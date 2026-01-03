@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
-import Link from 'next/link';
+import { useState, useEffect, useCallback, use } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Building2, Edit, ArrowDownCircle, ArrowUpCircle, Wallet, History } from 'lucide-react';
+import { Building2, ArrowDownCircle, ArrowUpCircle, Wallet, History } from 'lucide-react';
 import { TransactionForm } from '@/components/suppliers/transaction-form';
+import { EditSupplierModal } from '@/components/suppliers/edit-supplier-modal';
 import type { Supplier, SupplierTransaction, SupplierBalance } from '@/types';
 
 interface SupplierDetailData extends Omit<Supplier, 'balance'>, SupplierBalance {
@@ -19,18 +18,18 @@ export default function SupplierDetailPage({ params }: { params: Promise<{ id: s
   const [supplier, setSupplier] = useState<SupplierDetailData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchSupplier = async () => {
+  const fetchSupplier = useCallback(async () => {
     const res = await fetch(`/api/suppliers/${id}`);
     const data = await res.json();
     if (data.success) {
       setSupplier(data.data);
     }
     setLoading(false);
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchSupplier();
-  }, [id]);
+  }, [fetchSupplier]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('vi-VN').format(value);
@@ -80,11 +79,7 @@ export default function SupplierDetailPage({ params }: { params: Promise<{ id: s
         </div>
         <div className="flex gap-2">
           <TransactionForm supplierId={id} onSuccess={fetchSupplier} />
-          <Button variant="outline" asChild>
-            <Link href={`/suppliers/${id}/edit`}>
-              <Edit className="mr-2 h-4 w-4" /> Sửa
-            </Link>
-          </Button>
+          <EditSupplierModal supplier={supplier} onSuccess={fetchSupplier} />
         </div>
       </div>
 
