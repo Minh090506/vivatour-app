@@ -1,0 +1,399 @@
+'use client';
+
+import { useState, useEffect, use } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  ArrowLeft,
+  ClipboardList,
+  Edit,
+  Trash2,
+  Calendar,
+  Building2,
+  CreditCard,
+  Lock,
+  FileText,
+} from 'lucide-react';
+import { OperatorForm } from '@/components/operators/operator-form';
+import { OperatorHistoryPanel } from '@/components/operators/operator-history-panel';
+import { SERVICE_TYPES, PAYMENT_STATUSES, type ServiceTypeKey, type PaymentStatusKey } from '@/config/operator-config';
+import type { OperatorHistoryEntry } from '@/types';
+
+interface OperatorDetail {
+  id: string;
+  requestId: string;
+  supplierId: string | null;
+  serviceDate: string | Date;
+  serviceType: string;
+  serviceName: string;
+  supplier: string | null;
+  costBeforeTax: number;
+  vat: number | null;
+  totalCost: number;
+  paymentStatus: string;
+  paidAmount: number | null;
+  paidAt: Date | null;
+  paymentDeadline: Date | string | null;
+  paymentDate: Date | null;
+  bankAccount: string | null;
+  notes: string | null;
+  isLocked: boolean;
+  lockedAt: Date | null;
+  lockedBy: string | null;
+  userId: string;
+  sheetRowIndex: number | null;
+  createdAt: Date;
+  updatedAt: Date;
+  request?: { code: string; customerName: string; status: string };
+  supplierRef?: { code: string; name: string; paymentModel: string; bankAccount: string };
+  history?: OperatorHistoryEntry[];
+}
+
+interface PageParams {
+  id: string;
+}
+
+export default function OperatorDetailPage({ params }: { params: Promise<PageParams> }) {
+  const { id } = use(params);
+  const router = useRouter();
+
+  const [operator, setOperator] = useState<OperatorDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  useEffect(() => {
+    fetchOperator();
+  }, [id]);
+
+  const fetchOperator = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/operators/${id}`);
+      const data = await res.json();
+      if (data.success) {
+        setOperator(data.data);
+      } else {
+        setError(data.error || 'Không tìm thấy dịch vụ');
+      }
+    } catch (err) {
+      console.error('Error fetching operator:', err);
+      setError('Lỗi tải dữ liệu');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/operators/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        router.push('/operators');
+      } else {
+        setError(data.error || 'Lỗi xóa dịch vụ');
+        setDeleteDialogOpen(false);
+      }
+    } catch (err) {
+      console.error('Error deleting operator:', err);
+      setError('Lỗi xóa dịch vụ');
+      setDeleteDialogOpen(false);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('vi-VN').format(value);
+  };
+
+  const formatDate = (date: string | Date | null) => {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('vi-VN');
+  };
+
+  const getServiceTypeLabel = (type: string) => {
+    return SERVICE_TYPES[type as ServiceTypeKey]?.label || type;
+  };
+
+  const getPaymentStatusInfo = (status: string) => {
+    return PAYMENT_STATUSES[status as PaymentStatusKey] || { label: status, color: 'gray' };
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-muted-foreground">Đang tải...</div>
+      </div>
+    );
+  }
+
+  if (error || !operator) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/operators">
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+          </Button>
+          <h1 className="text-2xl font-bold">Chi tiết dịch vụ</h1>
+        </div>
+        <Card>
+          <CardContent className="py-10 text-center text-red-500">
+            {error || 'Không tìm thấy dịch vụ'}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const paymentInfo = getPaymentStatusInfo(operator.paymentStatus);
+
+  // Edit mode
+  if (isEditing) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => setIsEditing(false)}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <ClipboardList className="h-6 w-6" />
+              Chỉnh sửa dịch vụ
+            </h1>
+            <p className="text-muted-foreground">{operator.serviceName}</p>
+          </div>
+        </div>
+
+        <OperatorForm
+          operator={operator}
+          onSuccess={() => {
+            setIsEditing(false);
+            fetchOperator();
+          }}
+        />
+      </div>
+    );
+  }
+
+  // View mode
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/operators">
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <ClipboardList className="h-6 w-6" />
+              {operator.serviceName}
+              {operator.isLocked && (
+                <span title="Đã khóa sổ">
+                  <Lock className="h-5 w-5 text-muted-foreground" />
+                </span>
+              )}
+            </h1>
+            <p className="text-muted-foreground">
+              Booking: {operator.request?.code || operator.requestId.slice(0, 8)}
+              {operator.request?.customerName && ` - ${operator.request.customerName}`}
+            </p>
+          </div>
+        </div>
+        {!operator.isLocked && (
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsEditing(true)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Sửa
+            </Button>
+            <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              Xóa
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Info */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Service Info */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Thông tin dịch vụ
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Loại dịch vụ</p>
+                  <Badge variant="outline" className="mt-1">
+                    {getServiceTypeLabel(operator.serviceType)}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Ngày dịch vụ</p>
+                  <p className="font-medium flex items-center gap-2 mt-1">
+                    <Calendar className="h-4 w-4" />
+                    {formatDate(operator.serviceDate)}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm text-muted-foreground">Tên dịch vụ</p>
+                <p className="font-medium mt-1">{operator.serviceName}</p>
+              </div>
+
+              {operator.notes && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Ghi chú</p>
+                  <p className="mt-1 text-muted-foreground">{operator.notes}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Supplier Info */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                Nhà cung cấp
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Tên NCC</p>
+                  {operator.supplierRef ? (
+                    <Link
+                      href={`/suppliers/${operator.supplierId}`}
+                      className="font-medium text-primary hover:underline mt-1 block"
+                    >
+                      {operator.supplierRef.code} - {operator.supplierRef.name}
+                    </Link>
+                  ) : (
+                    <p className="font-medium mt-1">{operator.supplier || '-'}</p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">TK Ngân hàng</p>
+                  <p className="font-medium mt-1">
+                    {operator.bankAccount || operator.supplierRef?.bankAccount || '-'}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Cost Info */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5" />
+                Chi phí & Thanh toán
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Chi phí trước thuế</p>
+                  <p className="font-medium mt-1">{formatCurrency(operator.costBeforeTax)} ₫</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">VAT</p>
+                  <p className="font-medium mt-1">
+                    {operator.vat ? `${formatCurrency(operator.vat)} ₫` : '-'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Tổng chi phí</p>
+                  <p className="font-bold text-lg text-primary mt-1">
+                    {formatCurrency(operator.totalCost)} ₫
+                  </p>
+                </div>
+              </div>
+
+              <hr />
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Trạng thái TT</p>
+                  <Badge
+                    variant="outline"
+                    className={`mt-1
+                      ${paymentInfo.color === 'green' && 'border-green-500 text-green-600 bg-green-50'}
+                      ${paymentInfo.color === 'yellow' && 'border-yellow-500 text-yellow-600 bg-yellow-50'}
+                      ${paymentInfo.color === 'orange' && 'border-orange-500 text-orange-600 bg-orange-50'}
+                    `}
+                  >
+                    {paymentInfo.label}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Đã thanh toán</p>
+                  <p className="font-medium mt-1">
+                    {operator.paidAmount ? `${formatCurrency(operator.paidAmount)} ₫` : '-'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Hạn thanh toán</p>
+                  <p className="font-medium mt-1">{formatDate(operator.paymentDeadline)}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Sidebar - History */}
+        <div>
+          <OperatorHistoryPanel history={operator.history || []} />
+        </div>
+      </div>
+
+      {/* Delete Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Xác nhận xóa</DialogTitle>
+            <DialogDescription>
+              Bạn có chắc muốn xóa dịch vụ &quot;{operator.serviceName}&quot;?
+              <br />
+              Hành động này không thể hoàn tác.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Hủy
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
+              {deleting ? 'Đang xóa...' : 'Xóa'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

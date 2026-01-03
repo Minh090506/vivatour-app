@@ -136,11 +136,32 @@ model Operator {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
+  // Audit history
+  history         OperatorHistory[]
+
   @@index([requestId])
   @@index([serviceDate])
   @@index([paymentStatus])
   @@index([supplierId])
   @@map("operators")
+}
+
+// ============================================
+// OPERATOR HISTORY (Audit Trail)
+// ============================================
+
+model OperatorHistory {
+  id          String   @id @default(cuid())
+  operatorId  String
+  operator    Operator @relation(fields: [operatorId], references: [id], onDelete: Cascade)
+  action      String   // CREATE, UPDATE, DELETE, LOCK, UNLOCK, APPROVE
+  changes     Json     // {field: {before, after}}
+  userId      String
+  createdAt   DateTime @default(now())
+
+  @@index([operatorId])
+  @@index([createdAt])
+  @@map("operator_history")
 }
 
 // ============================================

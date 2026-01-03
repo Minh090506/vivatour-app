@@ -350,3 +350,57 @@ export interface SupplierFilters {
   paymentModel?: PaymentModel;
   isActive?: boolean;
 }
+
+// ============================================
+// OPERATOR TYPES (Dịch vụ/Chi phí)
+// ============================================
+
+// Re-export from config for consistency
+export {
+  SERVICE_TYPES,
+  SERVICE_TYPE_KEYS,
+  PAYMENT_STATUSES,
+  PAYMENT_STATUS_KEYS,
+  HISTORY_ACTIONS,
+  DEFAULT_VAT_RATE,
+  type ServiceTypeKey,
+  type PaymentStatusKey,
+  type HistoryActionKey,
+} from '@/config/operator-config';
+
+// Operator filters
+export interface OperatorFilters {
+  search?: string;
+  requestId?: string;
+  supplierId?: string;
+  serviceType?: string;
+  paymentStatus?: string;  // Relaxed to string for form state
+  fromDate?: string;
+  toDate?: string;
+  isLocked?: boolean;
+}
+
+// Operator history entry
+export interface OperatorHistoryEntry {
+  id: string;
+  operatorId: string;
+  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'LOCK' | 'UNLOCK' | 'APPROVE';
+  changes: Record<string, { before: unknown; after: unknown }>;
+  userId: string;
+  createdAt: Date;
+}
+
+// Approval queue item (for Phase 2)
+export interface ApprovalQueueItem {
+  id: string;
+  requestCode: string;
+  customerName: string;
+  serviceDate: Date;
+  serviceType: string;
+  serviceName: string;
+  supplierName: string | null;
+  totalCost: number;
+  paymentDeadline: Date | null;
+  daysOverdue: number;
+  isLocked: boolean;
+}
