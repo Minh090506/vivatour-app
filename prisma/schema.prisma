@@ -1,0 +1,349 @@
+// Prisma schema for MyVivaTour Platform
+// Hybrid approach: PostgreSQL as cache, Google Sheets as source of truth
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// USER & AUTHENTICATION
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  role          Role      @default(SELLER)
+  avatar        String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  requests      Request[]
+  operators     Operator[]
+  revenues      Revenue[]
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  SELLER
+  ACCOUNTANT
+}
+
+// ============================================
+// REQUEST MODULE (Customer Requests)
+// ============================================
+
+model Request {
+  id              String    @id @default(cuid())
+  code            String    @unique  // Booking Code: 240101-JOHN-US
+
+  // Customer Info
+  customerName    String
+  contact         String    // Email or Phone
+  whatsapp        String?
+  pax             Int       @default(1)
+  country         String
+
+  // Source & Status
+  source          String    // TripAdvisor, Zalo, Email, Agent, etc.
+  status          String    @default("F2")  // F1, F2, F3, F4, F5
+
+  // Tour Info
+  tourDays        Int?
+  expectedDate    DateTime?
+  expectedRevenue Decimal?  @db.Decimal(15, 0)
+  expectedCost    Decimal?  @db.Decimal(15, 0)
+
+  // Dates
+  requestDate     DateTime  @default(now())
+  nextFollowUp    DateTime?
+
+  // Notes
+  notes           String?   @db.Text
+
+  // Metadata
+  sellerId        String
+  seller          User      @relation(fields: [sellerId], references: [id])
+  sheetRowIndex   Int?      // Row index in Google Sheet for sync
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  operators       Operator[]
+  revenues        Revenue[]
+  emails          Email[]
+
+  @@index([status])
+  @@index([sellerId])
+  @@index([nextFollowUp])
+  @@map("requests")
+}
+
+// ============================================
+// OPERATOR MODULE (Services/Costs)
+// ============================================
+
+model Operator {
+  id              String    @id @default(cuid())
+
+  // Link to Request
+  requestId       String
+  request         Request   @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  // Link to Supplier (NCC)
+  supplierId      String?
+  supplierRef     Supplier? @relation(fields: [supplierId], references: [id])
+
+  // Service Info
+  serviceDate     DateTime
+  serviceType     String    // Hotel, Transport, Tour, Guide, etc.
+  serviceName     String
+  supplier        String?   // Legacy field - supplier name text
+
+  // Cost Info
+  costBeforeTax   Decimal   @db.Decimal(15, 0)
+  vat             Decimal?  @db.Decimal(15, 0)
+  totalCost       Decimal   @db.Decimal(15, 0)
+
+  // Payment Info
+  paymentDeadline DateTime?
+  paymentStatus   String    @default("PENDING")  // PENDING, PAID, PARTIAL
+  paymentDate     DateTime?
+  bankAccount     String?
+
+  // Lock (for accounting)
+  isLocked        Boolean   @default(false)
+  lockedAt        DateTime?
+  lockedBy        String?
+
+  // Notes
+  notes           String?   @db.Text
+
+  // Metadata
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  sheetRowIndex   Int?      // Row index in Google Sheet for sync
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([requestId])
+  @@index([serviceDate])
+  @@index([paymentStatus])
+  @@index([supplierId])
+  @@map("operators")
+}
+
+// ============================================
+// REVENUE MODULE (Income/Payments)
+// ============================================
+
+model Revenue {
+  id              String    @id @default(cuid())
+  revenueId       String?   @unique  // Original ID from Sheet
+
+  // Link to Request
+  requestId       String
+  request         Request   @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  // Payment Info
+  paymentDate     DateTime
+  paymentType     String    // Deposit, Full Payment, etc.
+
+  // Amount
+  foreignAmount   Decimal?  @db.Decimal(15, 2)
+  currency        String?   @default("VND")
+  exchangeRate    Decimal?  @db.Decimal(15, 2)
+  amountVND       Decimal   @db.Decimal(15, 0)
+
+  // Source
+  paymentSource   String    // Bank transfer, Cash, etc.
+
+  // Lock (for accounting)
+  isLocked        Boolean   @default(false)
+  lockedAt        DateTime?
+  lockedBy        String?
+
+  // Notes
+  notes           String?   @db.Text
+
+  // Metadata
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  sheetRowIndex   Int?      // Row index in Google Sheet for sync
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([requestId])
+  @@index([paymentDate])
+  @@map("revenues")
+}
+
+// ============================================
+// EMAIL INTEGRATION
+// ============================================
+
+model Email {
+  id              String    @id @default(cuid())
+  gmailId         String    @unique  // Gmail message ID
+
+  // Link to Request (optional, matched by AI)
+  requestId       String?
+  request         Request?  @relation(fields: [requestId], references: [id])
+
+  // Email Info
+  from            String
+  to              String
+  subject         String
+  body            String    @db.Text
+  date            DateTime
+
+  // Status
+  isRead          Boolean   @default(false)
+  isReplied       Boolean   @default(false)
+
+  // AI Analysis
+  aiSummary       String?   @db.Text
+  aiSuggestedReply String?  @db.Text
+
+  createdAt       DateTime  @default(now())
+
+  @@index([requestId])
+  @@index([date])
+  @@index([isReplied])
+  @@map("emails")
+}
+
+// ============================================
+// KNOWLEDGE BASE (for AI)
+// ============================================
+
+model KnowledgeItem {
+  id              String    @id @default(cuid())
+
+  category        String    // Policy, FAQ, Template, etc.
+  title           String
+  content         String    @db.Text
+  keywords        String[]  // For search
+
+  // Embedding for AI search
+  embedding       Float[]   @default([])
+
+  isActive        Boolean   @default(true)
+  sheetRowIndex   Int?      // Row index in Internal_Knowledge sheet
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([category])
+  @@map("knowledge_items")
+}
+
+// ============================================
+// SYNC LOG (for Google Sheets sync)
+// ============================================
+
+model SyncLog {
+  id              String    @id @default(cuid())
+
+  sheetName       String    // Request, Operator, Revenue
+  action          String    // SYNC, CREATE, UPDATE, DELETE
+  recordId        String?
+  rowIndex        Int?
+
+  status          String    // SUCCESS, FAILED
+  errorMessage    String?
+
+  syncedAt        DateTime  @default(now())
+
+  @@index([sheetName])
+  @@index([syncedAt])
+  @@map("sync_logs")
+}
+
+// ============================================
+// SUPPLIER MODULE (NCC - Nhà Cung Cấp)
+// ============================================
+
+enum PaymentModel {
+  PREPAID       // Deposit pool (VMB style)
+  PAY_PER_USE   // Pay per booking
+  CREDIT        // Credit limit, pay later
+}
+
+enum TransactionType {
+  DEPOSIT       // Add funds to supplier
+  REFUND        // Return from supplier
+  ADJUSTMENT    // Price change, correction
+  FEE           // Service fee, penalty
+}
+
+model Supplier {
+  id              String    @id @default(cuid())
+  code            String    @unique  // e.g., VNA-001, MTE-002
+  name            String
+  type            String    // VMB, HOTEL, TRANSPORT, GUIDE, RESTAURANT, OTHER
+
+  // Payment Configuration
+  paymentModel    PaymentModel @default(PREPAID)
+  creditLimit     Decimal?  @db.Decimal(15, 0)  // For CREDIT model
+  paymentTermDays Int?      // Days to pay (for CREDIT)
+
+  // Contact Information
+  contactName     String?
+  contactPhone    String?
+  contactEmail    String?
+  bankAccount     String?   // Bank account for payments
+
+  // Status
+  isActive        Boolean   @default(true)
+  notes           String?   @db.Text
+
+  // Relations
+  transactions    SupplierTransaction[]
+  operators       Operator[]
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([type])
+  @@index([isActive])
+  @@index([code])
+  @@map("suppliers")
+}
+
+model SupplierTransaction {
+  id              String    @id @default(cuid())
+
+  // Link to Supplier
+  supplierId      String
+  supplier        Supplier  @relation(fields: [supplierId], references: [id])
+
+  // Transaction Info
+  type            TransactionType
+  amount          Decimal   @db.Decimal(15, 0)  // Positive for deposits/refunds
+  transactionDate DateTime
+  description     String?
+  proofLink       String?   // Link to receipt/invoice
+
+  // Optional: Link to related booking (for refunds)
+  relatedBookingCode String?
+
+  // Metadata
+  createdBy       String    // User ID who created
+  createdAt       DateTime  @default(now())
+
+  @@index([supplierId])
+  @@index([transactionDate])
+  @@index([type])
+  @@map("supplier_transactions")
+}

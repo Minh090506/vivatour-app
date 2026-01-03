@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(findstr:*)",
+      "Bash(dir /B)",
+      "Bash(dir \"C:\\\\Users\\\\Admin\\\\Projects\\\\company-workflow-app\\\\vivatour-app\\\\prisma\" /s)",
+      "Bash(powershell:*)"
+    ]
+  }
+}
