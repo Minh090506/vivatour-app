@@ -640,41 +640,127 @@ const x = calculateThing(); // Do something important
 
 ## Testing Standards
 
+### Test Framework
+
+- **Jest** 30.x with Next.js integration
+- **Testing Library** for React components
+- **jest-mock-extended** for Prisma mocking
+
 ### Test File Organization
 
-- Place tests next to the code they test
-- Use `.test.ts` or `.spec.ts` suffix
-- Organize tests by feature
-
 ```
-src/lib/
-├── supplier-balance.ts
-├── supplier-balance.test.ts
-└── __tests__/
-    └── supplier-balance.test.ts
+src/__tests__/
+├── lib/                          # Business logic tests
+│   └── supplier-balance.test.ts
+├── config/                       # Configuration tests
+│   └── supplier-config.test.ts
+├── api/                          # API route tests
+│   ├── suppliers.test.ts
+│   └── supplier-transactions.test.ts
+└── components/                   # Component tests (if needed)
+```
+
+### Test Scripts
+
+```bash
+npm test              # Run all tests
+npm run test:watch    # Watch mode
+npm run test:coverage # Coverage report
+```
+
+### Test Environment
+
+Use `@jest-environment` pragma to specify environment:
+
+```typescript
+/**
+ * @jest-environment node
+ */
+// For API routes and server-side logic
+
+/**
+ * @jest-environment jsdom
+ */
+// For React components (default)
+```
+
+### Prisma Mocking Pattern
+
+```typescript
+import { prismaMock } from '@/lib/__mocks__/db';
+
+// Mock at module level
+jest.mock('@/lib/db', () => ({
+  prisma: prismaMock,
+}));
+
+// In tests
+prismaMock.supplier.findMany.mockResolvedValue([/* mock data */]);
 ```
 
 ### Test Structure
 
 ```typescript
-import { calculateSupplierBalance } from '@/lib/supplier-balance';
-
 describe('calculateSupplierBalance', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('should calculate balance correctly with deposits and costs', async () => {
-    // Arrange
-    const supplierId = 'test-supplier-id';
+    // Arrange - setup mocks
+    prismaMock.supplierTransaction.groupBy.mockResolvedValue([
+      { type: 'DEPOSIT', _sum: { amount: 5000000 } },
+    ]);
 
     // Act
-    const result = await calculateSupplierBalance(supplierId);
+    const result = await calculateSupplierBalance('supplier-id');
 
     // Assert
-    expect(result.balance).toBe(expectedAmount);
+    expect(result.balance).toBe(5000000);
   });
 
   it('should handle zero transactions', async () => {
     // Test edge case
   });
 });
+```
+
+### API Route Testing
+
+```typescript
+import { NextRequest } from 'next/server';
+import { GET, POST } from '@/app/api/suppliers/route';
+
+function createMockRequest(url: string, options?: RequestInit): NextRequest {
+  return new NextRequest(new URL(url, 'http://localhost:3000'), options);
+}
+
+it('should return 400 for missing required fields', async () => {
+  const request = createMockRequest('http://localhost:3000/api/suppliers', {
+    method: 'POST',
+    body: JSON.stringify({ /* incomplete data */ }),
+  });
+
+  const response = await POST(request);
+  const data = await response.json();
+
+  expect(response.status).toBe(400);
+  expect(data.success).toBe(false);
+});
+```
+
+### Coverage Thresholds
+
+```javascript
+// jest.config.ts
+coverageThreshold: {
+  global: {
+    branches: 70,
+    functions: 70,
+    lines: 70,
+    statements: 70,
+  },
+}
 ```
 
 ---
