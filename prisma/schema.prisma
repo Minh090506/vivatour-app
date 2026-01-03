@@ -289,9 +289,10 @@ enum TransactionType {
 
 model Supplier {
   id              String    @id @default(cuid())
-  code            String    @unique  // e.g., VNA-001, MTE-002
+  code            String    @unique  // e.g., HOT-DN-ANK-0001
   name            String
-  type            String    // VMB, HOTEL, TRANSPORT, GUIDE, RESTAURANT, OTHER
+  type            String    // HOTEL, RESTAURANT, TRANSPORT, GUIDE, VISA, VMB, CRUISE, ACTIVITY, OTHER
+  location        String?   // HA_NOI, DA_NANG, etc. or custom value
 
   // Payment Configuration
   paymentModel    PaymentModel @default(PREPAID)

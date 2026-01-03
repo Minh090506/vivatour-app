@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ArrowUpCircle, ArrowDownCircle, Wallet, Building2 } from 'lucide-react';
-import { SUPPLIER_TYPES } from '@/types';
+import { SUPPLIER_TYPES, SUPPLIER_TYPE_KEYS } from '@/config/supplier-config';
 import Link from 'next/link';
 
 interface SupplierBalanceData {
@@ -43,7 +43,7 @@ export default function SupplierReportsPage() {
   const fetchReport = async () => {
     setLoading(true);
     const params = new URLSearchParams();
-    if (typeFilter) params.set('type', typeFilter);
+    if (typeFilter && typeFilter !== 'all') params.set('type', typeFilter);
 
     const res = await fetch(`/api/reports/supplier-balance?${params}`);
     const result = await res.json();
@@ -75,9 +75,9 @@ export default function SupplierReportsPage() {
             <SelectValue placeholder="Tất cả loại NCC" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Tất cả</SelectItem>
-            {SUPPLIER_TYPES.map(type => (
-              <SelectItem key={type} value={type}>{type}</SelectItem>
+            <SelectItem value="all">Tất cả</SelectItem>
+            {SUPPLIER_TYPE_KEYS.map((key) => (
+              <SelectItem key={key} value={key}>{SUPPLIER_TYPES[key].label}</SelectItem>
             ))}
           </SelectContent>
         </Select>

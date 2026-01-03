@@ -9,13 +9,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plus, Search, Building2 } from 'lucide-react';
-import { SUPPLIER_TYPES } from '@/types';
+import {
+  SUPPLIER_TYPES,
+  SUPPLIER_TYPE_KEYS,
+  SUPPLIER_LOCATIONS,
+  PAYMENT_MODELS,
+  type SupplierLocationKey,
+} from '@/config/supplier-config';
 
 interface SupplierListItem {
   id: string;
   code: string;
   name: string;
   type: string;
+  location: string | null;
   paymentModel: string;
   isActive: boolean;
   balance?: number;
@@ -35,7 +42,7 @@ export default function SuppliersPage() {
     setLoading(true);
     const params = new URLSearchParams();
     if (search) params.set('search', search);
-    if (typeFilter) params.set('type', typeFilter);
+    if (typeFilter && typeFilter !== 'all') params.set('type', typeFilter);
     params.set('includeBalance', 'true');
 
     const res = await fetch(`/api/suppliers?${params}`);
@@ -51,12 +58,17 @@ export default function SuppliersPage() {
   };
 
   const getPaymentModelLabel = (model: string) => {
-    switch (model) {
-      case 'PREPAID': return 'Trả trước';
-      case 'PAY_PER_USE': return 'Thanh toán theo đơn';
-      case 'CREDIT': return 'Công nợ';
-      default: return model;
-    }
+    return PAYMENT_MODELS[model as keyof typeof PAYMENT_MODELS]?.label || model;
+  };
+
+  const getTypeLabel = (type: string) => {
+    return SUPPLIER_TYPES[type as keyof typeof SUPPLIER_TYPES]?.label || type;
+  };
+
+  const getLocationLabel = (location: string | null) => {
+    if (!location) return '-';
+    const loc = SUPPLIER_LOCATIONS[location as SupplierLocationKey];
+    return loc?.label || location;
   };
 
   return (
@@ -95,9 +107,11 @@ export default function SuppliersPage() {
                 <SelectValue placeholder="Loại NCC" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tất cả</SelectItem>
-                {SUPPLIER_TYPES.map((type) => (
-                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                <SelectItem value="all">Tất cả</SelectItem>
+                {SUPPLIER_TYPE_KEYS.map((key) => (
+                  <SelectItem key={key} value={key}>
+                    {SUPPLIER_TYPES[key].label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -126,6 +140,7 @@ export default function SuppliersPage() {
                   <TableHead>Mã NCC</TableHead>
                   <TableHead>Tên NCC</TableHead>
                   <TableHead>Loại</TableHead>
+                  <TableHead>Địa phương</TableHead>
                   <TableHead>Hình thức TT</TableHead>
                   <TableHead className="text-right">Số dư</TableHead>
                   <TableHead>Trạng thái</TableHead>
@@ -137,14 +152,17 @@ export default function SuppliersPage() {
                     <TableCell>
                       <Link
                         href={`/suppliers/${supplier.id}`}
-                        className="font-medium text-primary hover:underline"
+                        className="font-medium text-primary hover:underline font-mono"
                       >
                         {supplier.code}
                       </Link>
                     </TableCell>
                     <TableCell>{supplier.name}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{supplier.type}</Badge>
+                      <Badge variant="outline">{getTypeLabel(supplier.type)}</Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {getLocationLabel(supplier.location)}
                     </TableCell>
                     <TableCell>{getPaymentModelLabel(supplier.paymentModel)}</TableCell>
                     <TableCell className={`text-right font-medium ${

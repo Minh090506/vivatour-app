@@ -244,24 +244,26 @@ export interface DropdownOptions {
 export type PaymentModel = 'PREPAID' | 'PAY_PER_USE' | 'CREDIT';
 export type TransactionType = 'DEPOSIT' | 'REFUND' | 'ADJUSTMENT' | 'FEE';
 
-export const SUPPLIER_TYPES = [
-  'VMB',        // Ve May Bay (Airline)
-  'HOTEL',      // Hotels
-  'TRANSPORT',  // Cars, buses
-  'GUIDE',      // Tour guides
-  'RESTAURANT', // Restaurants
-  'CRUISE',     // Cruise/boats
-  'ACTIVITY',   // Activities, tours
-  'OTHER'       // Other services
-] as const;
-
-export type SupplierType = typeof SUPPLIER_TYPES[number];
+// Re-export from config for backward compatibility
+export {
+  SUPPLIER_TYPES,
+  SUPPLIER_TYPE_KEYS,
+  SUPPLIER_LOCATIONS,
+  SUPPLIER_LOCATION_KEYS,
+  PAYMENT_MODELS,
+  generateSupplierCode,
+  CUSTOM_LOCATION,
+  type SupplierTypeKey,
+  type SupplierLocationKey,
+  type PaymentModelKey,
+} from '@/config/supplier-config';
 
 export interface Supplier {
   id: string;
   code: string;
   name: string;
   type: string;
+  location: string | null;  // Location key or custom value
   paymentModel: PaymentModel;
   creditLimit: number | null;
   paymentTermDays: number | null;
@@ -283,6 +285,7 @@ export interface SupplierFormData {
   code: string;
   name: string;
   type: string;
+  location?: string;
   paymentModel: PaymentModel;
   creditLimit?: number;
   paymentTermDays?: number;
