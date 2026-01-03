@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Bell, User, Settings, LogOut, Menu } from 'lucide-react';
@@ -18,13 +19,28 @@ import { cn } from '@/lib/utils';
 const navigation = [
   { name: 'Dashboard', href: '/' },
   { name: 'Request', href: '/requests' },
-  { name: 'Operator', href: '/operator' },
+  { name: 'Operator', href: '/operators' },
+  { name: 'Duyệt TT', href: '/operators/approvals', showBadge: true },
   { name: 'NCC', href: '/suppliers' },
   { name: 'Revenue', href: '/revenue' },
 ];
 
 export function Header() {
   const pathname = usePathname();
+  const [overdueCount, setOverdueCount] = useState(0);
+
+  useEffect(() => {
+    fetch('/api/operators/pending-payments?filter=overdue')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          setOverdueCount(data.data?.length || 0);
+        }
+      })
+      .catch(() => {
+        // Silent fail for badge
+      });
+  }, []);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white shadow-sm">
@@ -49,18 +65,24 @@ export function Header() {
             {navigation.map((item) => {
               const isActive = pathname === item.href ||
                 (item.href !== '/' && pathname.startsWith(item.href));
+              const showBadge = 'showBadge' in item && item.showBadge && overdueCount > 0;
               return (
                 <Link
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+                    'px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5',
                     isActive
                       ? 'bg-primary text-primary-foreground'
                       : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                   )}
                 >
                   {item.name}
+                  {showBadge && (
+                    <Badge variant="destructive" className="h-5 px-1.5 text-xs">
+                      {overdueCount}
+                    </Badge>
+                  )}
                 </Link>
               );
             })}
