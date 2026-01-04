@@ -28,7 +28,7 @@ export function RequestListPanel({
   onSearchChange,
 }: RequestListPanelProps) {
   return (
-    <div className="w-[350px] md:w-[280px] border-r flex flex-col h-full bg-background">
+    <div className="w-[350px] lg:w-[350px] md:w-[280px] border-r flex flex-col h-full bg-background">
       {/* Search input */}
       <div className="p-3 border-b">
         <div className="relative">

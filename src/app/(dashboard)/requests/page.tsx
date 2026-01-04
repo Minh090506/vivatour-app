@@ -30,6 +30,7 @@ function RequestsPageContent() {
   // List state
   const [requests, setRequests] = useState<Request[]>([]);
   const [listLoading, setListLoading] = useState(true);
+  const [searchInput, setSearchInput] = useState(''); // Local search input for debouncing
   const [filters, setFilters] = useState<FiltersType>({
     search: '',
     stage: '',
@@ -111,6 +112,14 @@ function RequestsPageContent() {
     init();
   }, []);
 
+  // Debounced search: update filters.search after 300ms delay
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters(prev => ({ ...prev, search: searchInput }));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
   // Fetch list on filter change
   useEffect(() => {
     fetchRequests();
@@ -130,15 +139,22 @@ function RequestsPageContent() {
     router.push(`/requests?id=${id}`, { scroll: false });
   };
 
-  // Handle search change from list panel
+  // Handle search change from list panel - update local state for debouncing
   const handleSearchChange = (value: string) => {
-    setFilters(prev => ({ ...prev, search: value }));
+    setSearchInput(value);
   };
 
   // Handle edit button click - navigate to edit page
   const handleEditClick = () => {
     if (selectedId) {
       router.push(`/requests/${selectedId}/edit`);
+    }
+  };
+
+  // Handle refresh - reload current request details
+  const handleRefresh = () => {
+    if (selectedId) {
+      fetchRequestDetail(selectedId);
     }
   };
 
@@ -173,13 +189,14 @@ function RequestsPageContent() {
           selectedId={selectedId}
           onSelect={handleSelect}
           isLoading={listLoading}
-          searchValue={filters.search || ''}
+          searchValue={searchInput}
           onSearchChange={handleSearchChange}
         />
         <RequestDetailPanel
           request={selectedRequest}
           isLoading={detailLoading}
           onEditClick={handleEditClick}
+          onRefresh={handleRefresh}
         />
       </div>
     </div>

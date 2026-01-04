@@ -10,3 +10,6 @@ export { RequestForm } from './request-form';
 export { RequestListItem } from './request-list-item';
 export { RequestListPanel } from './request-list-panel';
 export { RequestDetailPanel } from './request-detail-panel';
+
+// Phase 4: Inline Services Table
+export { RequestServicesTable } from './request-services-table';
