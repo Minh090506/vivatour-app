@@ -1,20 +1,36 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import {
-  RequestTable,
+  RequestListPanel,
+  RequestDetailPanel,
   RequestFilters,
 } from '@/components/requests';
-import type { Request, RequestFilters as Filters } from '@/types';
+import type { Request, RequestFilters as FiltersType, Operator, User } from '@/types';
 
-export default function RequestsPage() {
+// Extended request type with relations
+interface RequestWithDetails extends Request {
+  operators?: Operator[];
+  seller?: User;
+  _count?: { operators?: number; revenues?: number };
+}
+
+/**
+ * Main requests page content with 2-panel layout.
+ * Left panel: search + list, Right panel: selected request details.
+ */
+function RequestsPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedId = searchParams.get('id');
+
+  // List state
   const [requests, setRequests] = useState<Request[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<Filters>({
+  const [listLoading, setListLoading] = useState(true);
+  const [filters, setFilters] = useState<FiltersType>({
     search: '',
     stage: '',
     status: '',
@@ -22,12 +38,18 @@ export default function RequestsPage() {
     fromDate: '',
     toDate: '',
   });
-  const [canViewAll, setCanViewAll] = useState(false);
-  const [sellers, setSellers] = useState([]);
 
-  // Fetch requests with filters
+  // Detail state
+  const [selectedRequest, setSelectedRequest] = useState<RequestWithDetails | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  // Permission state
+  const [canViewAll, setCanViewAll] = useState(false);
+  const [sellers, setSellers] = useState<User[]>([]);
+
+  // Fetch requests list with filters
   const fetchRequests = useCallback(async () => {
-    setLoading(true);
+    setListLoading(true);
     try {
       const params = new URLSearchParams();
       if (filters.search) params.set('search', filters.search);
@@ -45,35 +67,85 @@ export default function RequestsPage() {
     } catch (err) {
       console.error('Error fetching requests:', err);
     } finally {
-      setLoading(false);
+      setListLoading(false);
     }
   }, [filters]);
 
-  // Check permissions and fetch sellers
+  // Fetch selected request details
+  const fetchRequestDetail = useCallback(async (id: string) => {
+    setDetailLoading(true);
+    try {
+      const res = await fetch(`/api/requests/${id}`);
+      const data = await res.json();
+      if (data.success) {
+        setSelectedRequest(data.data);
+      } else {
+        // Request not found - clear selection
+        setSelectedRequest(null);
+        router.replace('/requests');
+      }
+    } catch (err) {
+      console.error('Error fetching request detail:', err);
+      setSelectedRequest(null);
+    } finally {
+      setDetailLoading(false);
+    }
+  }, [router]);
+
+  // Init: check permissions and fetch sellers
   useEffect(() => {
     async function init() {
-      // Check if user can view all
-      const configRes = await fetch('/api/config/user/me');
-      const configData = await configRes.json();
-      if (configData.success && configData.data?.canViewAll) {
-        setCanViewAll(true);
-        // Fetch sellers list for filter
-        const sellersRes = await fetch('/api/users?role=SELLER');
-        const sellersData = await sellersRes.json();
-        if (sellersData.success) setSellers(sellersData.data);
+      try {
+        const configRes = await fetch('/api/config/user/me');
+        const configData = await configRes.json();
+        if (configData.success && configData.data?.canViewAll) {
+          setCanViewAll(true);
+          const sellersRes = await fetch('/api/users?role=SELLER');
+          const sellersData = await sellersRes.json();
+          if (sellersData.success) setSellers(sellersData.data);
+        }
+      } catch (err) {
+        console.error('Error initializing:', err);
       }
     }
     init();
   }, []);
 
+  // Fetch list on filter change
   useEffect(() => {
     fetchRequests();
   }, [fetchRequests]);
 
+  // Fetch detail when selection changes
+  useEffect(() => {
+    if (selectedId) {
+      fetchRequestDetail(selectedId);
+    } else {
+      setSelectedRequest(null);
+    }
+  }, [selectedId, fetchRequestDetail]);
+
+  // Handle request selection - update URL
+  const handleSelect = (id: string) => {
+    router.push(`/requests?id=${id}`, { scroll: false });
+  };
+
+  // Handle search change from list panel
+  const handleSearchChange = (value: string) => {
+    setFilters(prev => ({ ...prev, search: value }));
+  };
+
+  // Handle edit button click - navigate to edit page
+  const handleEditClick = () => {
+    if (selectedId) {
+      router.push(`/requests/${selectedId}/edit`);
+    }
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="h-[calc(100vh-4rem)] flex flex-col">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center p-4 border-b">
         <div>
           <h1 className="text-2xl font-bold">Yêu cầu</h1>
           <p className="text-muted-foreground">Quản lý yêu cầu khách hàng</p>
@@ -85,19 +157,42 @@ export default function RequestsPage() {
       </div>
 
       {/* Filters */}
-      <RequestFilters
-        filters={filters}
-        onChange={setFilters}
-        sellers={sellers}
-        showSellerFilter={canViewAll}
-      />
+      <div className="border-b">
+        <RequestFilters
+          filters={filters}
+          onChange={setFilters}
+          sellers={sellers}
+          showSellerFilter={canViewAll}
+        />
+      </div>
 
-      {/* Table */}
-      <RequestTable
-        requests={requests}
-        isLoading={loading}
-        onRowClick={(req) => router.push(`/requests/${req.id}`)}
-      />
+      {/* 2-Panel Layout */}
+      <div className="flex-1 flex overflow-hidden">
+        <RequestListPanel
+          requests={requests}
+          selectedId={selectedId}
+          onSelect={handleSelect}
+          isLoading={listLoading}
+          searchValue={filters.search || ''}
+          onSearchChange={handleSearchChange}
+        />
+        <RequestDetailPanel
+          request={selectedRequest}
+          isLoading={detailLoading}
+          onEditClick={handleEditClick}
+        />
+      </div>
     </div>
+  );
+}
+
+/**
+ * Requests page with Suspense boundary for useSearchParams
+ */
+export default function RequestsPage() {
+  return (
+    <Suspense fallback={<div className="p-4">Đang tải...</div>}>
+      <RequestsPageContent />
+    </Suspense>
   );
 }
