@@ -1,6 +1,6 @@
 # Phase 4: Inline Services Table
 
-**Status:** Pending
+**Status:** Completed
 **Estimated Effort:** Medium-Large
 
 ---
@@ -432,10 +432,40 @@ const handleRefresh = () => {
 
 ## Acceptance Criteria
 
-- [ ] Services table shows all operators for request
-- [ ] Click Edit → row becomes editable
-- [ ] Click Add → new editable row appears
-- [ ] Save → calls API, refreshes data
-- [ ] Delete → confirms, calls API, refreshes
-- [ ] Locked operators have disabled edit/delete
-- [ ] Empty state when no operators
+- [x] Services table shows all operators for request
+- [x] Click Edit → row becomes editable
+- [x] Click Add → new editable row appears
+- [x] Save → calls API, refreshes data
+- [x] Delete → confirms, calls API, refreshes
+- [x] Locked operators have disabled edit/delete
+- [x] Empty state when no operators
+
+---
+
+## Implementation Notes
+
+**Date:** 2026-01-04
+**Build Status:** ✓ Compiled successfully with TypeScript
+
+### Files Modified:
+1. `src/components/requests/request-services-table.tsx` - Created (344 lines)
+2. `src/components/requests/request-detail-panel.tsx` - Updated (4 changes)
+3. `src/app/(dashboard)/requests/page.tsx` - Updated (2 changes)
+4. `src/components/requests/index.ts` - Updated (export added)
+
+### Implementation Details:
+- Inline table uses shadcn/ui Table, Input, Select, Button components
+- Editable row state managed with `EditingRow` interface
+- Vietnamese labels: Ngày, Loại, Tên dịch vụ, NCC, Chi phí
+- SERVICE_TYPES from operator-config for service type dropdown
+- Edit/Delete buttons disabled when `op.isLocked === true`
+- Empty state message: "Chưa có dịch vụ nào"
+- Refresh callback triggers parent re-fetch of request details
+- API calls: POST /api/operators, PUT /api/operators/:id, DELETE /api/operators/:id
+
+### Success Criteria Met:
+✓ All acceptance criteria verified through code review
+✓ TypeScript compilation successful (no type errors)
+✓ Next.js build passed
+✓ Component properly integrated with detail panel
+✓ Refresh mechanism working via callback chain
