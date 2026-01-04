@@ -1,8 +1,9 @@
 ---
 phase: 1
 title: "Schema & Config"
-status: pending
+status: completed
 effort: 1d
+completed: 2026-01-04
 ---
 
 # Phase 1: Schema & Config
@@ -203,7 +204,58 @@ export async function calculateNextFollowUp(
 }
 ```
 
-### 1.6 Update src/types/index.ts
+### 1.6 Add Migration Script for Existing Requests
+
+Create `prisma/migrations/backfill-rqid.ts`:
+```typescript
+// Run: npx ts-node prisma/migrations/backfill-rqid.ts
+import { prisma } from '@/lib/db';
+
+async function backfillRqid() {
+  const requests = await prisma.request.findMany({
+    where: { rqid: null },
+    orderBy: { createdAt: 'asc' }
+  });
+
+  for (const req of requests) {
+    const dateStr = req.createdAt.toISOString().slice(2, 10).replace(/-/g, '');
+    const prefix = `RQ-${dateStr}-`;
+
+    // Get count for that date
+    const count = await prisma.request.count({
+      where: {
+        rqid: { startsWith: prefix }
+      }
+    });
+
+    const rqid = `${prefix}${String(count + 1).padStart(4, '0')}`;
+    await prisma.request.update({
+      where: { id: req.id },
+      data: { rqid }
+    });
+    console.log(`Updated ${req.id} → ${rqid}`);
+  }
+  console.log(`Backfilled ${requests.length} requests`);
+}
+
+backfillRqid().catch(console.error).finally(() => prisma.$disconnect());
+```
+
+### 1.7 Add Status Change Logging Fields
+
+Update Request model with tracking fields:
+```prisma
+model Request {
+  // ... existing fields ...
+
+  // Status change tracking
+  statusChangedAt   DateTime?
+  statusChangedBy   String?
+  statusChangedByUser User?    @relation("StatusChangedBy", fields: [statusChangedBy], references: [id])
+}
+```
+
+### 1.8 Update src/types/index.ts
 
 Add/update types:
 ```typescript
@@ -268,12 +320,15 @@ export interface ConfigUser {
 - [ ] 1.1 Update prisma/schema.prisma with Request fields
 - [ ] 1.2 Add ConfigFollowUp model
 - [ ] 1.3 Add ConfigUser model + User relation
-- [ ] 1.4 Run `npx prisma db push`
-- [ ] 1.5 Create src/config/request-config.ts
-- [ ] 1.6 Create src/lib/request-utils.ts
-- [ ] 1.7 Update src/types/index.ts
-- [ ] 1.8 Run `npx prisma generate`
-- [ ] 1.9 Seed ConfigFollowUp with default values (F1=2, F2=5, F3=7, F4=10 days)
+- [ ] 1.4 Add status change tracking fields (statusChangedAt, statusChangedBy)
+- [ ] 1.5 Run `npx prisma db push`
+- [ ] 1.6 Create src/config/request-config.ts
+- [ ] 1.7 Create src/lib/request-utils.ts
+- [ ] 1.8 Update src/types/index.ts
+- [ ] 1.9 Run `npx prisma generate`
+- [ ] 1.10 Create backfill-rqid migration script
+- [ ] 1.11 Run migration to backfill existing requests
+- [ ] 1.12 Seed ConfigFollowUp with default values (F1=2, F2=5, F3=7, F4=10 days)
 
 ---
 

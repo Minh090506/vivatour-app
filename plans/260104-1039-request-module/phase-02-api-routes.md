@@ -1,8 +1,9 @@
 ---
 phase: 2
 title: "API Routes"
-status: pending
+status: completed
 effort: 1d
+completed: 2026-01-04
 ---
 
 # Phase 2: API Routes
@@ -130,19 +131,39 @@ export async function POST(request: NextRequest) {
 }
 ```
 
-### 2.5 Create GET/POST /api/config/user
+### 2.5 Create GET/POST /api/config/user (Admin Only)
 
 ```typescript
+import { getCurrentUser } from '@/lib/auth'; // Assumes auth helper exists
+
 // GET - List all user configs (admin only)
 export async function GET() {
+  // Admin-only check
+  const currentUser = await getCurrentUser();
+  if (currentUser?.role !== 'ADMIN') {
+    return NextResponse.json(
+      { success: false, error: 'Chỉ Admin mới có quyền truy cập' },
+      { status: 403 }
+    );
+  }
+
   const configs = await prisma.configUser.findMany({
     include: { user: { select: { id: true, name: true, email: true } } }
   });
   return NextResponse.json({ success: true, data: configs });
 }
 
-// POST - Create/update user config
+// POST - Create/update user config (admin only)
 export async function POST(request: NextRequest) {
+  // Admin-only check
+  const currentUser = await getCurrentUser();
+  if (currentUser?.role !== 'ADMIN') {
+    return NextResponse.json(
+      { success: false, error: 'Chỉ Admin mới có quyền thực hiện' },
+      { status: 403 }
+    );
+  }
+
   const body = await request.json();
   const config = await prisma.configUser.upsert({
     where: { userId: body.userId },

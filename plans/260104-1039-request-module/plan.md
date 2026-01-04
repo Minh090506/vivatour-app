@@ -27,8 +27,8 @@ Implement complete Request module with 14 statuses grouped into 4 stages, auto-g
 
 | Phase | Name | Status | Effort | Dependencies |
 |-------|------|--------|--------|--------------|
-| 1 | [Schema & Config](phase-01-schema-config.md) | ⬜ Pending | 1d | None |
-| 2 | [API Routes](phase-02-api-routes.md) | ⬜ Pending | 1d | Phase 1 |
+| 1 | [Schema & Config](phase-01-schema-config.md) | ✅ Complete | 1d | None |
+| 2 | [API Routes](phase-02-api-routes.md) | ✅ Complete | 1d | Phase 1 |
 | 3 | [UI Components](phase-03-ui-components.md) | ⬜ Pending | 1.5d | Phase 2 |
 | 4 | [UI Pages](phase-04-ui-pages.md) | ⬜ Pending | 1.5d | Phase 3 |
 | 5 | [Booking & Follow-up](phase-05-booking-followup.md) | ⬜ Pending | 1d | Phase 4 |
@@ -131,11 +131,11 @@ OUTCOME       → BOOKING, KHACH_HOAN, KHACH_SUY_NGHI, KHONG_DU_TC, DA_KET_THUC,
 | ConfigUser access | Admin only - only ADMIN role can manage seller codes |
 | Booking status revert | Allow with warning - bookingCode and operators remain |
 
-### Plan Revisions Required
+### Plan Revisions Applied ✅
 
-- [ ] **Phase 1:** Add migration script to backfill rqid for existing requests
-- [ ] **Phase 1:** Add basic status change logging (statusChangedAt, statusChangedBy fields)
-- [ ] **Phase 2:** Remove auto-operator creation from BOOKING logic
-- [ ] **Phase 2:** Add admin-only check to ConfigUser API endpoints
-- [ ] **Phase 5:** Update PUT handler - only generate bookingCode, no operator creation
-- [ ] **Phase 5:** Add warning message when reverting from BOOKING status
+- [x] **Phase 1:** Add migration script to backfill rqid for existing requests
+- [x] **Phase 1:** Add basic status change logging (statusChangedAt, statusChangedBy fields)
+- [x] **Phase 2:** Remove auto-operator creation from BOOKING logic
+- [x] **Phase 2:** Add admin-only check to ConfigUser API endpoints
+- [x] **Phase 5:** Update PUT handler - only generate bookingCode, no operator creation
+- [x] **Phase 5:** Add warning message when reverting from BOOKING status

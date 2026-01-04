@@ -51,23 +51,17 @@ if (body.status === 'BOOKING' && existing.status !== 'BOOKING') {
     );
   }
 
-  // Generate booking code
+  // Generate booking code only (no auto-operator creation)
   const bookingCode = await generateBookingCode(startDate, configUser.sellerCode);
   updateData.bookingCode = bookingCode;
 
-  // Auto-create initial Operator entry
-  await prisma.operator.create({
-    data: {
-      requestId: id,
-      serviceDate: startDate,
-      serviceType: 'TOUR',
-      serviceName: `Tour ${existing.country} - ${existing.customerName}`,
-      costBeforeTax: existing.expectedCost || 0,
-      totalCost: existing.expectedCost || 0,
-      userId: existing.sellerId,
-      notes: `Auto-generated from Request ${existing.rqid}`,
-    }
-  });
+  // NOTE: Operator entries are created manually by user after BOOKING
+}
+
+// Handle revert from BOOKING status - return warning but allow
+if (existing.status === 'BOOKING' && body.status !== 'BOOKING') {
+  // Include warning in response (bookingCode and operators remain)
+  responseWarning = 'Đã chuyển khỏi Booking. Mã booking và operators vẫn được giữ lại.';
 }
 ```
 
@@ -354,9 +348,9 @@ if (followup) {
 ## Success Criteria
 
 - [ ] Changing status to BOOKING generates unique code
-- [ ] Operator entry auto-created with request data
 - [ ] Error shown if seller not configured
 - [ ] Error shown if startDate missing for booking
+- [ ] Warning shown when reverting from BOOKING status
 - [ ] Dashboard widget shows overdue/today/upcoming
 - [ ] Clicking widget item navigates to request
 
