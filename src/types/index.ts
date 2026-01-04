@@ -404,3 +404,53 @@ export interface ApprovalQueueItem {
   daysOverdue: number;
   isLocked: boolean;
 }
+
+// ============================================
+// OPERATOR REPORT TYPES (Phase 4)
+// ============================================
+
+// Cost by service type
+export interface CostByServiceType {
+  type: string;
+  label: string;
+  total: number;
+  count: number;
+}
+
+// Cost by supplier
+export interface CostBySupplier {
+  supplierId: string | null;
+  supplierName: string;
+  total: number;
+  count: number;
+}
+
+// Cost by month
+export interface CostByMonth {
+  month: string; // YYYY-MM format
+  total: number;
+  count: number;
+}
+
+// Cost report summary
+export interface CostReportSummary {
+  totalCost: number;
+  totalCount: number;
+  avgCost: number;
+}
+
+// Full operator cost report
+export interface OperatorCostReport {
+  byServiceType: CostByServiceType[];
+  bySupplier: CostBySupplier[];
+  byMonth: CostByMonth[];
+  summary: CostReportSummary;
+}
+
+// Payment status report
+export interface PaymentStatusReport {
+  pending: { count: number; total: number };
+  dueThisWeek: { count: number; total: number };
+  overdue: { count: number; total: number };
+  paidThisMonth: { count: number; total: number };
+}
