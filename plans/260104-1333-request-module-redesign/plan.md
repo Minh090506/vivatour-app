@@ -88,7 +88,8 @@ RequestsPage (2-panel layout)
 **Files:** `request-list-panel.tsx`, `request-list-item.tsx`, `request-detail-panel.tsx`
 
 ### Phase 3: 2-Panel Page Layout
-**Files:** `src/app/(dashboard)/requests/page.tsx`
+**Status:** ✅ DONE (2026-01-04)
+**Files:** `src/app/(dashboard)/requests/page.tsx`, `[id]/page.tsx`, `[id]/edit/page.tsx`
 
 ### Phase 4: Inline Services Table
 **Files:** `request-services-table.tsx`, API updates
@@ -125,7 +126,7 @@ RequestsPage (2-panel layout)
 - [x] Booking code uses seller initial fallback ✅
 - [x] 2-panel components created ✅
 - [x] List item shows RQID/BookingCode, customer, status ✅
-- [ ] Right panel shows details on selection
+- [x] Right panel shows details on selection ✅
+- [x] URL reflects selected request (?id=xxx) ✅
 - [ ] Inline services table allows add/edit/delete
-- [ ] URL reflects selected request (?id=xxx)
 - [ ] Responsive on tablet (narrower panel)
