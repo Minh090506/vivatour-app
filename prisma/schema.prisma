@@ -39,6 +39,11 @@ enum Role {
   ACCOUNTANT
 }
 
+enum Gender {
+  MALE
+  FEMALE
+}
+
 // ============================================
 // REQUEST MODULE (Customer Requests)
 // ============================================
@@ -414,4 +419,27 @@ model ConfigUser {
   updatedAt   DateTime @updatedAt
 
   @@map("config_user")
+}
+
+// ============================================
+// SELLER MODULE (Independent Seller Management)
+// ============================================
+
+model Seller {
+  id          String   @id @default(cuid())
+  telegramId  String   @unique  // Telegram identifier
+  sellerName  String             // Display name: "Ly - Jenny", "Tu - Tony"
+  sheetName   String             // Google Sheet name
+  metaName    String?            // Meta/Facebook name (optional)
+  email       String?            // Email address (optional)
+  gender      Gender             // MALE or FEMALE
+  sellerCode  String   @unique   // Code for booking: J, T, V, K, L (1-2 chars)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([telegramId])
+  @@index([sellerCode])
+  @@index([isActive])
+  @@map("sellers")
 }

@@ -13,6 +13,23 @@ export interface User {
   avatar: string | null;
 }
 
+// Seller types
+export type Gender = 'MALE' | 'FEMALE';
+
+export interface Seller {
+  id: string;
+  telegramId: string;
+  sellerName: string;
+  sheetName: string;
+  metaName: string | null;
+  email: string | null;
+  gender: Gender;
+  sellerCode: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // Request types - Re-export from config
 export {
   REQUEST_STAGES,
