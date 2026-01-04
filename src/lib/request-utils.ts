@@ -34,16 +34,36 @@ export async function generateRQID(): Promise<string> {
 /**
  * Generate Booking Code: YYYYMMDD + SellerCode + Seq
  * Example: 20260201L0005
+ *
+ * Fallback: If no sellerCode, use first letter of seller name
  */
 export async function generateBookingCode(
   startDate: Date,
-  sellerCode: string
+  sellerId: string
 ): Promise<string> {
+  // Get seller code or fallback to name initial
+  const config = await prisma.configUser.findUnique({
+    where: { userId: sellerId },
+    include: { user: { select: { name: true } } },
+  });
+
+  let code: string;
+
+  if (config?.sellerCode) {
+    code = config.sellerCode;
+  } else if (config?.user?.name) {
+    // Fallback: first letter of name, uppercase
+    code = config.user.name.charAt(0).toUpperCase();
+  } else {
+    // Ultimate fallback
+    code = 'X';
+  }
+
   const year = startDate.getFullYear();
   const month = String(startDate.getMonth() + 1).padStart(2, '0');
   const day = String(startDate.getDate()).padStart(2, '0');
   const dateStr = `${year}${month}${day}`;
-  const prefix = `${dateStr}${sellerCode}`;
+  const prefix = `${dateStr}${code}`;
 
   // Get max sequence for this prefix
   const existing = await prisma.request.findMany({

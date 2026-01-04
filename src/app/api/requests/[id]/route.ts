@@ -121,18 +121,6 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
       // Handle BOOKING status transition - generate booking code
       if (newStatus === 'BOOKING' && existing.status !== 'BOOKING') {
-        // Get seller's code from ConfigUser
-        const configUser = await prisma.configUser.findUnique({
-          where: { userId: existing.sellerId },
-        });
-
-        if (!configUser?.sellerCode) {
-          return NextResponse.json(
-            { success: false, error: 'Seller chưa được cấu hình mã. Liên hệ Admin.' },
-            { status: 400 }
-          );
-        }
-
         // Require startDate for booking
         const startDate = body.startDate ? new Date(body.startDate) : existing.startDate;
         if (!startDate) {
@@ -142,8 +130,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
           );
         }
 
-        // Generate booking code (collision handling is in generateBookingCode)
-        const bookingCode = await generateBookingCode(startDate, configUser.sellerCode);
+        // Generate booking code using sellerId (function handles fallback logic)
+        const bookingCode = await generateBookingCode(startDate, existing.sellerId);
         updateData.bookingCode = bookingCode;
       }
 

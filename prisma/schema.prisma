@@ -407,7 +407,8 @@ model ConfigUser {
   id          String   @id @default(cuid())
   userId      String   @unique
   user        User     @relation(fields: [userId], references: [id])
-  sellerCode  String   // L, N, T (single char for booking code)
+  sellerCode  String?  // L, N, T (single char for booking code) - optional, fallback to name initial
+  sellerName  String?  // Display name for reports/UI
   canViewAll  Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
