@@ -80,6 +80,7 @@ RequestsPage (2-panel layout)
 ## Phases
 
 ### Phase 1: Schema & Utils Update
+**Status:** ✅ DONE (2026-01-04)
 **Files:** `prisma/schema.prisma`, `src/lib/request-utils.ts`, migration
 
 ### Phase 2: New Components
@@ -119,8 +120,8 @@ RequestsPage (2-panel layout)
 
 ## Success Criteria
 
-- [ ] ConfigUser has sellerName field
-- [ ] Booking code uses seller initial fallback
+- [x] ConfigUser has sellerName field ✅
+- [x] Booking code uses seller initial fallback ✅
 - [ ] 2-panel layout renders correctly
 - [ ] List item shows RQID/BookingCode, customer, status
 - [ ] Right panel shows details on selection
