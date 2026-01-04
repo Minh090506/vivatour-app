@@ -289,22 +289,30 @@ createdAt
 #### requests
 ```sql
 id (CUID) PRIMARY KEY
-code UNIQUE (booking code)
+code UNIQUE (simple booking code, e.g., "240101-JOHN-US")
+rqid UNIQUE (request ID: RQ-YYMMDD-0001)
+bookingCode UNIQUE (system booking code: YYYYMMDDL0001, generated on BOOKING status)
 customerName
 contact
 whatsapp
 pax
 country
 source
-status (F1-F5 funnel)
+status (14 statuses in request funnel)
+stage (LEAD, QUOTE, FOLLOWUP, OUTCOME)
 tourDays
+startDate
+endDate
 expectedDate
 expectedRevenue
 expectedCost
 requestDate
+lastContactDate
 nextFollowUp
+statusChangedAt
+statusChangedBy (FK to users, who changed status)
 notes
-sellerId (FK to users)
+sellerId (FK to users, the responsible seller)
 sheetRowIndex
 createdAt
 updatedAt
@@ -401,20 +409,95 @@ errorMessage
 syncedAt
 ```
 
+#### config_user
+```sql
+id (CUID) PRIMARY KEY
+userId UNIQUE (FK to users)
+sellerCode (Optional: single char for booking code - L, N, T, etc.)
+sellerName (Optional: display name for reports/UI)
+canViewAll (default: false)
+createdAt
+updatedAt
+```
+
 ### Indexing Strategy
 
 Indexes are added for:
 - Foreign keys (automatic in Prisma)
-- Unique fields (`code`, `email`, `gmailId`)
-- Frequently filtered fields (`status`, `type`, `isActive`, `paymentStatus`)
-- Date range queries (`serviceDate`, `paymentDate`, `transactionDate`)
+- Unique fields (`code`, `email`, `gmailId`, `bookingCode`)
+- Frequently filtered fields (`status`, `stage`, `type`, `isActive`, `paymentStatus`)
+- Date range queries (`serviceDate`, `paymentDate`, `transactionDate`, `nextFollowUp`)
+- Composite filters (common query patterns)
 
 ```prisma
-@@index([status])           // For request filtering by funnel stage
+@@index([status])           // For request filtering by funnel status
+@@index([stage])            // For request funnel stage (LEAD, QUOTE, etc.)
+@@index([sellerId])         // For requests by seller
+@@index([sellerId, stage])  // For seller + stage filtering
+@@index([bookingCode])      // For booking code lookup
+@@index([nextFollowUp])     // For follow-up scheduling
 @@index([type])             // For supplier type filtering
 @@index([isActive])         // For active/inactive filtering
 @@index([paymentStatus])    // For operator payment tracking
 @@index([serviceDate])      // For date range queries
+```
+
+---
+
+## Request Processing Workflow
+
+### Booking Code Generation
+
+**Trigger**: Request status changes to `BOOKING`
+
+**Process**:
+1. Client sends PUT request to `/api/requests/[id]` with `status: "BOOKING"` and `startDate`
+2. API route checks for `startDate` (required for booking)
+3. Calls `generateBookingCode(startDate, sellerId)` utility
+4. Function looks up seller's `ConfigUser` record:
+   - If `sellerCode` exists (e.g., 'L', 'N', 'T') → use it
+   - Else if `user.name` exists → use first letter uppercase
+   - Else → fallback to 'X'
+5. Format: `YYYYMMDD` + code char + sequence (e.g., "20260201L0005")
+6. Query existing codes with same prefix to determine next sequence
+7. Return generated booking code
+8. Update request with `bookingCode` field
+
+**Example Flow**:
+```
+PUT /api/requests/req-123
+{
+  "status": "BOOKING",
+  "startDate": "2026-02-01"
+}
+  ↓
+generateBookingCode("2026-02-01", "user-456")
+  ↓
+SELECT FROM configUser WHERE userId = "user-456"
+  ↓
+Found: sellerCode = 'L'
+  ↓
+SELECT COUNT FROM requests WHERE bookingCode LIKE '20260201L%'
+  ↓
+Found 4 existing codes → next seq = 0005
+  ↓
+Return: "20260201L0005"
+  ↓
+Update: bookingCode = "20260201L0005"
+```
+
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "id": "req-123",
+    "bookingCode": "20260201L0005",
+    "status": "BOOKING",
+    "startDate": "2026-02-01T00:00:00Z",
+    ...
+  }
+}
 ```
 
 ---

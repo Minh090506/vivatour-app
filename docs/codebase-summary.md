@@ -126,6 +126,7 @@ vivatour-app/
 |------|-------|---------|
 | `src/lib/db.ts` | 16 | Prisma client singleton for development HMR |
 | `src/lib/supplier-balance.ts` | 92 | Calculate supplier balance (deposits - costs) |
+| `src/lib/request-utils.ts` | 152 | Request utilities: ID generation, booking code, follow-up calculations |
 | `src/lib/utils.ts` | 6 | `cn()` utility to merge Tailwind CSS classes |
 | `src/types/index.ts` | 350+ | All TypeScript interfaces and types |
 
@@ -134,7 +135,7 @@ vivatour-app/
 | Model | Fields | Purpose |
 |-------|--------|---------|
 | User | id, email, name, role | User accounts (ADMIN/SELLER/ACCOUNTANT) |
-| Request | id, code, customerName, contact, status, etc. | Customer tour requests |
+| Request | id, code, bookingCode, customerName, contact, status, etc. | Customer tour requests with booking codes |
 | Operator | id, requestId, serviceType, totalCost, paymentStatus | Services/costs for requests |
 | Revenue | id, requestId, paymentDate, amountVND, paymentSource | Income tracking |
 | Supplier | id, code, name, type, paymentModel, creditLimit | Supplier management (NCC) |
@@ -142,6 +143,7 @@ vivatour-app/
 | Email | id, gmailId, from, to, subject, aiSummary | Gmail integration |
 | KnowledgeItem | id, category, title, content, keywords | AI knowledge base |
 | SyncLog | id, sheetName, action, status, errorMessage | Google Sheets sync history |
+| ConfigUser | id, userId, sellerCode, sellerName, canViewAll | User configuration (optional seller code, fallback name) |
 
 ---
 
@@ -159,6 +161,11 @@ Each component is styled with Tailwind CSS and supports dark mode via CSS variab
 ---
 
 ## Data Models Overview
+
+### Request Codes
+- **code**: Simple booking code (e.g., "240101-JOHN-US")
+- **bookingCode**: YYYYMMDD+SellerCode+Seq (e.g., "20260201L0005") - generated on BOOKING status
+- **rqid**: Request ID: RQ-YYMMDD-0001
 
 ### Request Funnel Status
 - **F1**: Initial inquiry
@@ -227,6 +234,34 @@ Hotel, Transport, Guide, Restaurant, VMB, Other
 }
 ```
 
+### Request Utility Functions
+
+```typescript
+// src/lib/request-utils.ts
+
+// Generate RQID: RQ-YYMMDD-0001 (sequential counter resets daily)
+generateRQID(): Promise<string>
+
+// Generate booking code: YYYYMMDDL0001
+// Fallback: If no sellerCode, uses first letter of seller name
+generateBookingCode(startDate: Date, sellerId: string): Promise<string>
+
+// Calculate end date from start + tourDays (inclusive)
+calculateEndDate(startDate: Date, tourDays: number): Date
+
+// Calculate next follow-up date based on ConfigFollowUp stage config
+calculateNextFollowUp(stage: string, lastContactDate: Date): Promise<Date | null>
+
+// Get seller code from ConfigUser
+getSellerCode(userId: string): Promise<string | null>
+
+// Check if user can view all requests
+canUserViewAll(userId: string): Promise<boolean>
+
+// Get follow-up date boundaries for filtering
+getFollowUpDateBoundaries(): { todayStart, todayEnd, threeDaysLater }
+```
+
 ### Response Format
 
 All API endpoints return JSON:
@@ -238,7 +273,9 @@ All API endpoints return JSON:
   data: { /* model data */ },
   // For lists
   total?: number,
-  hasMore?: boolean
+  hasMore?: boolean,
+  // Optional warning for non-fatal issues
+  warning?: string
 }
 
 // Error response
