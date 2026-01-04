@@ -22,11 +22,13 @@ import {
   Calendar,
   Building2,
   CreditCard,
-  Lock,
   FileText,
+  Unlock,
 } from 'lucide-react';
 import { OperatorForm } from '@/components/operators/operator-form';
 import { OperatorHistoryPanel } from '@/components/operators/operator-history-panel';
+import { LockIndicator } from '@/components/operators/lock-indicator';
+import { toast } from 'sonner';
 import { SERVICE_TYPES, PAYMENT_STATUSES, type ServiceTypeKey, type PaymentStatusKey } from '@/config/operator-config';
 import type { OperatorHistoryEntry } from '@/types';
 
@@ -74,6 +76,7 @@ export default function OperatorDetailPage({ params }: { params: Promise<PagePar
   const [isEditing, setIsEditing] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [unlocking, setUnlocking] = useState(false);
 
   useEffect(() => {
     fetchOperator();
@@ -114,6 +117,29 @@ export default function OperatorDetailPage({ params }: { params: Promise<PagePar
       setDeleteDialogOpen(false);
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleUnlock = async () => {
+    setUnlocking(true);
+    try {
+      const res = await fetch(`/api/operators/${id}/unlock`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: 'current-user' }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Đã mở khóa dịch vụ');
+        fetchOperator();
+      } else {
+        toast.error(data.error || 'Lỗi mở khóa');
+      }
+    } catch (err) {
+      console.error('Error unlocking operator:', err);
+      toast.error('Lỗi mở khóa dịch vụ');
+    } finally {
+      setUnlocking(false);
     }
   };
 
@@ -207,30 +233,37 @@ export default function OperatorDetailPage({ params }: { params: Promise<PagePar
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <ClipboardList className="h-6 w-6" />
               {operator.serviceName}
-              {operator.isLocked && (
-                <span title="Đã khóa sổ">
-                  <Lock className="h-5 w-5 text-muted-foreground" />
-                </span>
-              )}
             </h1>
+            <LockIndicator
+              isLocked={operator.isLocked}
+              lockedAt={operator.lockedAt}
+              lockedBy={operator.lockedBy}
+            />
             <p className="text-muted-foreground">
               Booking: {operator.request?.code || operator.requestId.slice(0, 8)}
               {operator.request?.customerName && ` - ${operator.request.customerName}`}
             </p>
           </div>
         </div>
-        {!operator.isLocked && (
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setIsEditing(true)}>
-              <Edit className="mr-2 h-4 w-4" />
-              Sửa
+        <div className="flex gap-2">
+          {operator.isLocked ? (
+            <Button variant="outline" onClick={handleUnlock} disabled={unlocking}>
+              <Unlock className="mr-2 h-4 w-4" />
+              {unlocking ? 'Đang mở...' : 'Mở khóa'}
             </Button>
-            <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
-              <Trash2 className="mr-2 h-4 w-4" />
-              Xóa
-            </Button>
-          </div>
-        )}
+          ) : (
+            <>
+              <Button variant="outline" onClick={() => setIsEditing(true)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Sửa
+              </Button>
+              <Button variant="destructive" onClick={() => setDeleteDialogOpen(true)}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Xóa
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

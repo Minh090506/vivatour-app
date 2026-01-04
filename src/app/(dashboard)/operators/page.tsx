@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plus, ClipboardList, Lock } from 'lucide-react';
 import { OperatorListFilters } from '@/components/operators/operator-list-filters';
+import { OperatorLockDialog } from '@/components/operators/operator-lock-dialog';
 import { SERVICE_TYPES, PAYMENT_STATUSES, type ServiceTypeKey, type PaymentStatusKey } from '@/config/operator-config';
 import type { OperatorFilters } from '@/types';
 
@@ -38,6 +39,7 @@ export default function OperatorsPage() {
     toDate: '',
     isLocked: undefined,
   });
+  const [lockDialogOpen, setLockDialogOpen] = useState(false);
 
   const fetchOperators = useCallback(async () => {
     setLoading(true);
@@ -95,11 +97,16 @@ export default function OperatorsPage() {
           </h1>
           <p className="text-muted-foreground">Chi phí dịch vụ theo Booking</p>
         </div>
-        <Button asChild>
-          <Link href="/operators/create">
-            <Plus className="mr-2 h-4 w-4" /> Thêm dịch vụ
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setLockDialogOpen(true)}>
+            <Lock className="mr-2 h-4 w-4" /> Khóa kỳ
+          </Button>
+          <Button asChild>
+            <Link href="/operators/create">
+              <Plus className="mr-2 h-4 w-4" /> Thêm dịch vụ
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -215,6 +222,13 @@ export default function OperatorsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Lock Period Dialog */}
+      <OperatorLockDialog
+        open={lockDialogOpen}
+        onOpenChange={setLockDialogOpen}
+        onSuccess={fetchOperators}
+      />
     </div>
   );
 }
