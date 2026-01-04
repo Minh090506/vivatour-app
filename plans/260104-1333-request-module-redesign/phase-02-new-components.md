@@ -1,7 +1,8 @@
 # Phase 2: New Components
 
-**Status:** Pending
+**Status:** ✅ DONE (2026-01-04)
 **Estimated Effort:** Medium
+**Completed:** 2026-01-04
 
 ---
 
@@ -367,8 +368,25 @@ export { RequestServicesTable } from './request-services-table';
 
 ## Acceptance Criteria
 
-- [ ] RequestListItem shows ID, customer, status, follow-up indicator
-- [ ] RequestListPanel has search and scrollable list
-- [ ] RequestDetailPanel shows empty state when no selection
-- [ ] RequestDetailPanel shows full details when request selected
-- [ ] All components exported from index.ts
+- [x] RequestListItem shows ID, customer, status, follow-up indicator ✅
+- [x] RequestListPanel has search and scrollable list ✅
+- [x] RequestDetailPanel shows empty state when no selection ✅
+- [x] RequestDetailPanel shows full details when request selected ✅
+- [x] All components exported from index.ts ✅
+
+---
+
+## Implementation Notes
+
+**Simplified from plan:**
+- Removed `size` prop from RequestStatusBadge (not needed, badge is compact enough)
+- Simplified RequestListPanel props: uses `searchValue` + `onSearchChange` instead of full filters object
+- RequestDetailPanel: Services table placeholder for Phase 4, `onEditClick` callback instead of inline state
+- Added dark mode support for booking code banner
+
+**Files Created:**
+- `src/components/requests/request-list-item.tsx` - List item with ID, customer, status, follow-up bell
+- `src/components/requests/request-list-panel.tsx` - Left panel with search + scrollable list
+- `src/components/requests/request-detail-panel.tsx` - Right panel with customer/tour info cards
+
+**TypeScript:** All components compile without errors

@@ -84,6 +84,7 @@ RequestsPage (2-panel layout)
 **Files:** `prisma/schema.prisma`, `src/lib/request-utils.ts`, migration
 
 ### Phase 2: New Components
+**Status:** ✅ DONE (2026-01-04)
 **Files:** `request-list-panel.tsx`, `request-list-item.tsx`, `request-detail-panel.tsx`
 
 ### Phase 3: 2-Panel Page Layout
@@ -122,8 +123,8 @@ RequestsPage (2-panel layout)
 
 - [x] ConfigUser has sellerName field ✅
 - [x] Booking code uses seller initial fallback ✅
-- [ ] 2-panel layout renders correctly
-- [ ] List item shows RQID/BookingCode, customer, status
+- [x] 2-panel components created ✅
+- [x] List item shows RQID/BookingCode, customer, status ✅
 - [ ] Right panel shows details on selection
 - [ ] Inline services table allows add/edit/delete
 - [ ] URL reflects selected request (?id=xxx)
