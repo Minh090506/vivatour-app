@@ -4,10 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:log": "next dev 2>&1 | tee logs.txt",
     "build": "next build",
+    "build:log": "next build 2>&1 | tee logs.txt",
     "start": "next start",
     "lint": "eslint",
+    "lint:log": "eslint . 2>&1 | tee logs.txt",
     "test": "jest",
+    "test:log": "jest 2>&1 | tee logs.txt",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage"
   },
