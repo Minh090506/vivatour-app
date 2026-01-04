@@ -13,25 +13,49 @@ export interface User {
   avatar: string | null;
 }
 
-// Request types
-export type RequestStatus = 'F1' | 'F2' | 'F3' | 'F4' | 'F5';
+// Request types - Re-export from config
+export {
+  REQUEST_STAGES,
+  REQUEST_STATUSES,
+  REQUEST_STAGE_KEYS,
+  REQUEST_STATUS_KEYS,
+  FOLLOWUP_STATUSES,
+  getStatusesByStage,
+  getStageFromStatus,
+  isFollowUpStatus,
+  getStatusLabel,
+  getStageLabel,
+  getStatusColor,
+  getStatusesGroupedByStage,
+  type RequestStage,
+  type RequestStatus,
+} from '@/config/request-config';
 
 export interface Request {
   id: string;
   code: string;
+  rqid: string | null;
+  bookingCode: string | null;
   customerName: string;
   contact: string;
   whatsapp: string | null;
   pax: number;
   country: string;
   source: string;
-  status: RequestStatus;
+  status: string;
+  stage: string;
   tourDays: number | null;
+  startDate: Date | null;
+  endDate: Date | null;
   expectedDate: Date | null;
   expectedRevenue: number | null;
   expectedCost: number | null;
   requestDate: Date;
+  receivedDate: Date;
+  lastContactDate: Date | null;
   nextFollowUp: Date | null;
+  statusChangedAt: Date | null;
+  statusChangedBy: string | null;
   notes: string | null;
   sellerId: string;
   seller?: User;
@@ -47,12 +71,34 @@ export interface RequestFormData {
   pax: number;
   country: string;
   source: string;
-  status: RequestStatus;
+  status: string;
   tourDays?: number;
+  startDate?: string;
   expectedDate?: string;
   expectedRevenue?: number;
   expectedCost?: number;
+  lastContactDate?: string;
   notes?: string;
+}
+
+// Config types
+export interface ConfigFollowUp {
+  id: string;
+  stage: string;
+  daysToWait: number;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ConfigUser {
+  id: string;
+  userId: string;
+  user?: User;
+  sellerCode: string;
+  canViewAll: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // Operator types
@@ -175,11 +221,14 @@ export interface DashboardStats {
 
 export interface FollowUpItem {
   id: string;
+  rqid: string | null;
   customerName: string;
   country: string;
   overdueDays: number;
-  status: RequestStatus;
+  status: string;
+  stage: string;
   contact: string;
+  nextFollowUp: Date | null;
 }
 
 export interface RecentEmail {
@@ -195,11 +244,13 @@ export interface RecentEmail {
 export interface RequestFilters {
   search?: string;
   seller?: string;
-  status?: RequestStatus;
+  status?: string;
+  stage?: string;
   source?: string;
   country?: string;
   fromDate?: string;
   toDate?: string;
+  followup?: 'overdue' | 'today' | 'upcoming';
 }
 
 export interface BookingFilters {

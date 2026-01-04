@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { calculateNextFollowUp, calculateEndDate } from '@/lib/request-utils';
+import { getStageFromStatus, isFollowUpStatus, type RequestStatus } from '@/config/request-config';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -61,24 +63,78 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     // Build update data
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: Record<string, any> = {};
+    let responseWarning: string | null = null;
 
+    // Basic fields
     if (body.customerName !== undefined) updateData.customerName = body.customerName.trim();
     if (body.contact !== undefined) updateData.contact = body.contact.trim();
     if (body.whatsapp !== undefined) updateData.whatsapp = body.whatsapp?.trim() || null;
     if (body.pax !== undefined) updateData.pax = body.pax;
     if (body.country !== undefined) updateData.country = body.country.trim();
     if (body.source !== undefined) updateData.source = body.source.trim();
-    if (body.status !== undefined) updateData.status = body.status;
     if (body.tourDays !== undefined) updateData.tourDays = body.tourDays;
     if (body.expectedDate !== undefined) {
       updateData.expectedDate = body.expectedDate ? new Date(body.expectedDate) : null;
     }
     if (body.expectedRevenue !== undefined) updateData.expectedRevenue = body.expectedRevenue;
     if (body.expectedCost !== undefined) updateData.expectedCost = body.expectedCost;
-    if (body.nextFollowUp !== undefined) {
+    if (body.notes !== undefined) updateData.notes = body.notes?.trim() || null;
+    if (body.lastContactDate !== undefined) {
+      updateData.lastContactDate = body.lastContactDate ? new Date(body.lastContactDate) : null;
+    }
+
+    // Handle startDate and calculate endDate
+    if (body.startDate !== undefined) {
+      updateData.startDate = body.startDate ? new Date(body.startDate) : null;
+      // Calculate endDate if startDate and tourDays available
+      if (body.startDate) {
+        const days = body.tourDays ?? existing.tourDays;
+        if (days) {
+          updateData.endDate = calculateEndDate(new Date(body.startDate), days);
+        }
+      }
+    } else if (body.tourDays !== undefined && existing.startDate) {
+      // If only tourDays changed, recalculate endDate
+      updateData.endDate = calculateEndDate(existing.startDate, body.tourDays);
+    }
+
+    // Handle status change → update stage and nextFollowUp
+    if (body.status !== undefined && body.status !== existing.status) {
+      const newStatus = body.status as RequestStatus;
+      updateData.status = newStatus;
+      updateData.stage = getStageFromStatus(newStatus);
+      updateData.statusChangedAt = new Date();
+      // Note: statusChangedBy should be set from auth context when available
+      if (body.statusChangedBy) {
+        updateData.statusChangedBy = body.statusChangedBy;
+      }
+
+      // Recalculate nextFollowUp based on new status
+      if (isFollowUpStatus(newStatus)) {
+        const contactDate = body.lastContactDate
+          ? new Date(body.lastContactDate)
+          : existing.lastContactDate || new Date();
+        updateData.nextFollowUp = await calculateNextFollowUp(newStatus, contactDate);
+      } else {
+        updateData.nextFollowUp = null;
+      }
+
+      // Warning when reverting from BOOKING status
+      if (existing.status === 'BOOKING' && newStatus !== 'BOOKING') {
+        responseWarning = 'Đã chuyển khỏi Booking. Mã booking và operators vẫn được giữ lại.';
+      }
+    } else if (body.lastContactDate !== undefined && isFollowUpStatus(existing.status as RequestStatus)) {
+      // If only lastContactDate changed and status is F1-F4, recalculate nextFollowUp
+      updateData.nextFollowUp = await calculateNextFollowUp(
+        existing.status as RequestStatus,
+        new Date(body.lastContactDate)
+      );
+    }
+
+    // Manual nextFollowUp override (if explicitly provided)
+    if (body.nextFollowUp !== undefined && !body.status) {
       updateData.nextFollowUp = body.nextFollowUp ? new Date(body.nextFollowUp) : null;
     }
-    if (body.notes !== undefined) updateData.notes = body.notes?.trim() || null;
 
     const updatedRequest = await prisma.request.update({
       where: { id },
@@ -88,7 +144,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       },
     });
 
-    return NextResponse.json({ success: true, data: updatedRequest });
+    return NextResponse.json({
+      success: true,
+      data: updatedRequest,
+      ...(responseWarning && { warning: responseWarning }),
+    });
   } catch (error) {
     console.error('Error updating request:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';

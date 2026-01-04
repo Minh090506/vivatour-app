@@ -27,6 +27,8 @@ model User {
   requests      Request[]
   operators     Operator[]
   revenues      Revenue[]
+  config        ConfigUser?
+  statusChanges Request[] @relation("StatusChangedBy")
 
   @@map("users")
 }
@@ -44,6 +46,8 @@ enum Role {
 model Request {
   id              String    @id @default(cuid())
   code            String    @unique  // Booking Code: 240101-JOHN-US
+  rqid            String?   @unique  // Request ID: RQ-YYMMDD-0001
+  bookingCode     String?   @unique  // Booking Code: YYYYMMDDL0001
 
   // Customer Info
   customerName    String
@@ -54,17 +58,27 @@ model Request {
 
   // Source & Status
   source          String    // TripAdvisor, Zalo, Email, Agent, etc.
-  status          String    @default("F2")  // F1, F2, F3, F4, F5
+  status          String    @default("DANG_LL_CHUA_TL")  // 14 statuses
+  stage           String    @default("LEAD")  // LEAD, QUOTE, FOLLOWUP, OUTCOME
 
   // Tour Info
   tourDays        Int?
+  startDate       DateTime?
+  endDate         DateTime?
   expectedDate    DateTime?
   expectedRevenue Decimal?  @db.Decimal(15, 0)
   expectedCost    Decimal?  @db.Decimal(15, 0)
 
   // Dates
   requestDate     DateTime  @default(now())
+  receivedDate    DateTime  @default(now())
+  lastContactDate DateTime?
   nextFollowUp    DateTime?
+
+  // Status change tracking
+  statusChangedAt DateTime?
+  statusChangedBy String?
+  statusChangedByUser User? @relation("StatusChangedBy", fields: [statusChangedBy], references: [id])
 
   // Notes
   notes           String?   @db.Text
@@ -83,7 +97,10 @@ model Request {
   emails          Email[]
 
   @@index([status])
+  @@index([stage])
   @@index([sellerId])
+  @@index([sellerId, stage])
+  @@index([bookingCode])
   @@index([nextFollowUp])
   @@map("requests")
 }
@@ -369,4 +386,31 @@ model SupplierTransaction {
   @@index([transactionDate])
   @@index([type])
   @@map("supplier_transactions")
+}
+
+// ============================================
+// CONFIG MODULES
+// ============================================
+
+model ConfigFollowUp {
+  id          String   @id @default(cuid())
+  stage       String   @unique  // F1, F2, F3, F4
+  daysToWait  Int
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("config_follow_up")
+}
+
+model ConfigUser {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
+  sellerCode  String   // L, N, T (single char for booking code)
+  canViewAll  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("config_user")
 }

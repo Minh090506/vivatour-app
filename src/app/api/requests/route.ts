@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { generateRQID, calculateNextFollowUp, getFollowUpDateBoundaries } from '@/lib/request-utils';
+import { getStageFromStatus, isFollowUpStatus, type RequestStatus } from '@/config/request-config';
 
 // GET /api/requests - List with filters
 export async function GET(request: NextRequest) {
@@ -9,11 +11,13 @@ export async function GET(request: NextRequest) {
     // Extract filters
     const search = searchParams.get('search') || '';
     const status = searchParams.get('status') || '';
+    const stage = searchParams.get('stage') || '';
     const sellerId = searchParams.get('sellerId') || '';
     const source = searchParams.get('source') || '';
     const country = searchParams.get('country') || '';
     const fromDate = searchParams.get('fromDate') || '';
     const toDate = searchParams.get('toDate') || '';
+    const followup = searchParams.get('followup') || ''; // overdue, today, upcoming
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
@@ -24,20 +28,37 @@ export async function GET(request: NextRequest) {
     if (search) {
       where.OR = [
         { code: { contains: search, mode: 'insensitive' } },
+        { rqid: { contains: search, mode: 'insensitive' } },
         { customerName: { contains: search, mode: 'insensitive' } },
         { contact: { contains: search, mode: 'insensitive' } },
+        { bookingCode: { contains: search, mode: 'insensitive' } },
       ];
     }
 
     if (status) where.status = status;
+    if (stage) where.stage = stage;
     if (sellerId) where.sellerId = sellerId;
     if (source) where.source = source;
     if (country) where.country = country;
 
     if (fromDate || toDate) {
-      where.requestDate = {};
-      if (fromDate) where.requestDate.gte = new Date(fromDate);
-      if (toDate) where.requestDate.lte = new Date(toDate);
+      where.receivedDate = {};
+      if (fromDate) where.receivedDate.gte = new Date(fromDate);
+      if (toDate) where.receivedDate.lte = new Date(toDate);
+    }
+
+    // Follow-up filters
+    if (followup) {
+      const { todayStart, todayEnd, threeDaysLater } = getFollowUpDateBoundaries();
+
+      if (followup === 'overdue') {
+        where.nextFollowUp = { lt: todayStart };
+        where.stage = { not: 'OUTCOME' }; // Only active requests
+      } else if (followup === 'today') {
+        where.nextFollowUp = { gte: todayStart, lt: todayEnd };
+      } else if (followup === 'upcoming') {
+        where.nextFollowUp = { gte: todayEnd, lt: threeDaysLater };
+      }
     }
 
     const [requests, total] = await Promise.all([
@@ -47,7 +68,7 @@ export async function GET(request: NextRequest) {
           seller: { select: { id: true, name: true, email: true } },
           _count: { select: { operators: true, revenues: true } },
         },
-        orderBy: { requestDate: 'desc' },
+        orderBy: { receivedDate: 'desc' },
         skip: offset,
         take: limit,
       }),
@@ -76,14 +97,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Validate required fields
-    if (!body.customerName || !body.contact || !body.country || !body.source) {
+    if (!body.customerName || !body.contact || !body.country || !body.source || !body.sellerId) {
       return NextResponse.json(
-        { success: false, error: 'Thiếu thông tin bắt buộc: customerName, contact, country, source' },
+        { success: false, error: 'Thiếu thông tin bắt buộc: customerName, contact, country, source, sellerId' },
         { status: 400 }
       );
     }
 
-    // Generate booking code: YYMMDD-NAME-COUNTRY
+    // Generate legacy code: YYMMDD-NAME-COUNTRY
     const now = new Date();
     const dateStr = now.toISOString().slice(2, 10).replace(/-/g, '');
     const namePart = body.customerName.split(' ')[0].toUpperCase().slice(0, 4);
@@ -91,22 +112,40 @@ export async function POST(request: NextRequest) {
     const randomSuffix = Math.random().toString(36).substring(2, 4).toUpperCase();
     const code = `${dateStr}-${namePart}-${countryPart}-${randomSuffix}`;
 
+    // Generate RQID
+    const rqid = await generateRQID();
+
+    // Determine status and stage
+    const status = (body.status || 'DANG_LL_CHUA_TL') as RequestStatus;
+    const stage = getStageFromStatus(status);
+
+    // Calculate nextFollowUp if status is F1-F4
+    let nextFollowUp: Date | null = null;
+    if (isFollowUpStatus(status)) {
+      const contactDate = body.lastContactDate ? new Date(body.lastContactDate) : now;
+      nextFollowUp = await calculateNextFollowUp(status, contactDate);
+    }
+
     // Create request
     const newRequest = await prisma.request.create({
       data: {
         code,
+        rqid,
         customerName: body.customerName.trim(),
         contact: body.contact.trim(),
         whatsapp: body.whatsapp?.trim() || null,
         pax: body.pax || 1,
         country: body.country.trim(),
         source: body.source.trim(),
-        status: body.status || 'F2',
+        status,
+        stage,
         tourDays: body.tourDays || null,
+        startDate: body.startDate ? new Date(body.startDate) : null,
         expectedDate: body.expectedDate ? new Date(body.expectedDate) : null,
         expectedRevenue: body.expectedRevenue || null,
         expectedCost: body.expectedCost || null,
-        nextFollowUp: body.nextFollowUp ? new Date(body.nextFollowUp) : null,
+        lastContactDate: body.lastContactDate ? new Date(body.lastContactDate) : null,
+        nextFollowUp,
         notes: body.notes?.trim() || null,
         sellerId: body.sellerId,
       },
