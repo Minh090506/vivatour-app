@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 
 const navigation = [
   { name: 'Dashboard', href: '/' },
-  { name: 'Request', href: '/requests' },
+  { name: 'Yêu cầu', href: '/requests' },
   { name: 'Operator', href: '/operators' },
   { name: 'Duyệt TT', href: '/operators/approvals', showBadge: true },
   { name: 'NCC', href: '/suppliers' },

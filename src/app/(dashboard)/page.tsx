@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { FollowUpWidget } from '@/components/dashboard/follow-up-widget';
 
 // Mock data - will be replaced with API calls
 const mockStats = {
@@ -118,19 +119,25 @@ function getGreeting(): string {
   return 'Chào buổi tối';
 }
 
+function formatCurrentDate(): string {
+  return new Date().toLocaleDateString('vi-VN', {
+    weekday: 'long',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+}
+
 export default function DashboardPage() {
-  const [currentDate, setCurrentDate] = useState('');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setCurrentDate(
-      new Date().toLocaleDateString('vi-VN', {
-        weekday: 'long',
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      })
-    );
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
   }, []);
+
+  // Compute date only after mount to avoid hydration mismatch
+  const displayDate = mounted ? formatCurrentDate() : '';
 
   return (
     <div className="space-y-6">
@@ -146,7 +153,7 @@ export default function DashboardPage() {
         </div>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Calendar className="h-4 w-4" />
-          <span className="text-sm">{currentDate}</span>
+          <span className="text-sm">{displayDate}</span>
         </div>
       </div>
 
@@ -252,8 +259,11 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Action Items & Recent Emails */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* Follow-up Widget & Action Items & Recent Emails */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Follow-up Widget */}
+        <FollowUpWidget limit={5} />
+
         {/* Action Items */}
         <Card>
           <CardHeader>

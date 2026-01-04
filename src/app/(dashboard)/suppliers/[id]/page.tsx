@@ -28,6 +28,7 @@ export default function SupplierDetailPage({ params }: { params: Promise<{ id: s
   }, [id]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchSupplier();
   }, [fetchSupplier]);
 

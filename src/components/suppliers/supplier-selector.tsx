@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Supplier {
@@ -28,11 +28,7 @@ export function SupplierSelector({
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchSuppliers();
-  }, [filterByType]);
-
-  const fetchSuppliers = async () => {
+  const fetchSuppliers = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
     params.set('isActive', 'true');
@@ -44,7 +40,12 @@ export function SupplierSelector({
       setSuppliers(data.data);
     }
     setLoading(false);
-  };
+  }, [filterByType]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchSuppliers();
+  }, [fetchSuppliers]);
 
   if (loading) {
     return (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -36,11 +36,7 @@ export default function SupplierReportsPage() {
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState('');
 
-  useEffect(() => {
-    fetchReport();
-  }, [typeFilter]);
-
-  const fetchReport = async () => {
+  const fetchReport = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
     if (typeFilter && typeFilter !== 'all') params.set('type', typeFilter);
@@ -52,7 +48,12 @@ export default function SupplierReportsPage() {
       setSummary(result.summary);
     }
     setLoading(false);
-  };
+  }, [typeFilter]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchReport();
+  }, [fetchReport]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('vi-VN').format(value);

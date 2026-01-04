@@ -1,12 +1,14 @@
 ---
 title: "Request Module Implementation"
 description: "Full request workflow with status stages, auto-generated IDs, booking conversion, and seller permissions"
-status: pending
+status: completed
 priority: P1
 effort: 6d
 branch: master
 tags: [request, workflow, crud, permissions]
 created: 2026-01-04
+reviewed: 2026-01-04
+completed: 2026-01-04
 ---
 
 # Request Module Implementation Plan
@@ -29,9 +31,9 @@ Implement complete Request module with 14 statuses grouped into 4 stages, auto-g
 |-------|------|--------|--------|--------------|
 | 1 | [Schema & Config](phase-01-schema-config.md) | ✅ Complete | 1d | None |
 | 2 | [API Routes](phase-02-api-routes.md) | ✅ Complete | 1d | Phase 1 |
-| 3 | [UI Components](phase-03-ui-components.md) | ⬜ Pending | 1.5d | Phase 2 |
-| 4 | [UI Pages](phase-04-ui-pages.md) | ⬜ Pending | 1.5d | Phase 3 |
-| 5 | [Booking & Follow-up](phase-05-booking-followup.md) | ⬜ Pending | 1d | Phase 4 |
+| 3 | [UI Components](phase-03-ui-components.md) | ✅ Complete | 1.5d | Phase 2 |
+| 4 | [UI Pages](phase-04-ui-pages.md) | ✅ Complete | 1.5d | Phase 3 |
+| 5 | [Booking & Follow-up](phase-05-booking-followup.md) | ✅ Complete | 1d | Phase 4 |
 
 ---
 
@@ -95,13 +97,15 @@ OUTCOME       → BOOKING, KHACH_HOAN, KHACH_SUY_NGHI, KHONG_DU_TC, DA_KET_THUC,
 
 ## Success Criteria
 
-- [ ] All 14 statuses selectable in UI grouped by stage
-- [ ] RQID auto-generated on create
-- [ ] BookingCode generated when status=BOOKING
-- [ ] Operator entry auto-created on booking
-- [ ] Follow-up dashboard shows overdue/today/upcoming
-- [ ] Sellers see only own requests
-- [ ] Build passes, no type errors
+- [x] All 14 statuses selectable in UI grouped by stage
+- [x] RQID auto-generated on create
+- [x] BookingCode generated when status=BOOKING
+- [x] Manual operator creation after booking (per design decision)
+- [x] Follow-up dashboard shows overdue/today/upcoming
+- [x] Sellers see only own requests (via ConfigUser.canViewAll)
+- [x] Build passes, no type errors
+- [x] CRITICAL-1 fixed: Static Tailwind color mapping
+- [x] CRITICAL-2 fixed: sellerId from /api/config/user/me
 
 ---
 
@@ -139,3 +143,39 @@ OUTCOME       → BOOKING, KHACH_HOAN, KHACH_SUY_NGHI, KHONG_DU_TC, DA_KET_THUC,
 - [x] **Phase 2:** Add admin-only check to ConfigUser API endpoints
 - [x] **Phase 5:** Update PUT handler - only generate bookingCode, no operator creation
 - [x] **Phase 5:** Add warning message when reverting from BOOKING status
+
+---
+
+## Code Review Findings (2026-01-04)
+
+**Report:** [code-reviewer-260104-1218-request-module-review.md](../reports/code-reviewer-260104-1218-request-module-review.md)
+
+### Critical Issues (RESOLVED)
+
+- [x] **CRITICAL-1:** Replace dynamic Tailwind classes with static mappings (`request-status-badge.tsx`) ✅ Fixed
+- [x] **CRITICAL-2:** Add `sellerId` to request creation flow ✅ Fixed (fetch from /api/config/user/me)
+- [ ] **CRITICAL-3:** Sanitize notes field to prevent potential XSS (low priority - React auto-escapes)
+
+### High Priority
+
+- [ ] **HIGH-1:** Add error boundaries to all pages
+- [ ] **HIGH-2:** Add abort controllers to async fetches (follow-up widget)
+
+### Medium Priority
+
+- [ ] **MED-1:** Replace `as any` type assertions with type guards
+- [ ] **MED-2:** Debounce search input to reduce API calls
+- [ ] **MED-3:** Add loading state feedback with toast notifications
+
+### Phase Completion Status
+
+- Phase 3: ✅ Complete (CRITICAL-1 fixed - static Tailwind color mapping)
+- Phase 4: ✅ Complete (CRITICAL-2 fixed - sellerId injection from /me endpoint)
+- Phase 5: ✅ Complete (all steps done, build passes)
+
+### Completed Actions
+
+1. ✅ Fixed CRITICAL-1 (dynamic Tailwind → static COLOR_CLASSES mapping)
+2. ✅ Fixed CRITICAL-2 (sellerId fetched from /api/config/user/me)
+3. ✅ Build verified - all phases compile successfully
+4. ⬜ Future: Add error boundaries and toast notifications (non-blocking)

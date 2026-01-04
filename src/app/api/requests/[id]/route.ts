@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { calculateNextFollowUp, calculateEndDate } from '@/lib/request-utils';
+import { calculateNextFollowUp, calculateEndDate, generateBookingCode } from '@/lib/request-utils';
 import { getStageFromStatus, isFollowUpStatus, type RequestStatus } from '@/config/request-config';
 
 interface RouteParams {
@@ -117,6 +117,34 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         updateData.nextFollowUp = await calculateNextFollowUp(newStatus, contactDate);
       } else {
         updateData.nextFollowUp = null;
+      }
+
+      // Handle BOOKING status transition - generate booking code
+      if (newStatus === 'BOOKING' && existing.status !== 'BOOKING') {
+        // Get seller's code from ConfigUser
+        const configUser = await prisma.configUser.findUnique({
+          where: { userId: existing.sellerId },
+        });
+
+        if (!configUser?.sellerCode) {
+          return NextResponse.json(
+            { success: false, error: 'Seller chưa được cấu hình mã. Liên hệ Admin.' },
+            { status: 400 }
+          );
+        }
+
+        // Require startDate for booking
+        const startDate = body.startDate ? new Date(body.startDate) : existing.startDate;
+        if (!startDate) {
+          return NextResponse.json(
+            { success: false, error: 'Cần nhập ngày bắt đầu tour trước khi chuyển Booking' },
+            { status: 400 }
+          );
+        }
+
+        // Generate booking code (collision handling is in generateBookingCode)
+        const bookingCode = await generateBookingCode(startDate, configUser.sellerCode);
+        updateData.bookingCode = bookingCode;
       }
 
       // Warning when reverting from BOOKING status

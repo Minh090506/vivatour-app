@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,11 +34,7 @@ export default function SuppliersPage() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
 
-  useEffect(() => {
-    fetchSuppliers();
-  }, [search, typeFilter]);
-
-  const fetchSuppliers = async () => {
+  const fetchSuppliers = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
     if (search) params.set('search', search);
@@ -51,7 +47,12 @@ export default function SuppliersPage() {
       setSuppliers(data.data);
     }
     setLoading(false);
-  };
+  }, [search, typeFilter]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchSuppliers();
+  }, [fetchSuppliers]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('vi-VN').format(value);

@@ -68,10 +68,6 @@ export function EditSupplierModal({ supplier, onSuccess }: EditSupplierModalProp
     }
   }, [open, getInitialFormData]);
 
-  // Check if location is custom (not in predefined list)
-  const isCustomLocation = formData.location === CUSTOM_LOCATION ||
-    (formData.location && !(formData.location in SUPPLIER_LOCATIONS));
-
   const updateField = (field: keyof FormData, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };

@@ -1,182 +1,3 @@
----
-phase: 4
-title: "UI Pages"
-status: completed
-effort: 1.5d
----
-
-# Phase 4: UI Pages
-
-## Context
-
-- **Parent Plan:** [plan.md](plan.md)
-- **Dependencies:** Phase 3 (UI Components)
-- **Patterns:** src/app/(dashboard)/operators/, src/app/(dashboard)/suppliers/
-
----
-
-## Overview
-
-Create Request pages: list, create, detail/edit. Wire up components to API endpoints.
-
----
-
-## Requirements
-
-### 4.1 Create /requests/page.tsx (List Page)
-
-```typescript
-'use client';
-
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import {
-  RequestTable,
-  RequestFilters,
-} from '@/components/requests';
-import type { Request, RequestFilters as Filters } from '@/types';
-
-export default function RequestsPage() {
-  const router = useRouter();
-  const [requests, setRequests] = useState<Request[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<Filters>({
-    search: '',
-    stage: '',
-    status: '',
-    sellerId: '',
-    fromDate: '',
-    toDate: '',
-  });
-  const [canViewAll, setCanViewAll] = useState(false);
-  const [sellers, setSellers] = useState([]);
-
-  // Fetch requests with filters
-  const fetchRequests = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (filters.search) params.set('search', filters.search);
-      if (filters.stage) params.set('stage', filters.stage);
-      if (filters.status) params.set('status', filters.status);
-      if (filters.sellerId) params.set('sellerId', filters.sellerId);
-      if (filters.fromDate) params.set('fromDate', filters.fromDate);
-      if (filters.toDate) params.set('toDate', filters.toDate);
-
-      const res = await fetch(`/api/requests?${params}`);
-      const data = await res.json();
-      if (data.success) {
-        setRequests(data.data);
-      }
-    } catch (err) {
-      console.error('Error fetching requests:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [filters]);
-
-  // Check permissions and fetch sellers
-  useEffect(() => {
-    async function init() {
-      // Check if user can view all
-      const configRes = await fetch('/api/config/user/me');
-      const configData = await configRes.json();
-      if (configData.success && configData.data?.canViewAll) {
-        setCanViewAll(true);
-        // Fetch sellers list for filter
-        const sellersRes = await fetch('/api/users?role=SELLER');
-        const sellersData = await sellersRes.json();
-        if (sellersData.success) setSellers(sellersData.data);
-      }
-    }
-    init();
-  }, []);
-
-  useEffect(() => {
-    fetchRequests();
-  }, [fetchRequests]);
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold">Yêu cầu</h1>
-          <p className="text-muted-foreground">Quản lý yêu cầu khách hàng</p>
-        </div>
-        <Button onClick={() => router.push('/requests/create')}>
-          <Plus className="w-4 h-4 mr-2" />
-          Thêm yêu cầu
-        </Button>
-      </div>
-
-      {/* Filters */}
-      <RequestFilters
-        filters={filters}
-        onChange={setFilters}
-        sellers={sellers}
-        showSellerFilter={canViewAll}
-      />
-
-      {/* Table */}
-      <RequestTable
-        requests={requests}
-        isLoading={loading}
-        onRowClick={(req) => router.push(`/requests/${req.id}`)}
-      />
-    </div>
-  );
-}
-```
-
-### 4.2 Create /requests/create/page.tsx
-
-```typescript
-'use client';
-
-import { useRouter } from 'next/navigation';
-import { RequestForm } from '@/components/requests';
-import type { RequestFormData } from '@/types';
-
-export default function CreateRequestPage() {
-  const router = useRouter();
-
-  const handleSubmit = async (data: RequestFormData) => {
-    const res = await fetch('/api/requests', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-
-    const result = await res.json();
-    if (!result.success) {
-      throw new Error(result.error);
-    }
-
-    router.push(`/requests/${result.data.id}`);
-  };
-
-  return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Thêm yêu cầu mới</h1>
-        <p className="text-muted-foreground">Nhập thông tin yêu cầu từ khách hàng</p>
-      </div>
-
-      <RequestForm
-        onSubmit={handleSubmit}
-        onCancel={() => router.back()}
-      />
-    </div>
-  );
-}
-```
-
-### 4.3 Create /requests/[id]/page.tsx (Detail/Edit)
-
-```typescript
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -186,15 +7,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Edit, ExternalLink } from 'lucide-react';
 import { RequestForm, RequestStatusBadge } from '@/components/requests';
-import type { Request, RequestFormData } from '@/types';
+import type { Request, RequestFormData, RequestStatus } from '@/types';
 import { formatDate, formatCurrency } from '@/lib/utils';
+
+interface RequestWithCounts extends Request {
+  _count?: {
+    operators?: number;
+    revenues?: number;
+  };
+}
 
 export default function RequestDetailPage() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
 
-  const [request, setRequest] = useState<Request | null>(null);
+  const [request, setRequest] = useState<RequestWithCounts | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -251,7 +79,7 @@ export default function RequestDetailPage() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-2xl font-bold">{request.rqid}</h1>
-              <RequestStatusBadge status={request.status} showStage />
+              <RequestStatusBadge status={request.status as RequestStatus} showStage />
             </div>
             <p className="text-muted-foreground">{request.customerName}</p>
           </div>
@@ -392,47 +220,3 @@ function InfoRow({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-```
-
-### 4.4 Add Route to Header Navigation
-
-Update `src/components/layout/Header.tsx`:
-
-```typescript
-// In navigation items array
-{ name: 'Yêu cầu', href: '/requests' },
-```
-
----
-
-## Implementation Steps
-
-- [x] 4.1 Create src/app/(dashboard)/requests/page.tsx
-- [x] 4.2 Create src/app/(dashboard)/requests/create/page.tsx
-- [x] 4.3 Create src/app/(dashboard)/requests/[id]/page.tsx
-- [x] 4.4 Update Header.tsx with /requests link
-- [x] 4.5 Create /api/config/user/me endpoint for permission check
-- [x] 4.6 Test full CRUD flow (build verification passed)
-
----
-
-## Success Criteria
-
-- [x] List page loads with filters
-- [x] Create page generates RQID on submit
-- [x] Detail page shows all request info
-- [x] Edit mode updates request
-- [x] Navigation works correctly
-- [x] Permissions filter results (seller sees own only)
-
----
-
-## Related Files
-
-| File | Action |
-|------|--------|
-| src/app/(dashboard)/requests/page.tsx | Create |
-| src/app/(dashboard)/requests/create/page.tsx | Create |
-| src/app/(dashboard)/requests/[id]/page.tsx | Create |
-| src/components/layout/Header.tsx | Modify |
-| src/app/api/config/user/me/route.ts | Create |

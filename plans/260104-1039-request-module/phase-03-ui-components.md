@@ -1,7 +1,7 @@
 ---
 phase: 3
 title: "UI Components"
-status: pending
+status: completed
 effort: 1.5d
 ---
 
@@ -464,23 +464,23 @@ export function RequestForm({ initialData, onSubmit, onCancel, isEditing }: Requ
 
 ## Implementation Steps
 
-- [ ] 3.1 Create src/components/requests/request-status-badge.tsx
-- [ ] 3.2 Create src/components/requests/request-filters.tsx
-- [ ] 3.3 Create src/components/requests/request-table.tsx
-- [ ] 3.4 Create src/components/requests/request-form.tsx
-- [ ] 3.5 Create index.ts to export all components
-- [ ] 3.6 Test components in isolation
+- [x] 3.1 Create src/components/requests/request-status-badge.tsx
+- [x] 3.2 Create src/components/requests/request-filters.tsx
+- [x] 3.3 Create src/components/requests/request-table.tsx
+- [x] 3.4 Create src/components/requests/request-form.tsx
+- [x] 3.5 Create index.ts to export all components
+- [x] 3.6 Test components in isolation
 
 ---
 
 ## Success Criteria
 
-- [ ] Status badge shows correct colors per status
-- [ ] Filters update parent state correctly
-- [ ] Table renders requests with click handler
-- [ ] Form validates required fields
-- [ ] EndDate auto-calculates from startDate + days
-- [ ] Build passes
+- [x] Status badge shows correct colors per status
+- [x] Filters update parent state correctly
+- [x] Table renders requests with click handler
+- [x] Form validates required fields
+- [x] EndDate auto-calculates from startDate + days
+- [x] Build passes
 
 ---
 
