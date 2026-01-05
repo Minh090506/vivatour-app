@@ -134,7 +134,7 @@ vivatour-app/
 
 | Model | Fields | Purpose |
 |-------|--------|---------|
-| User | id, email, name, role | User accounts (ADMIN/SELLER/ACCOUNTANT) |
+| User | id, email, password, name, role | User accounts (ADMIN/SELLER/ACCOUNTANT/OPERATOR) with bcrypt hashed password |
 | Request | id, code, bookingCode, customerName, contact, status, etc. | Customer tour requests with booking codes |
 | Operator | id, requestId, serviceType, totalCost, paymentStatus | Services/costs for requests |
 | Revenue | id, requestId, paymentDate, amountVND, paymentSource | Income tracking |
@@ -295,16 +295,16 @@ All API endpoints return JSON:
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
 
-### Dependencies (45 total)
+### Dependencies (47 total)
 - **Next.js Ecosystem**: next, react, react-dom
-- **UI/Styling**: tailwindcss, radix-ui components, shadcn/ui
+- **UI/Styling**: tailwindcss, radix-ui components, shadcn/ui, react-resizable-panels
 - **Forms**: react-hook-form, zod, @hookform/resolvers
 - **Database**: prisma, @prisma/client
 - **APIs**: googleapis, @anthropic-ai/sdk
 - **Utils**: date-fns, clsx, tailwind-merge, lucide-react
 - **Notifications**: sonner
 - **State**: zustand
-- **Auth**: next-auth (planned)
+- **Auth**: next-auth (5.0.0-beta.30), bcryptjs (password hashing)
 - **DevTools**: typescript, eslint, tailwindcss postcss
 
 ---
@@ -329,9 +329,10 @@ GOOGLE_CLIENT_SECRET="xxx"
 # Anthropic AI
 ANTHROPIC_API_KEY="sk-ant-xxx"
 
-# NextAuth
+# NextAuth (Credentials + Password Authentication)
 NEXTAUTH_SECRET="xxx"
 NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_PROVIDERS="credentials"
 ```
 
 ---

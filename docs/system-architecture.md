@@ -246,8 +246,9 @@ Supplier ──────── (1:N) SupplierTransaction
 ```sql
 id (CUID) PRIMARY KEY
 email UNIQUE
+password (bcrypt hashed, nullable - for credentials auth)
 name
-role (enum: ADMIN, SELLER, ACCOUNTANT)
+role (enum: ADMIN, SELLER, ACCOUNTANT, OPERATOR)
 avatar
 createdAt
 updatedAt
@@ -582,7 +583,7 @@ Stream response to UI
 - Customer context understanding
 - Multi-turn conversation
 
-### 4. NextAuth.js (Authentication) [Planned]
+### 4. NextAuth.js (Authentication) [Phase 01]
 
 **Purpose**: User authentication and session management
 
@@ -591,9 +592,9 @@ Stream response to UI
 Login Page
     ↓
 NextAuth.js Providers
-    ├── Email/Password
-    ├── Google OAuth
-    └── GitHub OAuth
+    ├── Credentials (email/password with bcrypt)
+    ├── Google OAuth (planned)
+    └── GitHub OAuth (planned)
     ↓
 Session/JWT Token
     ↓
@@ -601,6 +602,12 @@ Protected Routes
     ↓
 API Routes (check session)
 ```
+
+**Password Handling**:
+- User passwords stored as bcryptjs hashed values in `users.password`
+- Hash computed via `bcryptjs` library during registration/password reset
+- Credentials provider validates hash on login
+- Passwords optional (nullable) for OAuth-only users
 
 ---
 
