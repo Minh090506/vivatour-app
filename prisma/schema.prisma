@@ -17,8 +17,9 @@ datasource db {
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
+  password      String?   // Hashed password for credentials auth (bcrypt)
   name          String?
-  role          Role      @default(SELLER)
+  role          Role      // Required - no default per validation
   avatar        String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -37,6 +38,7 @@ enum Role {
   ADMIN
   SELLER
   ACCOUNTANT
+  OPERATOR
 }
 
 enum Gender {
