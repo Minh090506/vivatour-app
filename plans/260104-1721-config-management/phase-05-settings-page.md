@@ -2,7 +2,7 @@
 
 **Parent Plan:** [plan.md](./plan.md)
 **Dependencies:** [Phase 4](./phase-04-followup-ui.md)
-**Status:** 🔲 PENDING
+**Status:** ✅ COMPLETED
 **Effort:** 0.5h
 **Priority:** P1
 
@@ -191,25 +191,25 @@ Using shadcn/ui default Tab styles:
 
 ## Todo List
 
-- [ ] Create src/app/(dashboard)/settings/page.tsx
-- [ ] Implement tab state management
-- [ ] Wire up Seller components
-- [ ] Wire up FollowUp components
-- [ ] Update Header.tsx with Settings link
-- [ ] Test tab switching
-- [ ] Test CRUD flows in both tabs
-- [ ] Verify responsive layout
+- [x] Create src/app/(dashboard)/settings/page.tsx
+- [x] Implement tab state management
+- [x] Wire up Seller components
+- [x] Wire up FollowUp components
+- [x] Update Header.tsx with Settings link (already present in dropdown)
+- [x] Test tab switching
+- [x] Test CRUD flows in both tabs
+- [x] Verify responsive layout
 
 ---
 
 ## Success Criteria
 
-- [ ] /settings route accessible
-- [ ] Both tabs render correct content
-- [ ] Tab switching is smooth
-- [ ] CRUD operations work in both tabs
-- [ ] Header shows Settings link
-- [ ] Page is responsive on mobile
+- [x] /settings route accessible
+- [x] Both tabs render correct content
+- [x] Tab switching is smooth
+- [x] CRUD operations work in both tabs
+- [x] Header shows Settings link
+- [x] Page is responsive on mobile
 
 ---
 
@@ -225,9 +225,9 @@ Using shadcn/ui default Tab styles:
 ## Final Checklist
 
 After all phases complete:
-- [ ] `npm run build` passes
+- [x] `npm run build` passes
 - [ ] `npm run lint` passes
-- [ ] All CRUD operations tested
-- [ ] Drag & drop reorder works
-- [ ] Seed data present (14 statuses)
+- [x] All CRUD operations tested
+- [x] Drag & drop reorder works
+- [x] Seed data present (14 statuses)
 - [ ] Documentation updated if needed

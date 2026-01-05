@@ -1,7 +1,7 @@
 # Phase 1: Prisma Schema & Models
 
 **Parent Plan:** [plan.md](./plan.md)
-**Status:** 🔲 PENDING
+**Status:** ✅ COMPLETED
 **Effort:** 1h
 **Priority:** P0
 
@@ -163,23 +163,23 @@ npx prisma generate
 
 ## Todo List
 
-- [ ] Add Gender enum to schema
-- [ ] Add Seller model to schema
-- [ ] Add FollowUpStatus model to schema
-- [ ] Create prisma/seed.ts
-- [ ] Update package.json with seed script
-- [ ] Run prisma db push
-- [ ] Run prisma db seed
-- [ ] Verify in Prisma Studio
+- [x] Add Gender enum to schema
+- [x] Add Seller model to schema
+- [x] Add FollowUpStatus model to schema
+- [x] Create prisma/seed.ts
+- [x] Update package.json with seed script
+- [x] Run prisma db push
+- [x] Run prisma db seed
+- [x] Verify in Prisma Studio
 
 ---
 
 ## Success Criteria
 
-- [ ] `npx prisma db push` runs without errors
-- [ ] `npx prisma db seed` creates 14 statuses
-- [ ] Prisma Studio shows new tables
-- [ ] `npx prisma generate` updates client types
+- [x] `npx prisma db push` runs without errors
+- [x] `npx prisma db seed` creates 14 statuses
+- [x] Prisma Studio shows new tables
+- [x] `npx prisma generate` updates client types
 
 ---
 

@@ -30,6 +30,18 @@ export interface Seller {
   updatedAt: Date;
 }
 
+// FollowUpStatus types
+export interface FollowUpStatus {
+  id: string;
+  status: string;
+  aliases: string[];
+  daysToFollowup: number;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // Request types - Re-export from config
 export {
   REQUEST_STAGES,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { sellerSchema, transformSellerData } from '@/lib/validations/seller-validation';
+import { sellerSchema, transformSellerData } from '@/lib/validations/config-validation';
 
 // GET /api/config/sellers - List all sellers with pagination
 export async function GET(request: NextRequest) {
@@ -10,6 +10,14 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10', 10);
     const search = searchParams.get('search') || '';
     const isActive = searchParams.get('isActive');
+
+    // Validate search length to prevent performance issues
+    if (search.length > 100) {
+      return NextResponse.json(
+        { success: false, error: 'Từ khóa tìm kiếm quá dài (tối đa 100 ký tự)' },
+        { status: 400 }
+      );
+    }
 
     const skip = (page - 1) * limit;
 

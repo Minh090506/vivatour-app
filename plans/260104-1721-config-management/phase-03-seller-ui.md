@@ -2,7 +2,7 @@
 
 **Parent Plan:** [plan.md](./plan.md)
 **Dependencies:** [Phase 2](./phase-02-api-routes.md)
-**Status:** 🔲 PENDING
+**Status:** ✅ COMPLETED
 **Effort:** 1.5h
 **Priority:** P0
 
@@ -168,29 +168,29 @@ Inactive: "bg-gray-100 text-gray-800"
 
 ## Todo List
 
-- [ ] Create src/components/settings/index.ts
-- [ ] Create seller-table.tsx with columns
-- [ ] Add pagination logic
-- [ ] Add search functionality
-- [ ] Create seller-form-modal.tsx
-- [ ] Add form validation với Zod
-- [ ] Implement create/update API calls
-- [ ] Add toast notifications
-- [ ] Add delete confirmation inline
-- [ ] Test all flows
+- [x] Create src/components/settings/index.ts
+- [x] Create seller-table.tsx with columns
+- [x] Add pagination logic
+- [x] Add search functionality
+- [x] Create seller-form-modal.tsx
+- [x] Add form validation với Zod
+- [x] Implement create/update API calls
+- [x] Add toast notifications
+- [x] Add delete confirmation inline
+- [x] Test all flows
 
 ---
 
 ## Success Criteria
 
-- [ ] Table displays all sellers with correct columns
-- [ ] Pagination works (prev/next, page numbers)
-- [ ] Search filters by name or telegramId
-- [ ] Add modal creates new seller
-- [ ] Edit modal updates existing seller
-- [ ] Delete removes seller with confirmation
-- [ ] Validation errors display inline
-- [ ] Toast shows success/error messages
+- [x] Table displays all sellers with correct columns
+- [x] Pagination works (prev/next, page numbers)
+- [x] Search filters by name or telegramId
+- [x] Add modal creates new seller
+- [x] Edit modal updates existing seller
+- [x] Delete removes seller with confirmation
+- [x] Validation errors display inline
+- [x] Toast shows success/error messages
 
 ---
 

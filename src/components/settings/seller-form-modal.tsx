@@ -19,21 +19,7 @@ import {
 } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-
-// Types
-export interface Seller {
-  id: string;
-  telegramId: string;
-  sellerName: string;
-  sheetName: string;
-  metaName: string | null;
-  email: string | null;
-  gender: 'MALE' | 'FEMALE';
-  sellerCode: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Seller } from '@/types';
 
 interface SellerFormModalProps {
   open: boolean;

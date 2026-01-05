@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { sellerSchema, transformSellerData } from '@/lib/validations/seller-validation';
+import { sellerSchema, transformSellerData } from '@/lib/validations/config-validation';
 
 interface RouteParams {
   params: Promise<{ id: string }>;

@@ -24,7 +24,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Plus, Edit, Trash2, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
-import { SellerFormModal, type Seller } from './seller-form-modal';
+import type { Seller } from '@/types';
+import { SellerFormModal } from './seller-form-modal';
 
 interface SellerTableProps {
   refreshKey?: number;
