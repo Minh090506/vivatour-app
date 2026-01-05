@@ -60,6 +60,11 @@ const customJestConfig: Config = {
     '<rootDir>/.next/',
   ],
 
+  // Ignore ESM modules (for next-auth and other ESM packages)
+  transformIgnorePatterns: [
+    'node_modules/(?!(next-auth)/)',
+  ],
+
   // Clear mocks between tests
   clearMocks: true,
 

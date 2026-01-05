@@ -596,20 +596,53 @@ Stream response to UI
 - Customer context understanding
 - Multi-turn conversation
 
-### 4. NextAuth.js v5 (Authentication) [Phase 02 - Configured]
+### 4. NextAuth.js v5 (Authentication) [Phase 02 - Configured, Phase 04 - Login Page]
 
 **Purpose**: User authentication and session management
 
 **Framework**: NextAuth.js v5
 **Configuration File**: `src/auth.ts`
 **API Route**: `src/app/api/auth/[...nextauth]/route.ts`
+**Login Page**: `src/app/login/page.tsx` (Phase 04)
 
-**Implementation Details**:
+**Login Page Implementation (Phase 04)**:
+
+- **Location**: `/login` route
+- **Component**: `src/app/login/login-form.tsx`
+- **Features**:
+  - Email/password form with React Hook Form + Zod validation
+  - Open redirect protection via `getSafeCallbackUrl()`
+  - Toast notifications (sonner) for user feedback
+  - Suspense boundary for SSR compatibility
+  - Vietnamese UI localization
+  - Accessible form inputs with proper labels & autocomplete
+
+**Form Validation**:
+```typescript
+loginSchema = z.object({
+  email: z.string().email("Email khong hop le"),
+  password: z.string().min(1, "Mat khau bat buoc"),
+})
+```
+
+**Security Functions**:
+- `getSafeCallbackUrl()`: Validates callback URLs to prevent open redirects
+  - Only allows relative paths (starts with single /)
+  - Blocks protocol-relative URLs (//)
+  - Default fallback to /requests
+
+**Authentication Flow**:
 
 ```
-Login Page (/login)
+User navigates to /login
     ↓
-POST /api/auth/callback/credentials
+LoginForm renders with Suspense boundary
+    ↓
+User enters email & password
+    ↓
+Zod schema validates input
+    ↓
+signIn("credentials") calls NextAuth.js v5
     ↓
 NextAuth.js Credentials Provider
     ├── Email/Password validation
@@ -617,7 +650,7 @@ NextAuth.js Credentials Provider
     ├── Timing attack protection (dummy hash)
     └── Role extraction from User model
     ↓
-JWT Token Creation
+Success → JWT Token Creation
     ├── Contains: id, email, name, role
     ├── Signed with AUTH_SECRET
     └── Stored in httpOnly cookie
@@ -626,6 +659,9 @@ Session Management
     ├── Strategy: JWT (stateless)
     ├── Max age: 24 hours
     └── Type-safe role in session
+    ↓
+Router redirect to callbackUrl (/requests default)
+    └── router.refresh() for fresh data
     ↓
 Protected Routes
     ├── Check auth() for session
