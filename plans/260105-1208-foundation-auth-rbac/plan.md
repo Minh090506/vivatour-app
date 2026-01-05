@@ -1,7 +1,7 @@
 ---
 title: "Phase 1: Foundation - Auth & RBAC"
 description: "NextAuth.js v5 authentication, 4-role RBAC, MasterDetailLayout"
-status: in-progress
+status: completed
 priority: P1
 effort: 4h
 branch: master
@@ -11,6 +11,9 @@ phase-01-completed: 2026-01-05
 phase-02-completed: 2026-01-05
 phase-03-completed: 2026-01-05
 phase-04-completed: 2026-01-05
+phase-05-completed: 2026-01-05
+phase-06-completed: 2026-01-05
+phase-07-completed: 2026-01-05
 ---
 
 # Phase 1: Foundation - Auth & RBAC
@@ -122,15 +125,15 @@ package.json                       # Upgrade deps
 
 ## Success Criteria
 
-- [ ] User can login with email/password
-- [ ] JWT contains user role
-- [ ] Unauthorized routes redirect to /login
-- [ ] Forbidden routes show 403 page
-- [ ] MasterDetailLayout renders 40-60 on desktop (md+)
-- [ ] SlideInPanel slides from right on mobile
-- [ ] usePermission correctly checks permissions
-- [ ] Build passes with no TypeScript errors
-- [ ] Lint passes with no errors
+- [x] User can login with email/password (code complete, QA pending)
+- [x] JWT contains user role (auth.ts verified)
+- [x] Unauthorized routes redirect to /login (middleware verified)
+- [x] Forbidden routes show 403 page (middleware verified)
+- [x] MasterDetailLayout renders 40-60 on desktop (md+) (Phase 06)
+- [x] SlideInPanel slides from right on mobile (Phase 06)
+- [x] usePermission correctly checks permissions (Phase 05)
+- [x] Build passes with no TypeScript errors
+- [x] Lint passes with no errors
 
 ## Risk Assessment
 

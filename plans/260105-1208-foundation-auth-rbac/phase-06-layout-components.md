@@ -10,8 +10,9 @@
 |-------|-------|
 | Description | MasterDetailLayout with resizable panels, SlideInPanel wrapper |
 | Priority | P1 |
-| Status | pending |
+| Status | complete |
 | Effort | 45min |
+| Review | plans/reports/code-reviewer-260105-1702-phase06-layout.md |
 
 ## Requirements
 
@@ -285,25 +286,25 @@ Add custom styles if needed in globals.css:
 
 ## Todo List
 
-- [ ] Install react-resizable-panels (if not in Phase 01)
-- [ ] Create src/components/layouts/MasterDetailLayout.tsx
-- [ ] Implement PanelGroup with 40-60 default split
-- [ ] Add minSize/maxSize constraints
-- [ ] Implement mobile view with Sheet
-- [ ] Create src/components/layouts/SlideInPanel.tsx
-- [ ] Configure responsive widths
-- [ ] Create src/components/layouts/index.ts
-- [ ] Test localStorage persistence
+- [x] Install react-resizable-panels (if not in Phase 01)
+- [x] Create src/components/layouts/master-detail-layout.tsx
+- [x] Implement Group with 40-60 default split (v4 API: Group not PanelGroup)
+- [x] Add minSize/maxSize constraints
+- [x] Implement mobile view with Sheet
+- [x] Create src/components/layouts/slide-in-panel.tsx
+- [x] Configure responsive widths
+- [x] Create src/components/layouts/index.ts
+- [ ] Test localStorage persistence (manual testing needed)
 
 ## Success Criteria
 
-- [ ] Desktop: 40-60 split visible at md breakpoint
-- [ ] Desktop: Resize handle works, changes persist to localStorage
-- [ ] Desktop: Empty state shows when no selection
-- [ ] Mobile: Full list visible, no detail panel
-- [ ] Mobile: Sheet slides in when selectedId set
-- [ ] Mobile: Sheet closes on X button click
-- [ ] Mobile: Sheet width responsive (85vw/540px/600px)
+- [x] Desktop: 40-60 split visible at md breakpoint
+- [?] Desktop: Resize handle works, changes persist to localStorage (visual test needed)
+- [x] Desktop: Empty state shows when no selection
+- [x] Mobile: Full list visible, no detail panel
+- [x] Mobile: Sheet slides in when selectedId set
+- [x] Mobile: Sheet closes on X button click (via onOpenChange)
+- [x] Mobile: Sheet width responsive (85vw/540px/600px)
 
 ## Risk Assessment
 
@@ -316,7 +317,25 @@ Add custom styles if needed in globals.css:
 
 ## Rollback Plan
 
-1. Delete `src/components/layouts/MasterDetailLayout.tsx`
-2. Delete `src/components/layouts/SlideInPanel.tsx`
+1. Delete `src/components/layouts/master-detail-layout.tsx`
+2. Delete `src/components/layouts/slide-in-panel.tsx`
 3. Delete `src/components/layouts/index.ts`
 4. Pages using layout will error
+
+## Implementation Notes
+
+**API Changes (react-resizable-panels v4)**:
+- Used `Group` (not `PanelGroup`)
+- Used `orientation` (not `direction`)
+- Used `id` (not `autoSaveId`)
+- Used `Separator` (not `PanelResizeHandle`)
+
+**Code Enhancements**:
+- Added `emptyText` prop for customizable placeholder
+- Added `detailDescription` prop for Sheet subtitle
+- Implemented proper Vietnamese diacritics in default text
+
+**Recommended Improvements** (from code review):
+- Add `aria-label="Resize panels"` to Separator
+- Remove `cursor-col-resize` from Separator className (library handles it)
+- Consider adding `widthClassName` prop to SlideInPanel for custom widths
