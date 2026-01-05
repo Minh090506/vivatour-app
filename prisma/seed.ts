@@ -1,6 +1,7 @@
-import 'dotenv/config';
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
+import "dotenv/config";
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { hash } from "bcryptjs";
 
 // Prisma 7.x requires driver adapter for database connections
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
@@ -23,8 +24,8 @@ const FOLLOWUP_STATUSES = [
   { status: "Cancel", aliases: ["cancel", "đã hủy"], daysToFollowup: 0, sortOrder: 14 },
 ];
 
-async function main() {
-  console.log('Seeding FollowUpStatus...');
+async function seedFollowUpStatuses() {
+  console.log("Seeding FollowUpStatus...");
 
   for (const status of FOLLOWUP_STATUSES) {
     await prisma.followUpStatus.upsert({
@@ -38,7 +39,42 @@ async function main() {
     });
   }
 
-  console.log('Seeded 14 follow-up statuses');
+  console.log("✓ Seeded 14 follow-up statuses");
+}
+
+async function seedAdminUser() {
+  const adminEmail = process.env.ADMIN_EMAIL || "admin@vivatour.vn";
+  const adminPassword = process.env.ADMIN_PASSWORD || "admin123!";
+
+  console.log(`Seeding admin user: ${adminEmail}`);
+
+  const existing = await prisma.user.findUnique({
+    where: { email: adminEmail },
+  });
+
+  if (existing) {
+    console.log(`✓ Admin user already exists: ${adminEmail}`);
+    return;
+  }
+
+  const hashedPassword = await hash(adminPassword, 10);
+
+  const admin = await prisma.user.create({
+    data: {
+      email: adminEmail,
+      password: hashedPassword,
+      name: "Administrator",
+      role: "ADMIN",
+    },
+  });
+
+  console.log(`✓ Admin user created: ${admin.email} (${admin.role})`);
+  console.log("⚠️  Change password in production!");
+}
+
+async function main() {
+  await seedFollowUpStatuses();
+  await seedAdminUser();
 }
 
 main()
