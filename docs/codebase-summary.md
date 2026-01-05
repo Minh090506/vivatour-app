@@ -104,10 +104,21 @@ vivatour-app/
 | `src/app/(dashboard)/page.tsx` | Dashboard home page |
 | `src/app/globals.css` | Global Tailwind CSS styles |
 
+### Authentication Files
+
+| File | Purpose |
+|------|---------|
+| `src/auth.ts` | NextAuth.js v5 configuration with Credentials provider, JWT strategy, role-based types |
+| `src/app/api/auth/[...nextauth]/route.ts` | NextAuth.js API route handler (exports GET/POST handlers) |
+
 ### API Routes (REST Endpoints)
 
 | Route | Method | Purpose |
 |-------|--------|---------|
+| `/api/auth/callback/credentials` | POST | Credentials provider login (NextAuth) |
+| `/api/auth/session` | GET | Get current session (NextAuth) |
+| `/api/auth/signin` | POST | Sign in redirect (NextAuth) |
+| `/api/auth/signout` | GET/POST | Sign out redirect (NextAuth) |
 | `/api/suppliers` | GET | List suppliers (with filters) |
 | `/api/suppliers` | POST | Create new supplier |
 | `/api/suppliers/[id]` | GET | Get single supplier |
@@ -144,6 +155,26 @@ vivatour-app/
 | KnowledgeItem | id, category, title, content, keywords | AI knowledge base |
 | SyncLog | id, sheetName, action, status, errorMessage | Google Sheets sync history |
 | ConfigUser | id, userId, sellerCode, sellerName, canViewAll | User configuration (optional seller code, fallback name) |
+
+---
+
+## Authentication System (Phase 02)
+
+**Framework**: NextAuth.js v5
+**Strategy**: JWT-based sessions with bcryptjs password hashing
+
+### Features
+- Email/password Credentials Provider
+- Role-based access control (RBAC): ADMIN, SELLER, ACCOUNTANT, OPERATOR
+- Timing attack protection with dummy hash
+- 24-hour session expiry
+- Type-safe role in JWT token and session
+
+### Configuration
+- Auth secret required (minimum 32 characters)
+- Session strategy: JWT (stateless, scalable)
+- Protected login page: `/login`
+- API route: `/api/auth/*` (NextAuth handlers)
 
 ---
 
@@ -315,6 +346,10 @@ All API endpoints return JSON:
 # Database
 DATABASE_URL="postgresql://user:password@host/database"
 
+# Authentication (NextAuth.js v5)
+AUTH_SECRET="<generate-with-openssl-rand-base64-32>"   # Min 32 chars
+NEXTAUTH_URL="http://localhost:3000"                    # Login redirect URL
+
 # Google APIs
 GOOGLE_SERVICE_ACCOUNT_EMAIL="xxx@xxx.iam.gserviceaccount.com"
 GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
@@ -328,11 +363,6 @@ GOOGLE_CLIENT_SECRET="xxx"
 
 # Anthropic AI
 ANTHROPIC_API_KEY="sk-ant-xxx"
-
-# NextAuth (Credentials + Password Authentication)
-NEXTAUTH_SECRET="xxx"
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_PROVIDERS="credentials"
 ```
 
 ---

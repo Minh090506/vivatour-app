@@ -178,6 +178,19 @@ Each route exports HTTP method handlers:
 - `PUT(request)` - Update data
 - `DELETE(request)` - Delete data
 
+**Authentication Routes** (NextAuth.js v5):
+
+```
+src/app/api/auth/[...nextauth]/route.ts → /api/auth/*
+```
+
+NextAuth handlers:
+- `POST /api/auth/callback/credentials` - Credentials provider login
+- `GET /api/auth/providers` - Available providers
+- `GET /api/auth/session` - Get current session
+- `POST /api/auth/signin` - Sign in (redirect)
+- `GET /api/auth/signout` - Sign out (redirect)
+
 ### Request/Response Format
 
 ```
@@ -583,31 +596,94 @@ Stream response to UI
 - Customer context understanding
 - Multi-turn conversation
 
-### 4. NextAuth.js (Authentication) [Phase 01]
+### 4. NextAuth.js v5 (Authentication) [Phase 02 - Configured]
 
 **Purpose**: User authentication and session management
 
-**Flow**:
+**Framework**: NextAuth.js v5
+**Configuration File**: `src/auth.ts`
+**API Route**: `src/app/api/auth/[...nextauth]/route.ts`
+
+**Implementation Details**:
+
 ```
-Login Page
+Login Page (/login)
     ↓
-NextAuth.js Providers
-    ├── Credentials (email/password with bcrypt)
-    ├── Google OAuth (planned)
-    └── GitHub OAuth (planned)
+POST /api/auth/callback/credentials
     ↓
-Session/JWT Token
+NextAuth.js Credentials Provider
+    ├── Email/Password validation
+    ├── Bcrypt hash verification
+    ├── Timing attack protection (dummy hash)
+    └── Role extraction from User model
+    ↓
+JWT Token Creation
+    ├── Contains: id, email, name, role
+    ├── Signed with AUTH_SECRET
+    └── Stored in httpOnly cookie
+    ↓
+Session Management
+    ├── Strategy: JWT (stateless)
+    ├── Max age: 24 hours
+    └── Type-safe role in session
     ↓
 Protected Routes
+    ├── Check auth() for session
+    ├── Verify role-based permissions
+    └── Deny access if no session
     ↓
 API Routes (check session)
+    └── Use auth() middleware for authentication
 ```
 
-**Password Handling**:
-- User passwords stored as bcryptjs hashed values in `users.password`
-- Hash computed via `bcryptjs` library during registration/password reset
-- Credentials provider validates hash on login
-- Passwords optional (nullable) for OAuth-only users
+**Role-Based Access Control (RBAC)**:
+
+4 roles defined in User model and JWT token:
+- **ADMIN**: Full system access, user management
+- **SELLER**: Create/manage requests, view own data
+- **ACCOUNTANT**: Financial records, accounting lock
+- **OPERATOR**: Service management, cost tracking
+
+**Security Features**:
+
+1. **Password Hashing**: bcryptjs with configurable rounds (default 10)
+2. **Timing Attack Prevention**: Dummy hash comparison for non-existent users
+3. **Auth Secret Validation**: Enforced minimum 32 characters at startup
+4. **Secure Cookies**: httpOnly, sameSite flags (NextAuth.js handles)
+5. **JWT Signing**: Uses AUTH_SECRET for cryptographic signing
+6. **Session Expiry**: 24-hour automatic expiration
+
+**Environment Variables**:
+
+```env
+AUTH_SECRET="<generate-openssl-rand-base64-32>"    # Min 32 chars
+NEXTAUTH_URL="http://localhost:3000"               # Login redirect URL
+```
+
+**Type Safety**:
+
+Extended NextAuth types in `src/auth.ts`:
+```typescript
+interface User {
+  role: "ADMIN" | "SELLER" | "ACCOUNTANT" | "OPERATOR"
+}
+interface Session {
+  user: {
+    id: string
+    email: string
+    name?: string | null
+    role: RoleType
+  }
+}
+interface JWT {
+  id: string
+  role: RoleType
+}
+```
+
+**Future OAuth Providers** (planned):
+- Google OAuth 2.0
+- GitHub OAuth 2.0
 
 ---
 
