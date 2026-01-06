@@ -3,7 +3,7 @@
 **Parent:** [plan.md](./plan.md)
 **Date:** 2026-01-06
 **Priority:** P1
-**Status:** pending
+**Status:** done
 **Review:** pending
 
 ## Overview
