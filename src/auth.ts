@@ -1,7 +1,18 @@
+/**
+ * Full NextAuth configuration with database access
+ *
+ * This file contains the complete auth setup including:
+ * - Database user lookup (Prisma)
+ * - Password verification (bcryptjs)
+ *
+ * Used by: API routes, server components (Node.js runtime only)
+ * For edge runtime (middleware), use auth.config.ts instead
+ */
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { prisma } from "@/lib/db";
+import { authConfig } from "./auth.config";
 
 // Validate AUTH_SECRET at startup
 if (!process.env.AUTH_SECRET || process.env.AUTH_SECRET.length < 32) {
@@ -13,31 +24,9 @@ if (!process.env.AUTH_SECRET || process.env.AUTH_SECRET.length < 32) {
 // Dummy hash for timing attack prevention
 const DUMMY_HASH = "$2a$10$dummyHashToPreventTimingAttackXXXXXXXXXXXXXX";
 
-type RoleType = "ADMIN" | "SELLER" | "ACCOUNTANT" | "OPERATOR";
-
-// Extend types for role
-declare module "next-auth" {
-  interface User {
-    role: RoleType;
-  }
-  interface Session {
-    user: {
-      id: string;
-      email: string;
-      name?: string | null;
-      role: RoleType;
-    };
-  }
-}
-
-declare module "@auth/core/jwt" {
-  interface JWT {
-    id: string;
-    role: RoleType;
-  }
-}
-
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  ...authConfig,
+  // Override providers with full authorize function (requires Node.js)
   providers: [
     Credentials({
       credentials: {
@@ -80,28 +69,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
-  session: {
-    strategy: "jwt",
-    maxAge: 24 * 60 * 60, // 24 hours per validation
-  },
-  pages: {
-    signIn: "/login",
-    error: "/login",
-  },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id as string;
-        token.role = user.role;
-      }
-      return token;
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as RoleType;
-      }
-      return session;
-    },
-  },
 });
