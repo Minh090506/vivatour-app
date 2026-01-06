@@ -2,6 +2,7 @@
  * @jest-environment node
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Tests for request module utilities
 // Covers: generateRQID, generateBookingCode, calculateEndDate, calculateNextFollowUp, etc.
 

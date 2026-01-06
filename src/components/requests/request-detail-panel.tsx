@@ -1,12 +1,43 @@
 'use client';
 
+import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { RequestStatusBadge } from './request-status-badge';
 import { RequestServicesTable } from './request-services-table';
-import { Edit, Loader2 } from 'lucide-react';
+import { RevenueTable, RevenueForm, RevenueSummaryCard } from '@/components/revenues';
+import { usePermission } from '@/hooks/use-permission';
+import { Edit, Plus } from 'lucide-react';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import type { Request, RequestStatus, Operator, User } from '@/types';
+
+// Revenue type from API (includes all fields needed by both RevenueTable and RevenueForm)
+interface RevenueFromApi {
+  id: string;
+  requestId: string;
+  paymentDate: Date | string;
+  paymentType: string;
+  foreignAmount?: number | null;
+  currency?: string | null;
+  exchangeRate?: number | null;
+  amountVND: number;
+  paymentSource: string;
+  notes?: string | null;
+  isLocked: boolean;
+  lockedAt?: Date | string | null;
+  lockedBy?: string | null;
+  request?: {
+    code: string;
+    customerName: string;
+    bookingCode?: string | null;
+  };
+}
 
 // Extended request type with optional relations
 interface RequestWithDetails extends Request {
@@ -53,6 +84,61 @@ export function RequestDetailPanel({
   onEditClick,
   onRefresh,
 }: RequestDetailPanelProps) {
+  // Permission hooks
+  const { can, isAdmin } = usePermission();
+
+  // Revenue state
+  const [revenues, setRevenues] = useState<RevenueFromApi[]>([]);
+  const [editingRevenue, setEditingRevenue] = useState<RevenueFromApi | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [loadingRevenues, setLoadingRevenues] = useState(false);
+
+  // Fetch revenues for this request
+  const fetchRevenues = useCallback(async () => {
+    if (!request?.id || !request?.bookingCode) {
+      setRevenues([]);
+      return;
+    }
+    setLoadingRevenues(true);
+    try {
+      const res = await fetch(`/api/revenues?requestId=${request.id}`);
+      const data = await res.json();
+      if (data.success) {
+        setRevenues(data.data || []);
+      }
+    } catch (err) {
+      console.error('Error fetching revenues:', err);
+    } finally {
+      setLoadingRevenues(false);
+    }
+  }, [request?.id, request?.bookingCode]);
+
+  // Fetch revenues when request changes
+  useEffect(() => {
+    fetchRevenues();
+  }, [fetchRevenues]);
+
+  // Revenue handlers
+  const handleAddRevenue = useCallback(() => {
+    setEditingRevenue(null);
+    setDialogOpen(true);
+  }, []);
+
+  const handleEditRevenue = useCallback((revenue: RevenueFromApi) => {
+    setEditingRevenue(revenue);
+    setDialogOpen(true);
+  }, []);
+
+  const handleDialogClose = useCallback(() => {
+    setDialogOpen(false);
+    setEditingRevenue(null);
+  }, []);
+
+  const handleRevenueSuccess = useCallback(() => {
+    handleDialogClose();
+    fetchRevenues();
+  }, [handleDialogClose, fetchRevenues]);
+
   // Loading state
   if (isLoading) {
     return <DetailSkeleton />;
@@ -160,6 +246,58 @@ export function RequestDetailPanel({
           </CardContent>
         </Card>
       )}
+
+      {/* Revenue Section - only for bookings with permission */}
+      {request.bookingCode && can('revenue:view') && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardTitle>Doanh thu ({revenues.length})</CardTitle>
+            {can('revenue:manage') && (
+              <Button variant="outline" size="sm" onClick={handleAddRevenue}>
+                <Plus className="w-4 h-4 mr-2" />
+                Thêm thu nhập
+              </Button>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {loadingRevenues ? (
+              <div className="text-center py-4 text-muted-foreground">
+                Đang tải dữ liệu...
+              </div>
+            ) : (
+              <>
+                {revenues.length > 0 && (
+                  <RevenueSummaryCard revenues={revenues} />
+                )}
+                <RevenueTable
+                  revenues={revenues}
+                  onEdit={(rev) => handleEditRevenue(rev as RevenueFromApi)}
+                  onRefresh={fetchRevenues}
+                  canManage={can('revenue:manage')}
+                  canUnlock={isAdmin}
+                />
+              </>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Revenue Dialog for add/edit */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingRevenue ? 'Chỉnh sửa thu nhập' : 'Thêm thu nhập mới'}
+            </DialogTitle>
+          </DialogHeader>
+          <RevenueForm
+            revenue={editingRevenue || undefined}
+            requestId={request?.id}
+            onSuccess={handleRevenueSuccess}
+            onCancel={handleDialogClose}
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Notes Section */}
       {request.notes && (

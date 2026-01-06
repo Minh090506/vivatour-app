@@ -3,7 +3,7 @@
 **Parent:** [plan.md](./plan.md)
 **Date:** 2026-01-06
 **Priority:** P1
-**Status:** pending
+**Status:** done
 **Review:** pending
 
 ## Overview
@@ -47,14 +47,70 @@ RequestDetailPanel
 
 ## Implementation Steps
 
-- [ ] Import revenue components in `request-detail-panel.tsx`
-- [ ] Add state for revenues list, editing revenue, dialog open
-- [ ] Add `fetchRevenues` function to load revenues by requestId
-- [ ] Call `fetchRevenues` when request changes
-- [ ] Add Revenue Card section after Services Table
+- [ ] Import revenue components and Dialog in `request-detail-panel.tsx`
+- [ ] Add usePermission hook for permission checks
+- [ ] Add state: revenues[], editingRevenue, dialogOpen, loadingRevenues
+- [ ] Add `fetchRevenues` function calling `GET /api/revenues?requestId=X`
+- [ ] Add useEffect to fetch when request.id changes (with bookingCode check)
+- [ ] Add Revenue Card section after Services Table (conditional on bookingCode)
+- [ ] Add RevenueSummaryCard at top of section
+- [ ] Add "Thêm thu nhập" button gated by `can("revenue:manage")`
+- [ ] Add RevenueTable with onEdit/onRefresh callbacks
 - [ ] Add Dialog with RevenueForm for add/edit
-- [ ] Wire up refresh callback for CRUD operations
-- [ ] Add permission check using `usePermission`
+- [ ] Wire up handleAdd, handleEdit, handleDialogClose, handleRefresh callbacks
+
+## Code Snippets
+
+**Imports to add:**
+```tsx
+import { useEffect, useState, useCallback } from 'react';
+import { usePermission } from '@/hooks/use-permission';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { RevenueTable, RevenueForm, RevenueSummaryCard } from '@/components/revenues';
+import { Plus } from 'lucide-react';
+```
+
+**State to add:**
+```tsx
+const { can, isAdmin } = usePermission();
+const [revenues, setRevenues] = useState<Revenue[]>([]);
+const [editingRevenue, setEditingRevenue] = useState<Revenue | null>(null);
+const [dialogOpen, setDialogOpen] = useState(false);
+const [loadingRevenues, setLoadingRevenues] = useState(false);
+```
+
+**Fetch function:**
+```tsx
+const fetchRevenues = useCallback(async () => {
+  if (!request?.id || !request?.bookingCode) return;
+  setLoadingRevenues(true);
+  try {
+    const res = await fetch(`/api/revenues?requestId=${request.id}`);
+    const data = await res.json();
+    if (data.success) setRevenues(data.data || []);
+  } catch (err) { console.error(err); }
+  finally { setLoadingRevenues(false); }
+}, [request?.id, request?.bookingCode]);
+```
+
+**Revenue interface:**
+```tsx
+interface Revenue {
+  id: string;
+  paymentDate: Date | string;
+  paymentType: string;
+  foreignAmount?: number | null;
+  currency?: string | null;
+  exchangeRate?: number | null;
+  amountVND: number;
+  paymentSource: string;
+  notes?: string | null;
+  isLocked: boolean;
+  lockedAt?: Date | string | null;
+  lockedBy?: string | null;
+  requestId: string;
+}
+```
 
 ## Success Criteria
 

@@ -5,7 +5,7 @@ import { prisma } from '@/lib/db';
 // For now, we check role from query param or header (to be replaced with proper auth)
 
 // GET /api/config/user - List all user configs (admin only)
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // TODO: Replace with proper auth check when auth system is implemented
     // For now, allow access (will be secured later)

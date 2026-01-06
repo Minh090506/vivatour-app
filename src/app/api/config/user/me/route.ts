@@ -8,7 +8,7 @@ import { prisma } from '@/lib/db';
  * For now, returns demo data since auth is not implemented yet.
  * In future, will check session and return actual user config.
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     // TODO: Get userId from session when auth is implemented
     // const session = await getServerSession();

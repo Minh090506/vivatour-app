@@ -18,7 +18,6 @@ export default function RequestEditPage() {
 
   const [request, setRequest] = useState<Request | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     async function fetchRequest() {
@@ -42,27 +41,19 @@ export default function RequestEditPage() {
   }, [id, router]);
 
   const handleUpdate = async (data: RequestFormData) => {
-    setSaving(true);
-    try {
-      const res = await fetch(`/api/requests/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
+    const res = await fetch(`/api/requests/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
 
-      const result = await res.json();
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-
-      // Navigate back to requests list with this request selected
-      router.push(`/requests?id=${id}`);
-    } catch (err) {
-      console.error('Error updating request:', err);
-      throw err;
-    } finally {
-      setSaving(false);
+    const result = await res.json();
+    if (!result.success) {
+      throw new Error(result.error);
     }
+
+    // Navigate back to requests list with this request selected
+    router.push(`/requests?id=${id}`);
   };
 
   const handleCancel = () => {

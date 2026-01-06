@@ -4,20 +4,13 @@ import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   SellerTable,
-  SellerFormModal,
   FollowUpStatusTable,
   FollowUpStatusFormModal,
 } from '@/components/settings';
 import { Settings, Users, ListChecks } from 'lucide-react';
-import { toast } from 'sonner';
-import type { Seller, FollowUpStatus } from '@/types';
+import type { FollowUpStatus } from '@/types';
 
 export default function SettingsPage() {
-  // Seller state
-  const [sellerModalOpen, setSellerModalOpen] = useState(false);
-  const [editingSeller, setEditingSeller] = useState<Seller | null>(null);
-  const [sellerRefreshKey, setSellerRefreshKey] = useState(0);
-
   // FollowUp state
   const [followUpModalOpen, setFollowUpModalOpen] = useState(false);
   const [editingFollowUp, setEditingFollowUp] = useState<FollowUpStatus | null>(null);
@@ -57,7 +50,7 @@ export default function SettingsPage() {
 
         <TabsContent value="sellers">
           <div className="bg-white rounded-lg border p-6">
-            <SellerTable key={sellerRefreshKey} />
+            <SellerTable />
           </div>
         </TabsContent>
 

@@ -80,6 +80,7 @@ export default function OperatorDetailPage({ params }: { params: Promise<PagePar
 
   useEffect(() => {
     fetchOperator();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const fetchOperator = async () => {

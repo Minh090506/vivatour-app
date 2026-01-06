@@ -88,7 +88,8 @@ describe('POST /api/operators/lock-period', () => {
     jest.clearAllMocks();
   });
 
-  const mockOperator = {
+  // Base mock operator template for reference (not directly used in this describe block)
+  const _mockOperatorTemplate = {
     id: 'op-1',
     requestId: 'req-1',
     supplierId: 'sup-1',
@@ -112,6 +113,7 @@ describe('POST /api/operators/lock-period', () => {
     createdAt: new Date(),
     updatedAt: new Date(),
   };
+  void _mockOperatorTemplate; // Suppress unused warning
 
   it('should lock all operators in a period', async () => {
     prismaMock.operator.findMany.mockResolvedValue([
