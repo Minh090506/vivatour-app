@@ -580,15 +580,48 @@ export async function POST(
 
 ## Success Criteria
 
-- [ ] `GET /api/revenues` returns list with filters
-- [ ] `POST /api/revenues` creates revenue with multi-currency support
-- [ ] `GET /api/revenues/[id]` returns single revenue
-- [ ] `PUT /api/revenues/[id]` updates (blocked if locked)
-- [ ] `DELETE /api/revenues/[id]` deletes (blocked if locked)
-- [ ] `POST /api/revenues/[id]/lock` locks revenue
-- [ ] `POST /api/revenues/[id]/unlock` unlocks (ADMIN only placeholder)
-- [ ] Currency conversion: foreignAmount * exchangeRate = amountVND
-- [ ] Vietnamese error messages throughout
+- [x] `GET /api/revenues` returns list with filters ✅
+- [x] `POST /api/revenues` creates revenue with multi-currency support ✅
+- [x] `GET /api/revenues/[id]` returns single revenue ✅
+- [x] `PUT /api/revenues/[id]` updates (blocked if locked) ✅
+- [x] `DELETE /api/revenues/[id]` deletes (blocked if locked) ✅
+- [x] `POST /api/revenues/[id]/lock` locks revenue ✅
+- [x] `POST /api/revenues/[id]/unlock` unlocks (ADMIN only - server-side enforced) ✅
+- [x] Currency conversion: foreignAmount * exchangeRate = amountVND ✅
+- [x] Vietnamese error messages throughout ✅
+- [x] Server-side authentication with NextAuth session ✅
+- [x] Role-based permission checks (RBAC) ✅
+
+---
+
+## Status Update
+
+**Phase Status**: ✅ COMPLETE (2026-01-06)
+
+**Code Reviews**:
+- First review: `plans/reports/code-reviewer-260106-XXXX-revenue-integration-phase01.md` (identified security issues)
+- Second review: `plans/reports/code-reviewer-260106-1128-revenue-integration-phase01-second-review.md` (APPROVED)
+
+**Security Improvements Applied**:
+- ✅ All routes use server-side `auth()` from NextAuth
+- ✅ User ID extracted from `session.user.id` (never trusted from client)
+- ✅ Permission checks using `hasPermission(role, permission)` at API level
+- ✅ ADMIN-only unlock enforced via `session.user.role !== 'ADMIN'` check
+- ✅ Lock mechanism prevents edit/delete when `isLocked === true`
+
+**Build Status**: ✅ PASSING (Next.js 16.1.1, TypeScript compilation successful)
+
+**Files Modified** (7 files, +144 -27 lines):
+- `src/app/api/revenues/route.ts` (GET/POST with auth)
+- `src/app/api/revenues/[id]/route.ts` (GET/PUT/DELETE with auth)
+- `src/app/api/revenues/[id]/lock/route.ts` (POST with permission check)
+- `src/app/api/revenues/[id]/unlock/route.ts` (POST with ADMIN check)
+- `src/hooks/use-permission.ts` (added userId export)
+- `src/components/revenues/revenue-table.tsx` (uses userId from hook)
+- `src/components/revenues/revenue-form.tsx` (uses userId from hook)
+
+**Critical Issues**: 0
+**Remaining Work**: Minor improvements suggested (optional for future refactoring)
 
 ---
 
