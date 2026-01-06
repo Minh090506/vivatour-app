@@ -1,7 +1,7 @@
 ---
 title: "Revenue Module Integration"
 description: "Integrate revenue components into request detail, hook up auth, create /revenues page"
-status: pending
+status: in_progress
 priority: P1
 effort: 2h
 branch: master
@@ -19,7 +19,7 @@ Integrate existing revenue components into the request detail panel, connect Nex
 
 | Phase | Description | Status | Effort |
 |-------|-------------|--------|--------|
-| [Phase 01](./phase-01-session-userid-hookup.md) | Hook up NextAuth session for userId | pending | 20m |
+| [Phase 01](./phase-01-session-userid-hookup.md) | Hook up NextAuth session for userId | ✅ done | 20m |
 | [Phase 02](./phase-02-request-detail-integration.md) | Integrate revenue components into request detail | pending | 45m |
 | [Phase 03](./phase-03-revenues-page.md) | Create standalone /revenues management page | pending | 55m |
 

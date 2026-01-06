@@ -3,9 +3,9 @@
 **Parent:** [plan.md](./plan.md)
 **Date:** 2026-01-06
 **Priority:** P1
-**Status:** blocked
-**Review:** failed - critical security issues
-**Review Report:** [plans/reports/code-reviewer-260106-1111-revenue-phase01.md](../../reports/code-reviewer-260106-1111-revenue-phase01.md)
+**Status:** ✅ done
+**Review:** ✅ passed (second review)
+**Commit:** `de43f75`
 
 ## Overview
 
@@ -19,71 +19,43 @@ Connect NextAuth session to revenue components so lock/unlock operations use the
 
 ## Requirements
 
-- Expose `userId` from `usePermission` hook
-- Update `RevenueTable` to use authenticated userId for lock/unlock
-- Update `RevenueForm` to use authenticated userId for create/update
+- [x] Expose `userId` from `usePermission` hook
+- [x] Update `RevenueTable` to use authenticated userId for lock/unlock
+- [x] Update `RevenueForm` to use authenticated userId for create/update
+- [x] **Added:** Server-side auth verification in all API routes
 
-## Architecture
+## Implementation Summary
 
-```
-usePermission hook
-├── Already uses useSession()
-├── Add: userId = session.user.id
-└── Return: { ...existing, userId }
+### Client-side (3 files)
+- `src/hooks/use-permission.ts` - Added `userId` to return object
+- `src/components/revenues/revenue-table.tsx` - Uses userId from hook
+- `src/components/revenues/revenue-form.tsx` - Uses userId from hook
 
-RevenueTable
-├── Import usePermission
-├── Get userId from hook
-└── Replace 'system' with userId in API calls
-```
+### API-side (4 files) - Extended scope after code review
+- `src/app/api/revenues/route.ts` - Added auth + permission checks
+- `src/app/api/revenues/[id]/route.ts` - Added auth + permission checks
+- `src/app/api/revenues/[id]/lock/route.ts` - Added auth + revenue:manage check
+- `src/app/api/revenues/[id]/unlock/route.ts` - Added auth + ADMIN check
 
-## Related Files
+## Security Improvements
 
-| File | Action |
-|------|--------|
-| `src/hooks/use-permission.ts` | Extend to return userId |
-| `src/components/revenues/revenue-table.tsx` | Use userId from hook |
-| `src/components/revenues/revenue-form.tsx` | Use userId from hook |
-
-## Implementation Steps
-
-- [x] Extend `usePermission` to include `userId` from session
-- [x] Update `RevenueTable` lock/unlock calls with userId from hook
-- [x] Update `RevenueForm` submit with userId from hook
-- [ ] Test lock/unlock with authenticated user ⚠️ BLOCKED by security issues
+1. ✅ All API routes verify session with `auth()`
+2. ✅ UserId extracted from `session.user.id` (never from client)
+3. ✅ Permission checks using `hasPermission(role, permission)`
+4. ✅ ADMIN-only enforcement for unlock operations
+5. ✅ 401 returned for unauthenticated requests
+6. ✅ 403 returned for unauthorized requests
 
 ## Success Criteria
 
-- [x] Lock/unlock API calls send actual user ID ⚠️ CLIENT-SIDE ONLY (INSECURE)
-- [x] Revenue form sends user ID on create/update ⚠️ CLIENT-SIDE ONLY (INSECURE)
+- [x] Lock/unlock API calls use server-side userId
+- [x] Revenue form creates with authenticated userId
 - [x] No 'system' hardcoded values remain
+- [x] All mutations require authentication
+- [x] Permission checks enforced
 
-## Code Review Findings
+## Reports
 
-**Status:** 🔴 **FAILED**
-**Critical Issues:** 3
-**High Priority:** 4
-**Recommendation:** **BLOCK MERGE**
-
-### Critical Security Vulnerabilities
-
-1. **Client-Side userId Tampering** - Client sends userId in request body, API trusts it without verification. Enables user impersonation and audit trail manipulation.
-
-2. **Missing Authorization Checks** - All API endpoints lack permission verification. TODO comments exist but checks not implemented.
-
-3. **No Authentication Required** - API routes process requests without verifying session. Allows unauthenticated access.
-
-### Required Fixes Before Proceeding
-
-1. Remove client-provided userId from API requests
-2. Extract userId from server-side session in API routes
-3. Add authentication verification to all endpoints
-4. Implement authorization checks (revenue:manage, ADMIN role)
-5. Add input validation for date filters
-6. Remove 'unknown' fallback (block operations without auth)
-
-**See full report:** [plans/reports/code-reviewer-260106-1111-revenue-phase01.md](../../reports/code-reviewer-260106-1111-revenue-phase01.md)
-
-## Risks
-
-- **Low:** Session may not be loaded - handle with optional chaining
+- First review (failed): [code-reviewer-260106-1111-revenue-phase01.md](../../reports/code-reviewer-260106-1111-revenue-phase01.md)
+- Second review (passed): [code-reviewer-260106-1128-revenue-integration-phase01-second-review.md](../../reports/code-reviewer-260106-1128-revenue-integration-phase01-second-review.md)
+- Test report: [tester-260106-1125-revenue-phase01-api-auth.md](../../reports/tester-260106-1125-revenue-phase01-api-auth.md)
