@@ -14,7 +14,7 @@ src/
 │   ├── (auth)/                       # Auth route group (Phase 04)
 │   │   ├── login/                    # Login page
 │   │   │   ├── page.tsx              # Login page component
-│   │   │   ├── login-form.tsx        # LoginForm component with validation
+│   │   │   ├── login-form.tsx        # LoginForm with validation
 │   │   │   └── __tests__/            # Login tests
 │   │   └── layout.tsx                # Auth layout
 │   ├── (dashboard)/                  # Dashboard route group
@@ -22,26 +22,32 @@ src/
 │   │   ├── layout.tsx                # Dashboard layout
 │   │   └── page.tsx                  # Dashboard home
 │   ├── api/                          # REST API routes
-│   │   ├── auth/                     # NextAuth.js v5 routes
+│   │   ├── auth/[...nextauth]/       # NextAuth.js v5 handlers
 │   │   ├── suppliers/                # Supplier endpoints
 │   │   ├── supplier-transactions/    # Transaction endpoints
 │   │   └── reports/                  # Report endpoints
-│   ├── layout.tsx                    # Root layout
+│   ├── layout.tsx                    # Root layout with SessionProvider
 │   └── page.tsx                      # Home page
 ├── components/
 │   ├── ui/                           # shadcn/ui components (22+)
-│   ├── layout/                       # Layout components
+│   ├── layout/                       # Header, AIAssistant
+│   ├── layouts/                      # PHASE 05 NEW
+│   │   ├── master-detail-layout.tsx  # Responsive 2-panel layout
+│   │   └── slide-in-panel.tsx        # Mobile detail panel
+│   ├── providers/                    # PHASE 05 NEW
+│   │   └── session-provider-wrapper.tsx # NextAuth SessionProvider wrapper
 │   └── suppliers/                    # Feature components
 ├── lib/
 │   ├── db.ts                         # Prisma singleton
-│   ├── auth.ts                       # NextAuth.js v5 config
+│   ├── permissions.ts                # PHASE 04 NEW: RBAC definitions
 │   ├── supplier-balance.ts           # Balance utilities
 │   └── utils.ts                      # Helpers
-├── hooks/                            # Custom React hooks
+├── hooks/
+│   └── use-permission.ts             # PHASE 04 NEW: Permission checking hook
 ├── stores/                           # Zustand state stores
 ├── types/                            # TypeScript definitions
-├── middleware.ts                     # Route protection
-├── auth.ts                           # Auth configuration
+├── auth.ts                           # PHASE 04: NextAuth.js v5 config
+├── middleware.ts                     # PHASE 03: Route protection
 └── constants.ts                      # App constants
 ```
 
@@ -120,15 +126,73 @@ loginSchema = z.object({
 
 ---
 
-## Authentication Layer Overview
+## Authentication & RBAC Layer
+
+### Core Files
 
 | File | Purpose |
 |------|---------|
-| src/app/login/page.tsx | Login page routing & layout |
-| src/app/login/login-form.tsx | Form with validation & submission |
-| src/app/api/auth/[...nextauth]/route.ts | NextAuth.js v5 handler |
-| src/auth.ts | NextAuth.js v5 configuration |
-| src/middleware.ts | Route protection & redirects |
+| src/auth.ts | NextAuth.js v5 config: Credentials provider, JWT callbacks, type extensions |
+| src/middleware.ts | Route protection: auth check + role-based route access (`roleRoutes`) |
+| src/app/api/auth/[...nextauth]/route.ts | NextAuth.js v5 handler exports |
+| src/app/(auth)/login/page.tsx | Login page layout |
+| src/app/(auth)/login/login-form.tsx | Form with React Hook Form + Zod validation |
+| src/lib/permissions.ts | RBAC definitions: roles, permissions, hasPermission() & getPermissions() |
+| src/hooks/use-permission.ts | Client hook: can(), canAll(), canAny(), role shortcuts (isAdmin, isSeller, etc.) |
+
+### RBAC System
+
+**Permissions Library** (`src/lib/permissions.ts`):
+- Defines 13 granular permissions using `resource:action` convention
+- Maps 4 roles to permission sets
+- Exports `hasPermission(role, permission)` for server-side checks
+- Exports `getPermissions(role)` to fetch all role permissions
+
+**Permission Categories**:
+- Request: view, create, edit, edit_own, delete
+- Operator: view, create, edit, edit_claimed, claim, approve, delete
+- Revenue: view, manage
+- Expense: view, manage
+- Supplier: view, manage
+- User: view, manage
+
+**Permission Hook** (`src/hooks/use-permission.ts`):
+- Client-side permission checking via NextAuth `useSession()`
+- `can(permission)` - Check single permission
+- `canAll(permissions[])` - AND logic (all required)
+- `canAny(permissions[])` - OR logic (any match)
+- Shortcuts: `isAdmin`, `isAccountant`, `isSeller`, `isOperator`, `isAuthenticated`, `isLoading`
+
+**Middleware Route Access** (`src/middleware.ts`):
+```typescript
+const roleRoutes = {
+  "/requests": ["ADMIN", "SELLER", "OPERATOR", "ACCOUNTANT"],
+  "/operators": ["ADMIN", "OPERATOR", "ACCOUNTANT"],
+  "/revenue": ["ADMIN", "ACCOUNTANT"],
+  "/expense": ["ADMIN", "ACCOUNTANT"],
+  "/settings": ["ADMIN"],
+  "/suppliers": ["ADMIN", "ACCOUNTANT"],
+}
+```
+
+### UI Components
+
+**SessionProviderWrapper** (`src/components/providers/session-provider-wrapper.tsx`):
+- Client component wrapping NextAuth SessionProvider
+- Enables useSession() hook availability throughout app
+- Wrapped by root layout
+
+**MasterDetailLayout** (`src/components/layouts/master-detail-layout.tsx`):
+- Responsive 2-panel layout with resizable panels (desktop, md+)
+- Mobile: Full-width list with Sheet overlay for detail
+- Props: master, detail, selectedId, onClose, storageKey (localStorage persistence)
+- Examples: requests list/detail, suppliers list/detail
+
+**SlideInPanel** (`src/components/layouts/slide-in-panel.tsx`):
+- Mobile detail panel: Right-side sheet overlay
+- Props: isOpen, onClose, title, description, children
+- Used by MasterDetailLayout for mobile view
+- Responsive widths: 85vw (mobile), 540px (sm), 600px (md)
 
 ---
 

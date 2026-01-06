@@ -247,56 +247,70 @@ PostgreSQL (Cache)
 
 ## Implementation Roadmap
 
-### Phase 1: MVP (Completed)
+### Phase 1: MVP (Completed - 2026-01-01)
 - [x] Supplier module (CRUD, transactions, balance)
 - [x] Dashboard layout with Header and AI Assistant
 - [x] TypeScript type system
 - [x] Database schema with Prisma
 - [x] shadcn/ui component library setup
 
-### Phase 2: Authentication & Route Protection (Completed)
-- [x] NextAuth.js v5 configuration
-- [x] Credentials provider with password validation
-- [x] Middleware for route protection
-- [x] Role-based access control (RBAC)
+### Phase 2: Authentication (Completed - 2026-01-04)
+- [x] NextAuth.js v5 configuration with Credentials provider
+- [x] Password hashing with bcryptjs (timing attack prevention)
+- [x] JWT session strategy (24-hour expiry)
+- [x] Type-safe session & token extensions
+- [x] AUTH_SECRET validation (min 32 chars)
 
-### Phase 3: Middleware Implementation (Completed)
-- [x] Route protection middleware
-- [x] User role verification
-- [x] Callback URL redirect handling
-- [x] Session management configuration
+### Phase 3: Middleware & Route Protection (Completed - 2026-01-04)
+- [x] Middleware for route protection (auth check)
+- [x] Role-based route access (`roleRoutes` config)
+- [x] Redirect unauthenticated to /login with callbackUrl
+- [x] Public routes whitelist (/login, /api/auth, /forbidden)
+- [x] 403 Forbidden page for unauthorized roles
 
-### Phase 4: Login Page (Completed)
+### Phase 4: RBAC & Login Page (Completed - 2026-01-05)
+- [x] Permission library with 13 granular permissions (`src/lib/permissions.ts`)
+- [x] Role-permission mapping (ADMIN, SELLER, OPERATOR, ACCOUNTANT)
+- [x] usePermission hook for client-side checks
 - [x] Login page UI (/login route)
-- [x] Form validation (React Hook Form + Zod)
+- [x] LoginForm with React Hook Form + Zod validation
 - [x] Open redirect protection (getSafeCallbackUrl)
 - [x] Toast notifications (Sonner)
 - [x] Suspense boundary for SSR compatibility
 - [x] Vietnamese localization
 - [x] Comprehensive test coverage
 
-### Phase 5: Core Modules (Next)
-- [ ] Customer Request module (CRUD)
-- [ ] Operator module
-- [ ] Revenue module
-- [ ] Advanced form components
+### Phase 5: Responsive Layouts (Completed - 2026-01-05)
+- [x] SessionProviderWrapper (NextAuth SessionProvider)
+- [x] MasterDetailLayout (responsive 2-panel with resizable desktop + sheet mobile)
+- [x] SlideInPanel (right-side mobile detail overlay)
+- [x] localStorage persistence for panel sizes
+- [x] Mobile-first responsive design
 
-### Phase 6: Integrations (Planned)
+### Phase 6: Core Modules (Next)
+- [ ] Customer Request module (CRUD with form builder)
+- [ ] Operator module (with claim/approve workflow)
+- [ ] Revenue module (multi-currency with exchange rates)
+- [ ] Advanced form components (date picker, multi-select, etc.)
+
+### Phase 7: Integrations (Planned)
 - [ ] Google Sheets bidirectional sync
 - [ ] Gmail API integration with AI analysis
 - [ ] OAuth providers (Google, GitHub)
+- [ ] Webhook support for external integrations
 
-### Phase 7: Enhancement (Planned)
+### Phase 8: Enhancement (Planned)
 - [ ] AI knowledge base management
 - [ ] Advanced reporting and analytics
 - [ ] Multi-user collaboration features
-- [ ] Production deployment
+- [ ] Notification system (email, SMS)
 
-### Phase 8: Polish (Planned)
+### Phase 9: Production (Planned)
 - [ ] Internationalization (i18n)
 - [ ] Performance optimization
 - [ ] Security audit and hardening
-- [ ] User documentation
+- [ ] Load testing and scalability
+- [ ] User documentation and training
 
 ---
 

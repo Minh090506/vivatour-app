@@ -596,130 +596,140 @@ Stream response to UI
 - Customer context understanding
 - Multi-turn conversation
 
-### 4. NextAuth.js v5 (Authentication) [Phase 02 - Configured, Phase 04 - Login Page]
+### 4. NextAuth.js v5 (Authentication & RBAC) [Phase 02-04 Complete]
 
-**Purpose**: User authentication and session management
+**Purpose**: User authentication, session management, and role-based access control
 
-**Framework**: NextAuth.js v5
-**Configuration File**: `src/auth.ts`
-**API Route**: `src/app/api/auth/[...nextauth]/route.ts`
-**Login Page**: `src/app/login/page.tsx` (Phase 04)
+**Framework**: NextAuth.js v5 with Credentials provider
+**Core Files**:
+- `src/auth.ts` - NextAuth configuration with JWT callbacks
+- `src/middleware.ts` - Route protection & role-based authorization
+- `src/app/api/auth/[...nextauth]/route.ts` - NextAuth handlers
+- `src/app/(auth)/login/` - Login page with form validation
+- `src/lib/permissions.ts` - RBAC permission definitions
+- `src/hooks/use-permission.ts` - Client-side permission checking
 
-**Login Page Implementation (Phase 04)**:
-
-- **Location**: `/login` route
-- **Component**: `src/app/login/login-form.tsx`
-- **Features**:
-  - Email/password form with React Hook Form + Zod validation
-  - Open redirect protection via `getSafeCallbackUrl()`
-  - Toast notifications (sonner) for user feedback
-  - Suspense boundary for SSR compatibility
-  - Vietnamese UI localization
-  - Accessible form inputs with proper labels & autocomplete
-
-**Form Validation**:
-```typescript
-loginSchema = z.object({
-  email: z.string().email("Email khong hop le"),
-  password: z.string().min(1, "Mat khau bat buoc"),
-})
-```
-
-**Security Functions**:
-- `getSafeCallbackUrl()`: Validates callback URLs to prevent open redirects
-  - Only allows relative paths (starts with single /)
-  - Blocks protocol-relative URLs (//)
-  - Default fallback to /requests
-
-**Authentication Flow**:
+**Auth Flow**:
 
 ```
 User navigates to /login
     ↓
-LoginForm renders with Suspense boundary
+LoginForm (React Hook Form + Zod validation)
+    ├── Email/password input with accessibility
+    ├── Open redirect protection via getSafeCallbackUrl()
+    └── Sonner toast notifications
     ↓
-User enters email & password
+signIn("credentials") → NextAuth.js Credentials Provider
+    ├── Email lookup in database
+    ├── Bcrypt password verification with timing attack protection
+    └── Extract user id, email, name, role
     ↓
-Zod schema validates input
+JWT Token Creation
+    ├── Payload: id, email, name, role
+    ├── Signed with AUTH_SECRET (min 32 chars)
+    └── Stored in httpOnly, secure cookie
     ↓
-signIn("credentials") calls NextAuth.js v5
-    ↓
-NextAuth.js Credentials Provider
-    ├── Email/Password validation
-    ├── Bcrypt hash verification
-    ├── Timing attack protection (dummy hash)
-    └── Role extraction from User model
-    ↓
-Success → JWT Token Creation
-    ├── Contains: id, email, name, role
-    ├── Signed with AUTH_SECRET
-    └── Stored in httpOnly cookie
-    ↓
-Session Management
-    ├── Strategy: JWT (stateless)
+Session Management (stateless JWT)
+    ├── Strategy: JWT
     ├── Max age: 24 hours
-    └── Type-safe role in session
+    └── Type-safe role in session.user.role
     ↓
-Router redirect to callbackUrl (/requests default)
-    └── router.refresh() for fresh data
+Middleware Protection (/src/middleware.ts)
+    ├── Public routes: /login, /api/auth, /forbidden
+    ├── Authenticated check: Redirect to /login if missing session
+    └── Role-based access: Match route to roleRoutes config
     ↓
-Protected Routes
-    ├── Check auth() for session
-    ├── Verify role-based permissions
-    └── Deny access if no session
-    ↓
-API Routes (check session)
-    └── Use auth() middleware for authentication
+Route/Component Access
+    ├── Protected routes deny unauthenticated access
+    └── Role check via middleware (server) or usePermission hook (client)
 ```
 
 **Role-Based Access Control (RBAC)**:
 
-4 roles defined in User model and JWT token:
-- **ADMIN**: Full system access, user management
-- **SELLER**: Create/manage requests, view own data
-- **ACCOUNTANT**: Financial records, accounting lock
-- **OPERATOR**: Service management, cost tracking
+4 roles with granular permissions:
+- **ADMIN** (`*`): Full system access, all permissions via wildcard
+- **SELLER**: `request:view`, `request:create`, `request:edit_own`, `operator:view`
+- **OPERATOR**: `request:view`, `operator:view`, `operator:claim`, `operator:edit_claimed`
+- **ACCOUNTANT**: Revenue, expense, supplier management + operator approval
+
+**Middleware Route Access** (`roleRoutes`):
+```
+/requests   → ADMIN, SELLER, OPERATOR, ACCOUNTANT
+/operators  → ADMIN, OPERATOR, ACCOUNTANT
+/revenue    → ADMIN, ACCOUNTANT
+/expense    → ADMIN, ACCOUNTANT
+/settings   → ADMIN only
+/suppliers  → ADMIN, ACCOUNTANT
+```
+
+**Permission Checking**:
+
+Server-side (auth utilities):
+```typescript
+import { auth } from "@/auth"
+const session = await auth()
+if (session?.user?.role === "ADMIN") { ... }
+```
+
+Client-side (usePermission hook):
+```typescript
+const { can, isAdmin, isSeller } = usePermission()
+if (can("request:create")) { ... }
+if (isAdmin) { ... }
+```
 
 **Security Features**:
 
-1. **Password Hashing**: bcryptjs with configurable rounds (default 10)
-2. **Timing Attack Prevention**: Dummy hash comparison for non-existent users
-3. **Auth Secret Validation**: Enforced minimum 32 characters at startup
-4. **Secure Cookies**: httpOnly, sameSite flags (NextAuth.js handles)
-5. **JWT Signing**: Uses AUTH_SECRET for cryptographic signing
-6. **Session Expiry**: 24-hour automatic expiration
+1. **Password Hashing**: bcryptjs with timing attack prevention (dummy hash for non-existent users)
+2. **AUTH_SECRET Validation**: Enforced minimum 32 characters at startup (fatal error if missing)
+3. **Secure Cookies**: httpOnly, secure, sameSite flags (NextAuth.js handles)
+4. **CSRF Protection**: Built-in via NextAuth.js v5
+5. **JWT Signing**: Cryptographic signing with AUTH_SECRET
+6. **Session Expiry**: 24-hour automatic token expiration
 
 **Environment Variables**:
-
 ```env
-AUTH_SECRET="<generate-openssl-rand-base64-32>"    # Min 32 chars
-NEXTAUTH_URL="http://localhost:3000"               # Login redirect URL
+AUTH_SECRET="<openssl rand -base64 32>"    # Required: min 32 chars
+DATABASE_URL="postgresql://..."             # For user lookup in Credentials provider
 ```
 
 **Type Safety**:
 
-Extended NextAuth types in `src/auth.ts`:
+Extended NextAuth module declarations in `src/auth.ts`:
 ```typescript
-interface User {
-  role: "ADMIN" | "SELLER" | "ACCOUNTANT" | "OPERATOR"
+declare module "next-auth" {
+  interface User {
+    role: RoleType  // "ADMIN" | "SELLER" | "ACCOUNTANT" | "OPERATOR"
+  }
+  interface Session {
+    user: {
+      id: string
+      email: string
+      name?: string | null
+      role: RoleType
+    }
+  }
 }
-interface Session {
-  user: {
+
+declare module "@auth/core/jwt" {
+  interface JWT {
     id: string
-    email: string
-    name?: string | null
     role: RoleType
   }
 }
-interface JWT {
-  id: string
-  role: RoleType
-}
 ```
 
-**Future OAuth Providers** (planned):
-- Google OAuth 2.0
-- GitHub OAuth 2.0
+**UI Components**:
+
+- **SessionProviderWrapper** (`src/components/providers/session-provider-wrapper.tsx`): Wraps app with NextAuth SessionProvider for useSession availability
+- **MasterDetailLayout** (`src/components/layouts/master-detail-layout.tsx`): Responsive 2-panel layout (resizable on desktop, sheet overlay on mobile)
+- **SlideInPanel** (`src/components/layouts/slide-in-panel.tsx`): Mobile slide-in detail panel (right-side sheet)
+
+**Future Enhancements**:
+- Google OAuth 2.0 provider
+- GitHub OAuth 2.0 provider
+- Email verification workflow
+- Password reset functionality
 
 ---
 
