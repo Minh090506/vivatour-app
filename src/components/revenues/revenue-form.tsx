@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CurrencyInput } from '@/components/ui/currency-input';
+import { usePermission } from '@/hooks/use-permission';
 
 // Payment types (inline to avoid build-time dependency)
 const PAYMENT_TYPES = {
@@ -58,6 +59,7 @@ interface RevenueFormProps {
 }
 
 export function RevenueForm({ revenue, requestId, onSuccess, onCancel }: RevenueFormProps) {
+  const { userId } = usePermission();
   const isEditing = !!revenue;
 
   // Form state
@@ -143,7 +145,7 @@ export function RevenueForm({ revenue, requestId, onSuccess, onCancel }: Revenue
         exchangeRate: currencyData.exchangeRate,
         amountVND: currencyData.amountVND,
         notes: formData.notes?.trim() || null,
-        userId: 'system', // TODO: Get from auth
+        userId: userId || 'unknown',
       };
 
       const res = await fetch(url, {

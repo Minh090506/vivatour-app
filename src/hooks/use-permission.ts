@@ -58,6 +58,9 @@ export function usePermission() {
     /** Current user's role (null if not authenticated) */
     role,
 
+    /** Current user's ID (null if not authenticated) */
+    userId: (session?.user?.id as string) || null,
+
     /** Session loading status */
     isLoading: status === "loading",
 

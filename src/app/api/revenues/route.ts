@@ -1,10 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { PAYMENT_TYPE_KEYS, CURRENCY_KEYS } from '@/config/revenue-config';
+import { auth } from '@/auth';
+import { hasPermission, type Role } from '@/lib/permissions';
 
 // GET /api/revenues - List with filters
 export async function GET(request: NextRequest) {
   try {
+    // Verify authentication
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { success: false, error: 'Chưa đăng nhập' },
+        { status: 401 }
+      );
+    }
+
+    // Verify permission
+    const role = session.user.role as Role;
+    if (!hasPermission(role, 'revenue:view')) {
+      return NextResponse.json(
+        { success: false, error: 'Không có quyền xem thu nhập' },
+        { status: 403 }
+      );
+    }
     const { searchParams } = new URL(request.url);
 
     // Extract filters
@@ -69,6 +88,24 @@ export async function GET(request: NextRequest) {
 // POST /api/revenues - Create revenue
 export async function POST(request: NextRequest) {
   try {
+    // Verify authentication
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { success: false, error: 'Chưa đăng nhập' },
+        { status: 401 }
+      );
+    }
+
+    // Verify permission
+    const role = session.user.role as Role;
+    if (!hasPermission(role, 'revenue:manage')) {
+      return NextResponse.json(
+        { success: false, error: 'Không có quyền tạo thu nhập' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
 
     // Validate required fields
@@ -136,7 +173,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create revenue
+    // Create revenue - use authenticated user ID from session
     const revenue = await prisma.revenue.create({
       data: {
         requestId: body.requestId,
@@ -148,7 +185,7 @@ export async function POST(request: NextRequest) {
         amountVND,
         paymentSource: body.paymentSource,
         notes: body.notes?.trim() || null,
-        userId: body.userId || 'system', // TODO: Get from auth session
+        userId: session.user.id,
       },
       include: {
         request: { select: { code: true, customerName: true, bookingCode: true } },

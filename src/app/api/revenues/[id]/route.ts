@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { PAYMENT_TYPE_KEYS, CURRENCY_KEYS } from '@/config/revenue-config';
+import { auth } from '@/auth';
+import { hasPermission, type Role } from '@/lib/permissions';
 
 // GET /api/revenues/[id] - Get single revenue
 export async function GET(
@@ -8,6 +10,24 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Verify authentication
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { success: false, error: 'Chưa đăng nhập' },
+        { status: 401 }
+      );
+    }
+
+    // Verify permission
+    const role = session.user.role as Role;
+    if (!hasPermission(role, 'revenue:view')) {
+      return NextResponse.json(
+        { success: false, error: 'Không có quyền xem thu nhập' },
+        { status: 403 }
+      );
+    }
+
     const { id } = await params;
 
     const revenue = await prisma.revenue.findUnique({
@@ -42,6 +62,24 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Verify authentication
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { success: false, error: 'Chưa đăng nhập' },
+        { status: 401 }
+      );
+    }
+
+    // Verify permission
+    const role = session.user.role as Role;
+    if (!hasPermission(role, 'revenue:manage')) {
+      return NextResponse.json(
+        { success: false, error: 'Không có quyền sửa thu nhập' },
+        { status: 403 }
+      );
+    }
+
     const { id } = await params;
     const body = await request.json();
 
@@ -139,6 +177,24 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Verify authentication
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { success: false, error: 'Chưa đăng nhập' },
+        { status: 401 }
+      );
+    }
+
+    // Verify permission
+    const role = session.user.role as Role;
+    if (!hasPermission(role, 'revenue:manage')) {
+      return NextResponse.json(
+        { success: false, error: 'Không có quyền xóa thu nhập' },
+        { status: 403 }
+      );
+    }
+
     const { id } = await params;
 
     // Check if exists

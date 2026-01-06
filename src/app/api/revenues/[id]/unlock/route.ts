@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { auth } from '@/auth';
 
 // POST /api/revenues/[id]/unlock - ADMIN only
 export async function POST(
@@ -7,18 +8,24 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    const body = await request.json();
-    const userId = body.userId || 'system';
+    // Verify authentication
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { success: false, error: 'Chưa đăng nhập' },
+        { status: 401 }
+      );
+    }
 
-    // TODO: Verify user is ADMIN
-    // const user = await getUser(userId);
-    // if (user.role !== 'ADMIN') {
-    //   return NextResponse.json(
-    //     { success: false, error: 'Chỉ Admin được mở khóa thu nhập' },
-    //     { status: 403 }
-    //   );
-    // }
+    // Verify user is ADMIN
+    if (session.user.role !== 'ADMIN') {
+      return NextResponse.json(
+        { success: false, error: 'Chỉ Admin được mở khóa thu nhập' },
+        { status: 403 }
+      );
+    }
+
+    const { id } = await params;
 
     const revenue = await prisma.revenue.findUnique({ where: { id } });
 

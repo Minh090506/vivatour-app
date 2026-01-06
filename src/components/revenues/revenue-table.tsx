@@ -25,6 +25,7 @@ import {
 import { Edit, Trash2, Lock, Unlock } from 'lucide-react';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
+import { usePermission } from '@/hooks/use-permission';
 
 // Payment type labels
 const PAYMENT_TYPE_LABELS: Record<string, string> = {
@@ -80,6 +81,7 @@ export function RevenueTable({
   canManage = true,
   canUnlock = false,
 }: RevenueTableProps) {
+  const { userId } = usePermission();
   const [deleting, setDeleting] = useState<string | null>(null);
   const [locking, setLocking] = useState<string | null>(null);
 
@@ -108,7 +110,7 @@ export function RevenueTable({
       const res = await fetch(`/api/revenues/${id}/lock`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: 'system' }), // TODO: Get from auth
+        body: JSON.stringify({ userId: userId || 'unknown' }),
       });
       const data = await res.json();
 
@@ -131,7 +133,7 @@ export function RevenueTable({
       const res = await fetch(`/api/revenues/${id}/unlock`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: 'system' }), // TODO: Get from auth
+        body: JSON.stringify({ userId: userId || 'unknown' }),
       });
       const data = await res.json();
 
