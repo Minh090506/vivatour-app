@@ -6,8 +6,9 @@ import {
   SellerTable,
   FollowUpStatusTable,
   FollowUpStatusFormModal,
+  GoogleSheetsSync,
 } from '@/components/settings';
-import { Settings, Users, ListChecks } from 'lucide-react';
+import { Settings, Users, ListChecks, FileSpreadsheet } from 'lucide-react';
 import type { FollowUpStatus } from '@/types';
 
 export default function SettingsPage() {
@@ -46,6 +47,10 @@ export default function SettingsPage() {
             <ListChecks className="h-4 w-4" />
             Quản lý Trạng thái
           </TabsTrigger>
+          <TabsTrigger value="sync" className="gap-2">
+            <FileSpreadsheet className="h-4 w-4" />
+            Google Sheets Sync
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="sellers">
@@ -77,6 +82,12 @@ export default function SettingsPage() {
                 setFollowUpRefreshKey((k) => k + 1);
               }}
             />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="sync">
+          <div className="bg-white rounded-lg border p-6">
+            <GoogleSheetsSync />
           </div>
         </TabsContent>
       </Tabs>
