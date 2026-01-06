@@ -42,11 +42,44 @@ async function seedFollowUpStatuses() {
   console.log("✓ Seeded 14 follow-up statuses");
 }
 
+/**
+ * Seed test users for all roles
+ * Password for all: Test123!
+ */
+async function seedTestUsers() {
+  console.log("Seeding test users...");
+
+  const testPassword = await hash("Test123!", 10);
+
+  const testUsers = [
+    { email: "admin@test.com", name: "Admin User", role: "ADMIN" as const },
+    { email: "seller@test.com", name: "Seller User", role: "SELLER" as const },
+    { email: "accountant@test.com", name: "Accountant User", role: "ACCOUNTANT" as const },
+    { email: "operator@test.com", name: "Operator User", role: "OPERATOR" as const },
+  ];
+
+  for (const user of testUsers) {
+    const result = await prisma.user.upsert({
+      where: { email: user.email },
+      update: {}, // Don't update if exists
+      create: {
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        password: testPassword,
+      },
+    });
+    console.log(`  ✓ ${result.role}: ${result.email}`);
+  }
+
+  console.log("✓ Seeded 4 test users (password: Test123!)");
+}
+
 async function seedAdminUser() {
   const adminEmail = process.env.ADMIN_EMAIL || "admin@vivatour.vn";
   const adminPassword = process.env.ADMIN_PASSWORD || "admin123!";
 
-  console.log(`Seeding admin user: ${adminEmail}`);
+  console.log(`Seeding production admin: ${adminEmail}`);
 
   const existing = await prisma.user.findUnique({
     where: { email: adminEmail },
@@ -74,6 +107,7 @@ async function seedAdminUser() {
 
 async function main() {
   await seedFollowUpStatuses();
+  await seedTestUsers();
   await seedAdminUser();
 }
 
