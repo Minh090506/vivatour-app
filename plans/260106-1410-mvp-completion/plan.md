@@ -28,7 +28,7 @@ Complete the MVP with 5 phases: Testing infrastructure, Google Sheets sync, Verc
 | Phase | Description | Effort | Status |
 |-------|-------------|--------|--------|
 | [Phase 01](./phase-01-testing-seed-data.md) | Testing Checklist + Seed Data | 2-3h | ✅ done |
-| [Phase 02](./phase-02-google-sheets-sync.md) | Google Sheets Sync (append-only) | 4-6h | pending |
+| [Phase 02](./phase-02-google-sheets-sync.md) | Google Sheets Sync (append-only) | 4-6h | ✅ done |
 | [Phase 03](./phase-03-vercel-deployment.md) | Deploy to Vercel Free | 1-2h | pending |
 | [Phase 04](./phase-04-knowledge-base-import.md) | Knowledge Base Import | 2-3h | pending |
 | [Phase 05](./phase-05-ai-chat-integration.md) | AI Chat Integration | 3-4h | pending |
@@ -45,9 +45,14 @@ Complete the MVP with 5 phases: Testing infrastructure, Google Sheets sync, Verc
 - `docs/testing-checklist.md` - Manual QA checklist
 - `src/lib/logger.ts` - Error logging utility
 
-**To Create:**
+**Created (Phase 02):**
 - `src/lib/google-sheets.ts` - Sheets API client
-- `src/app/api/sync/sheets/route.ts` - Sync endpoint
+- `src/lib/sheet-mappers.ts` - Row mappers for Request/Operator/Revenue
+- `src/app/api/sync/sheets/route.ts` - Sync endpoint (POST/GET)
+- `src/components/settings/google-sheets-sync.tsx` - Sync UI component
+- `src/components/ui/alert.tsx` - Alert component (shadcn)
+
+**To Create:**
 - `src/app/api/ai/chat/route.ts` - AI endpoint
 - `src/lib/knowledge-search.ts` - Knowledge search
 
