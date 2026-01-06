@@ -27,7 +27,7 @@ Complete the MVP with 5 phases: Testing infrastructure, Google Sheets sync, Verc
 
 | Phase | Description | Effort | Status |
 |-------|-------------|--------|--------|
-| [Phase 01](./phase-01-testing-seed-data.md) | Testing Checklist + Seed Data | 2-3h | pending |
+| [Phase 01](./phase-01-testing-seed-data.md) | Testing Checklist + Seed Data | 2-3h | ✅ done |
 | [Phase 02](./phase-02-google-sheets-sync.md) | Google Sheets Sync (append-only) | 4-6h | pending |
 | [Phase 03](./phase-03-vercel-deployment.md) | Deploy to Vercel Free | 1-2h | pending |
 | [Phase 04](./phase-04-knowledge-base-import.md) | Knowledge Base Import | 2-3h | pending |
@@ -40,8 +40,12 @@ Complete the MVP with 5 phases: Testing infrastructure, Google Sheets sync, Verc
 - `src/components/layout/AIAssistant.tsx` - UI widget (placeholder)
 - `src/lib/permissions.ts` - RBAC system
 
+**Created (Phase 01):**
+- `prisma/seed.ts` - Seed script with test users
+- `docs/testing-checklist.md` - Manual QA checklist
+- `src/lib/logger.ts` - Error logging utility
+
 **To Create:**
-- `prisma/seed.ts` - Seed script
 - `src/lib/google-sheets.ts` - Sheets API client
 - `src/app/api/sync/sheets/route.ts` - Sync endpoint
 - `src/app/api/ai/chat/route.ts` - AI endpoint
