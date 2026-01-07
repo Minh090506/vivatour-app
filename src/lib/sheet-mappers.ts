@@ -134,9 +134,12 @@ export interface RequestRowData {
 /**
  * Map Request sheet row to database fields
  *
+ * Syncs ALL rows where seller (A) is not empty.
+ * For rows without booking code (T), generates "RQ-{rowIndex}" code.
+ *
  * Actual columns from Google Sheet:
- * A(0): Seller
- * B(1): Name (customerName)
+ * A(0): Seller (REQUIRED - determines if row is synced)
+ * B(1): Name (customerName, REQUIRED)
  * C(2): Contact
  * E(4): Pax
  * F(5): Quốc gia (country)
@@ -147,7 +150,7 @@ export interface RequestRowData {
  * L(11): DT dự kiến (expectedRevenue)
  * M(12): Chi phí dự kiến (expectedCost)
  * N(13): Ghi chú (notes)
- * T(19): Mã khách (code) - UNIQUE REQUEST CODE
+ * T(19): Mã khách (booking code) - OPTIONAL, auto-generated if empty
  * Z(25): Ngày dự kiến kết thúc (endDate)
  */
 export async function mapRequestRow(
@@ -170,15 +173,19 @@ export async function mapRequestRow(
   const code = row[19]; // T: Mã khách (UNIQUE CODE)
   const endDate = row[25]; // Z: Ngày dự kiến kết thúc
 
-  // Skip empty rows or header rows
-  if (!code?.trim() || code === "Mã khách") {
+  // Skip empty rows or header rows (require seller name, not booking code)
+  if (!sellerName?.trim() || sellerName === "Seller") {
     return null;
   }
 
   // Skip if no customer name (required field)
-  if (!customerName?.trim()) {
+  if (!customerName?.trim() || customerName === "Name") {
     return null;
   }
+
+  // Generate code: use booking code if exists, otherwise generate from row index
+  const bookingCode = code?.trim();
+  const generatedCode = bookingCode || `RQ-${rowIndex.toString().padStart(5, "0")}`;
 
   // Find seller by name or use default
   let seller = await prisma.user.findFirst({
@@ -201,7 +208,7 @@ export async function mapRequestRow(
   const costNum = parseNumber(expectedCost);
 
   return {
-    code: code.trim(),
+    code: generatedCode,
     customerName: customerName.trim(),
     contact: contact?.trim() || "",
     country: country?.trim() || "Unknown",
