@@ -43,30 +43,34 @@ function parsePrivateKey(key: string): string {
  */
 interface SheetConfig {
   spreadsheetId: string | undefined;
+  tabName: string; // Actual tab name in Google Sheet (may differ from internal key)
   headerRow: number; // Row containing headers (data starts at headerRow + 1)
 }
 
 /**
  * Get configuration for a specific sheet type.
- * Includes spreadsheet ID and header row (for sheets with different structures).
+ * Includes spreadsheet ID, actual tab name, and header row.
  */
 export function getSheetConfig(sheetName: string): SheetConfig {
   const configs: Record<string, SheetConfig> = {
     Request: {
       spreadsheetId: process.env.SHEET_ID_REQUEST,
+      tabName: "Request",
       headerRow: 1, // Headers in row 1, data from row 2
     },
     Operator: {
       spreadsheetId: process.env.SHEET_ID_OPERATOR,
+      tabName: "Operator_Mix", // Actual tab name differs from internal key
       headerRow: 1, // Headers in row 1, data from row 2
     },
     Revenue: {
       spreadsheetId: process.env.SHEET_ID_REVENUE,
+      tabName: "Revenue",
       headerRow: 2, // Row 1 is blank, headers in row 2, data from row 3
     },
   };
 
-  const config = configs[sheetName] || { spreadsheetId: undefined, headerRow: 1 };
+  const config = configs[sheetName] || { spreadsheetId: undefined, tabName: sheetName, headerRow: 1 };
   config.spreadsheetId = config.spreadsheetId || process.env.GOOGLE_SHEET_ID;
 
   return config;
@@ -129,7 +133,7 @@ export interface SheetRow {
 /**
  * Fetch data from a Google Sheet tab
  *
- * @param sheetName - Tab name (e.g., 'Request', 'Operator', 'Revenue')
+ * @param sheetName - Internal key (e.g., 'Request', 'Operator', 'Revenue')
  * @param startRow - Row to start from (default: 2, skips header)
  * @param spreadsheetId - Optional spreadsheet ID (defaults to getSheetIdForType)
  * @returns Array of SheetRow with rowIndex and values
@@ -139,12 +143,17 @@ export async function getSheetData(
   startRow: number = 2,
   spreadsheetId?: string
 ): Promise<SheetRow[]> {
-  const sheetId = spreadsheetId || getSheetIdForType(sheetName);
+  const config = getSheetConfig(sheetName);
+  const sheetId = spreadsheetId || config.spreadsheetId;
+  if (!sheetId) {
+    throw new Error(`No spreadsheet ID for ${sheetName}`);
+  }
   const sheets = getSheetsClient();
 
+  // Use tabName from config (may differ from internal sheetName key)
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: sheetId,
-    range: `${sheetName}!A${startRow}:Z`,
+    range: `${config.tabName}!A${startRow}:Z`,
   });
 
   const rows = response.data.values || [];
@@ -179,7 +188,7 @@ export async function getLastSyncedRow(sheetName: string): Promise<number> {
 /**
  * Get sheet headers (first row)
  *
- * @param sheetName - Tab name
+ * @param sheetName - Internal key (e.g., 'Request', 'Operator', 'Revenue')
  * @param spreadsheetId - Optional spreadsheet ID (defaults to getSheetIdForType)
  * @returns Array of header column names
  */
@@ -187,12 +196,17 @@ export async function getSheetHeaders(
   sheetName: string,
   spreadsheetId?: string
 ): Promise<string[]> {
-  const sheetId = spreadsheetId || getSheetIdForType(sheetName);
+  const config = getSheetConfig(sheetName);
+  const sheetId = spreadsheetId || config.spreadsheetId;
+  if (!sheetId) {
+    throw new Error(`No spreadsheet ID for ${sheetName}`);
+  }
   const sheets = getSheetsClient();
 
+  // Use tabName from config and headerRow for correct header position
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: sheetId,
-    range: `${sheetName}!A1:Z1`,
+    range: `${config.tabName}!A${config.headerRow}:Z${config.headerRow}`,
   });
 
   return (response.data.values?.[0] as string[]) || [];
