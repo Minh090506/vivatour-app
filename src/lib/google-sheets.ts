@@ -39,23 +39,59 @@ function parsePrivateKey(key: string): string {
 }
 
 /**
+ * Sheet configuration per type
+ */
+interface SheetConfig {
+  spreadsheetId: string | undefined;
+  headerRow: number; // Row containing headers (data starts at headerRow + 1)
+}
+
+/**
+ * Get configuration for a specific sheet type.
+ * Includes spreadsheet ID and header row (for sheets with different structures).
+ */
+export function getSheetConfig(sheetName: string): SheetConfig {
+  const configs: Record<string, SheetConfig> = {
+    Request: {
+      spreadsheetId: process.env.SHEET_ID_REQUEST,
+      headerRow: 1, // Headers in row 1, data from row 2
+    },
+    Operator: {
+      spreadsheetId: process.env.SHEET_ID_OPERATOR,
+      headerRow: 1, // Headers in row 1, data from row 2
+    },
+    Revenue: {
+      spreadsheetId: process.env.SHEET_ID_REVENUE,
+      headerRow: 2, // Row 1 is blank, headers in row 2, data from row 3
+    },
+  };
+
+  const config = configs[sheetName] || { spreadsheetId: undefined, headerRow: 1 };
+  config.spreadsheetId = config.spreadsheetId || process.env.GOOGLE_SHEET_ID;
+
+  return config;
+}
+
+/**
  * Get spreadsheet ID for a specific sheet type.
  * Checks per-sheet env var first, falls back to GOOGLE_SHEET_ID.
  */
 export function getSheetIdForType(sheetName: string): string {
-  const sheetEnvMap: Record<string, string | undefined> = {
-    Request: process.env.SHEET_ID_REQUEST,
-    Operator: process.env.SHEET_ID_OPERATOR,
-    Revenue: process.env.SHEET_ID_REVENUE,
-  };
-
-  const sheetId = sheetEnvMap[sheetName] || process.env.GOOGLE_SHEET_ID;
-  if (!sheetId) {
+  const config = getSheetConfig(sheetName);
+  if (!config.spreadsheetId) {
     throw new Error(
       `No spreadsheet ID for ${sheetName}. Set SHEET_ID_${sheetName.toUpperCase()} or GOOGLE_SHEET_ID`
     );
   }
-  return sheetId;
+  return config.spreadsheetId;
+}
+
+/**
+ * Get the data start row for a sheet (row after headers).
+ */
+export function getDataStartRow(sheetName: string): number {
+  const config = getSheetConfig(sheetName);
+  return config.headerRow + 1;
 }
 
 function getSheetsClient() {
@@ -123,7 +159,7 @@ export async function getSheetData(
  * Get the last successfully synced row for a sheet
  *
  * @param sheetName - Tab name to check
- * @returns Last synced rowIndex, or 1 if no prior sync
+ * @returns Last synced rowIndex, or (headerRow) if no prior sync
  */
 export async function getLastSyncedRow(sheetName: string): Promise<number> {
   const lastSync = await prisma.syncLog.findFirst({
@@ -131,8 +167,13 @@ export async function getLastSyncedRow(sheetName: string): Promise<number> {
     orderBy: { rowIndex: "desc" },
   });
 
-  // Return 1 so next fetch starts from row 2 (after header)
-  return lastSync?.rowIndex ?? 1;
+  if (lastSync) {
+    return lastSync.rowIndex;
+  }
+
+  // Return headerRow so next fetch starts from data row (headerRow + 1)
+  const config = getSheetConfig(sheetName);
+  return config.headerRow;
 }
 
 /**

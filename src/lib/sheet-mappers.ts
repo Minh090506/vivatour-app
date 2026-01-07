@@ -26,7 +26,7 @@ function parseNumber(value: string | undefined): number | null {
 
 /**
  * Parse date from sheet cell
- * Supports: DD/MM/YYYY, YYYY-MM-DD, MM/DD/YYYY
+ * Supports: DD/MM/YYYY, YYYY-MM-DD, MM/DD/YYYY, Excel serial dates
  */
 function parseDate(value: string | undefined): Date | null {
   if (!value?.trim()) return null;
@@ -42,6 +42,22 @@ function parseDate(value: string | undefined): Date | null {
   const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (isoMatch) {
     return new Date(value);
+  }
+
+  // Try ISO datetime format (YYYY-MM-DDTHH:mm:ss.sssZ)
+  const isoDateTimeMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})T/);
+  if (isoDateTimeMatch) {
+    return new Date(value);
+  }
+
+  // Try Excel serial date (number between 1 and 100000 typically)
+  const serialNum = parseFloat(value);
+  if (!isNaN(serialNum) && serialNum > 1 && serialNum < 100000) {
+    // Excel serial date: days since 1899-12-30 (Excel epoch)
+    // Need to subtract 1 because Excel incorrectly counts 1900 as leap year
+    const excelEpoch = new Date(1899, 11, 30);
+    const date = new Date(excelEpoch.getTime() + serialNum * 24 * 60 * 60 * 1000);
+    return date;
   }
 
   // Fallback to Date.parse
@@ -198,30 +214,39 @@ export interface OperatorRowData {
 /**
  * Map Operator sheet row to database fields
  *
- * Expected columns:
- * A: requestCode, B: serviceDate, C: serviceType, D: serviceName,
- * E: supplier, F: costBeforeTax, G: vat, H: totalCost,
- * I: paymentStatus, J: notes
+ * Actual columns from Google Sheet:
+ * A(0): Mã khách (requestCode)
+ * J(9): Ngày sử dụng dịch vụ (serviceDate)
+ * K(10): Loại dịch vụ (serviceType/serviceName)
+ * O(14): Chi phí dự kiến trước thuế (costBeforeTax)
+ * P(15): Thuế VAT (vat)
+ * Q(16): Chi phí dự kiến (totalCost)
+ * S(18): Tài khoản thanh toán (supplier - payment account)
+ * T(19): Ghi chú (notes)
+ * W(22): Dư nợ (remaining balance → paymentStatus)
  */
 export async function mapOperatorRow(
   row: string[],
   rowIndex: number
 ): Promise<OperatorRowData | null> {
-  const [
-    requestCode,
-    serviceDate,
-    serviceType,
-    serviceName,
-    supplier,
-    costBeforeTax,
-    vat,
-    totalCost,
-    paymentStatus,
-    notes,
-  ] = row;
+  // Extract by actual column indices
+  const requestCode = row[0]; // A: Mã khách
+  const serviceDate = row[9]; // J: Ngày sử dụng dịch vụ
+  const serviceType = row[10]; // K: Loại dịch vụ
+  const costBeforeTax = row[14]; // O: Chi phí dự kiến trước thuế
+  const vat = row[15]; // P: Thuế VAT
+  const totalCost = row[16]; // Q: Chi phí dự kiến
+  const supplier = row[18]; // S: Tài khoản thanh toán
+  const notes = row[19]; // T: Ghi chú
+  const remainingBalance = row[22]; // W: Dư nợ
 
-  // Skip empty rows
-  if (!requestCode?.trim() || !serviceName?.trim()) {
+  // Skip empty rows or header rows
+  if (!requestCode?.trim() || requestCode === "Mã khách") {
+    return null;
+  }
+
+  // Skip if no service type (required field)
+  if (!serviceType?.trim()) {
     return null;
   }
 
@@ -242,16 +267,21 @@ export async function mapOperatorRow(
   const vatNum = parseNumber(vat);
   const total = parseNumber(totalCost) || cost;
 
+  // Determine payment status from remaining balance
+  const balance = parseNumber(remainingBalance);
+  const paymentStatus =
+    balance === null || balance === 0 ? "PAID" : "PENDING";
+
   return {
     requestCode: requestCode.trim(),
     serviceDate: parsedDate,
-    serviceType: serviceType?.trim() || "Other",
-    serviceName: serviceName.trim(),
+    serviceType: serviceType.trim(),
+    serviceName: serviceType.trim(), // Use serviceType as serviceName
     supplier: supplier?.trim() || null,
     costBeforeTax: new Decimal(cost),
     vat: vatNum !== null ? new Decimal(vatNum) : null,
     totalCost: new Decimal(total),
-    paymentStatus: paymentStatus?.trim() || "PENDING",
+    paymentStatus,
     notes: notes?.trim() || null,
     userId: operatorUser.id,
     sheetRowIndex: rowIndex,
@@ -278,28 +308,32 @@ export interface RevenueRowData {
 /**
  * Map Revenue sheet row to database fields
  *
- * Expected columns:
- * A: requestCode, B: paymentDate, C: paymentType, D: foreignAmount,
- * E: currency, F: exchangeRate, G: amountVND, H: paymentSource, I: notes
+ * Actual columns from Google Sheet (note: row 1 is blank, row 2 is headers):
+ * A(0): Code (requestCode)
+ * L(11): Khoản thu (paymentType)
+ * M(12): Ngày thu tiền (paymentDate)
+ * N(13): Nguồn thu (paymentSource)
+ * Q(16): Thu ngoại tệ (foreignAmount)
+ * R(17): Tỷ giá (exchangeRate)
+ * S(18): Loại Ngoại tệ (currency)
+ * T(19): Tổng tiền Thu (amountVND)
  */
 export async function mapRevenueRow(
   row: string[],
   rowIndex: number
 ): Promise<RevenueRowData | null> {
-  const [
-    requestCode,
-    paymentDate,
-    paymentType,
-    foreignAmount,
-    currency,
-    exchangeRate,
-    amountVND,
-    paymentSource,
-    notes,
-  ] = row;
+  // Extract by actual column indices
+  const requestCode = row[0]; // A: Code
+  const paymentType = row[11]; // L: Khoản thu
+  const paymentDate = row[12]; // M: Ngày thu tiền
+  const paymentSource = row[13]; // N: Nguồn thu
+  const foreignAmount = row[16]; // Q: Thu ngoại tệ
+  const exchangeRate = row[17]; // R: Tỷ giá
+  const currency = row[18]; // S: Loại Ngoại tệ
+  const amountVND = row[19]; // T: Tổng tiền Thu
 
-  // Skip empty rows
-  if (!requestCode?.trim()) {
+  // Skip empty rows or header rows
+  if (!requestCode?.trim() || requestCode === "Code") {
     return null;
   }
 
@@ -329,7 +363,7 @@ export async function mapRevenueRow(
     exchangeRate: rateNum !== null ? new Decimal(rateNum) : null,
     amountVND: new Decimal(vndNum),
     paymentSource: paymentSource?.trim() || "Bank transfer",
-    notes: notes?.trim() || null,
+    notes: null, // No notes column in this sheet
     userId: accountant.id,
     sheetRowIndex: rowIndex,
   };
