@@ -1,12 +1,13 @@
 ---
 title: "Fix Request Sync - Use RequestID as Unique Key"
 description: "Fix sync to use column AR as unique identifier + status Vietnamese→enum mapping"
-status: pending
+status: completed
 priority: P1
 effort: 1h
 branch: master
 tags: [sync, request, bugfix]
 created: 2026-01-07
+completed: 2026-01-07
 ---
 
 # Plan: Fix Request Sync Logic
@@ -37,8 +38,8 @@ Fix Request sync to use `Request ID` (column AR, index 43) as unique identifier 
 
 | Phase | Description | Status | File |
 |-------|-------------|--------|------|
-| 1 | Fix sheet-mappers.ts | pending | [phase-01-fix-sheet-mappers.md](./phase-01-fix-sheet-mappers.md) |
-| 2 | Truncate + Re-sync | pending | [phase-02-truncate-resync.md](./phase-02-truncate-resync.md) |
+| 1 | Fix sheet-mappers.ts | ✅ completed | [phase-01-fix-sheet-mappers.md](./phase-01-fix-sheet-mappers.md) |
+| 2 | Truncate + Re-sync | ✅ completed | [phase-02-truncate-resync.md](./phase-02-truncate-resync.md) |
 
 ## Files to Modify
 
@@ -47,10 +48,11 @@ Fix Request sync to use `Request ID` (column AR, index 43) as unique identifier 
 
 ## Success Criteria
 
-- [ ] Requests synced with stable Request ID from column AR
-- [ ] Status stored as enum key (e.g., DANG_LL_CHUA_TL)
-- [ ] Filters work correctly
-- [ ] Operator/Revenue link via bookingCode
+- [x] Requests synced with stable Request ID from column AR
+- [x] Status stored as enum key (e.g., DANG_LL_CHUA_TL)
+- [ ] Filters work correctly (needs UI testing after deployment)
+- [x] Operator/Revenue link via bookingCode
+- [x] Code review completed - see [reports/code-reviewer-260107-2346-request-sync-fix-phase2.md](../reports/code-reviewer-260107-2346-request-sync-fix-phase2.md)
 
 ## Risk Mitigation
 

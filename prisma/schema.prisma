@@ -52,9 +52,9 @@ enum Gender {
 
 model Request {
   id              String    @id @default(cuid())
-  code            String    @unique  // Booking Code: 240101-JOHN-US
-  rqid            String?   @unique  // Request ID: RQ-YYMMDD-0001
-  bookingCode     String?   @unique  // Booking Code: YYYYMMDDL0001
+  code            String    @unique  // Request ID from Sheet column AR (unique sync key)
+  rqid            String?   @unique  // Legacy: RQ-YYMMDD-0001 (deprecated)
+  bookingCode     String?            // Booking Code from column T (for Operator/Revenue linking, NOT unique)
 
   // Customer Info
   customerName    String

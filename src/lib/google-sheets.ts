@@ -153,7 +153,7 @@ export async function getSheetData(
   // Use tabName from config (may differ from internal sheetName key)
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: sheetId,
-    range: `${config.tabName}!A${startRow}:Z`,
+    range: `${config.tabName}!A${startRow}:AZ`,
   });
 
   const rows = response.data.values || [];
@@ -206,7 +206,7 @@ export async function getSheetHeaders(
   // Use tabName from config and headerRow for correct header position
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId: sheetId,
-    range: `${config.tabName}!A${config.headerRow}:Z${config.headerRow}`,
+    range: `${config.tabName}!A${config.headerRow}:AZ${config.headerRow}`,
   });
 
   return (response.data.values?.[0] as string[]) || [];
