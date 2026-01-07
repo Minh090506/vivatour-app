@@ -14,6 +14,39 @@ import { Prisma } from "@prisma/client";
 const Decimal = Prisma.Decimal;
 
 /**
+ * Map Vietnamese status labels to enum keys
+ * Must match REQUEST_STATUSES in src/config/request-config.ts
+ */
+const VIETNAMESE_TO_STATUS_KEY: Record<string, string> = {
+  "Đang LL - khách chưa trả lời": "DANG_LL_CHUA_TL",
+  "Đang LL - chưa trả lời": "DANG_LL_CHUA_TL",
+  "Đang LL - khách đã trả lời": "DANG_LL_DA_TL",
+  "Đang LL - đã trả lời": "DANG_LL_DA_TL",
+  "Đã báo giá": "DA_BAO_GIA",
+  "Đang xây Tour": "DANG_XAY_TOUR",
+  "F1": "F1",
+  "F2": "F2",
+  "F3": "F3",
+  "F4": "F4",
+  "F4: Lần cuối": "F4",
+  "Lần cuối": "F4",
+  "Booking": "BOOKING",
+  "Khách hoãn": "KHACH_HOAN",
+  "Đang suy nghĩ": "KHACH_SUY_NGHI",
+  "Không đủ TC": "KHONG_DU_TC",
+  "Đã kết thúc": "DA_KET_THUC",
+  "Cancel": "CANCEL",
+};
+
+/**
+ * Convert Vietnamese status label to enum key
+ */
+function mapVietnameseToStatusKey(vietnameseLabel: string | undefined): string {
+  if (!vietnameseLabel?.trim()) return "DANG_LL_CHUA_TL";
+  return VIETNAMESE_TO_STATUS_KEY[vietnameseLabel.trim()] || "DANG_LL_CHUA_TL";
+}
+
+/**
  * Parse number from sheet cell, handling Vietnamese number format
  */
 function parseNumber(value: string | undefined): number | null {
@@ -113,7 +146,8 @@ function mapStatusToStage(status: string): string {
  * Request data ready for upsert
  */
 export interface RequestRowData {
-  code: string;
+  code: string;  // Request ID from column AR - unique sync key
+  bookingCode: string | null;  // Booking code from column T - for Operator/Revenue linking
   customerName: string;
   contact: string;
   country: string;
@@ -134,58 +168,66 @@ export interface RequestRowData {
 /**
  * Map Request sheet row to database fields
  *
- * Syncs ALL rows where seller (A) is not empty.
- * For rows without booking code (T), generates "RQ-{rowIndex}" code.
+ * Syncs ALL rows where Request ID (AR) is not empty.
+ * Uses Request ID as unique sync key, booking code for Operator/Revenue linking.
  *
  * Actual columns from Google Sheet:
- * A(0): Seller (REQUIRED - determines if row is synced)
+ * A(0): Seller (REQUIRED)
  * B(1): Name (customerName, REQUIRED)
  * C(2): Contact
  * E(4): Pax
  * F(5): Quốc gia (country)
  * G(6): Nguồn (source)
- * H(7): Trạng thái (status)
+ * H(7): Trạng thái (status - Vietnamese labels)
  * J(9): Số ngày đi Tour (tourDays)
  * K(10): Ngày dự kiến đi (startDate)
  * L(11): DT dự kiến (expectedRevenue)
  * M(12): Chi phí dự kiến (expectedCost)
  * N(13): Ghi chú (notes)
- * T(19): Mã khách (booking code) - OPTIONAL, auto-generated if empty
+ * T(19): Mã khách (bookingCode) - for Operator/Revenue linking
  * Z(25): Ngày dự kiến kết thúc (endDate)
+ * AR(43): Request ID - UNIQUE SYNC KEY
  */
 export async function mapRequestRow(
   row: string[],
   rowIndex: number
 ): Promise<RequestRowData | null> {
   // Extract by actual column indices
-  const sellerName = row[0]; // A: Seller
-  const customerName = row[1]; // B: Name
-  const contact = row[2]; // C: Contact
-  const pax = row[4]; // E: Pax
-  const country = row[5]; // F: Quốc gia
-  const source = row[6]; // G: Nguồn
-  const status = row[7]; // H: Trạng thái
-  const tourDays = row[9]; // J: Số ngày đi Tour
-  const startDate = row[10]; // K: Ngày dự kiến đi
+  const sellerName = row[0];     // A: Seller
+  const customerName = row[1];   // B: Name
+  const contact = row[2];        // C: Contact
+  const pax = row[4];            // E: Pax
+  const country = row[5];        // F: Quốc gia
+  const source = row[6];         // G: Nguồn
+  const status = row[7];         // H: Trạng thái
+  const tourDays = row[9];       // J: Số ngày đi Tour
+  const startDate = row[10];     // K: Ngày dự kiến đi
   const expectedRevenue = row[11]; // L: DT dự kiến
-  const expectedCost = row[12]; // M: Chi phí dự kiến
-  const notes = row[13]; // N: Ghi chú
-  const code = row[19]; // T: Mã khách (UNIQUE CODE)
-  const endDate = row[25]; // Z: Ngày dự kiến kết thúc
+  const expectedCost = row[12];  // M: Chi phí dự kiến
+  const notes = row[13];         // N: Ghi chú
+  const bookingCode = row[19];   // T: Mã khách (for Operator/Revenue linking)
+  const endDate = row[25];       // Z: Ngày dự kiến kết thúc
+  const requestId = row[43];     // AR: Request ID - UNIQUE SYNC KEY
 
-  // Skip empty rows or header rows (require seller name, not booking code)
-  if (!sellerName?.trim() || sellerName === "Seller") {
+  // Skip if no Request ID (required for all rows)
+  if (!requestId?.trim()) {
     return null;
   }
 
-  // Skip if no customer name (required field)
+  // Skip header rows
+  if (requestId === "Request ID" || sellerName === "Seller") {
+    return null;
+  }
+
+  // Skip if no seller (required)
+  if (!sellerName?.trim()) {
+    return null;
+  }
+
+  // Skip if no customer name (required)
   if (!customerName?.trim() || customerName === "Name") {
     return null;
   }
-
-  // Generate code: use booking code if exists, otherwise generate from row index
-  const bookingCode = code?.trim();
-  const generatedCode = bookingCode || `RQ-${rowIndex.toString().padStart(5, "0")}`;
 
   // Find seller by name or use default
   let seller = await prisma.user.findFirst({
@@ -208,12 +250,13 @@ export async function mapRequestRow(
   const costNum = parseNumber(expectedCost);
 
   return {
-    code: generatedCode,
+    code: requestId.trim(),  // Use Request ID as unique sync key
+    bookingCode: bookingCode?.trim() || null,  // For Operator/Revenue linking
     customerName: customerName.trim(),
     contact: contact?.trim() || "",
     country: country?.trim() || "Unknown",
     source: source?.trim() || "Other",
-    status: status?.trim() || "Đang LL - khách chưa trả lời",
+    status: mapVietnameseToStatusKey(status),  // Map Vietnamese to enum key
     stage: mapStatusToStage(status),
     pax: parseInt(pax) || 1,
     tourDays: parseNumber(tourDays) ? Math.round(parseNumber(tourDays)!) : null,

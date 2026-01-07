@@ -176,7 +176,7 @@ export async function getLastSyncedRow(sheetName: string): Promise<number> {
     orderBy: { rowIndex: "desc" },
   });
 
-  if (lastSync) {
+  if (lastSync && lastSync.rowIndex !== null) {
     return lastSync.rowIndex;
   }
 

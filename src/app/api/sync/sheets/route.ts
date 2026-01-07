@@ -49,10 +49,11 @@ async function syncRequestSheet(
       const data = await mapRequestRow(row.values, row.rowIndex);
       if (!data) continue;
 
-      // Upsert by unique code
+      // Upsert by unique code (Request ID from column AR)
       await prisma.request.upsert({
         where: { code: data.code },
         update: {
+          bookingCode: data.bookingCode,
           customerName: data.customerName,
           contact: data.contact,
           country: data.country,
@@ -116,13 +117,13 @@ async function syncOperatorSheet(
       const data = await mapOperatorRow(row.values, row.rowIndex);
       if (!data) continue;
 
-      // Find the request by code
-      const request = await prisma.request.findUnique({
-        where: { code: data.requestCode },
+      // Find the request by bookingCode (Operator sheet uses booking code, not request ID)
+      const request = await prisma.request.findFirst({
+        where: { bookingCode: data.requestCode },
       });
 
       if (!request) {
-        throw new Error(`Request not found: ${data.requestCode}`);
+        throw new Error(`Request not found for bookingCode: ${data.requestCode}`);
       }
 
       // Create operator (no upsert - operators can duplicate)
@@ -185,13 +186,13 @@ async function syncRevenueSheet(
       const data = await mapRevenueRow(row.values, row.rowIndex);
       if (!data) continue;
 
-      // Find the request by code
-      const request = await prisma.request.findUnique({
-        where: { code: data.requestCode },
+      // Find the request by bookingCode (Revenue sheet uses booking code, not request ID)
+      const request = await prisma.request.findFirst({
+        where: { bookingCode: data.requestCode },
       });
 
       if (!request) {
-        throw new Error(`Request not found: ${data.requestCode}`);
+        throw new Error(`Request not found for bookingCode: ${data.requestCode}`);
       }
 
       // Create revenue (no upsert - revenues can have multiple entries)
