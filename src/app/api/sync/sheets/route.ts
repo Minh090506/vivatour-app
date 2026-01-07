@@ -15,6 +15,7 @@ import {
   getSheetData,
   getLastSyncedRow,
   isGoogleSheetsConfigured,
+  getSheetConfigStatus,
 } from "@/lib/google-sheets";
 import {
   mapRequestRow,
@@ -265,7 +266,7 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error:
-            "Google Sheets not configured. Set GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY, GOOGLE_SHEET_ID",
+            "Google Sheets not configured. Set GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY, and SHEET_ID_* or GOOGLE_SHEET_ID",
         },
         { status: 400 }
       );
@@ -277,6 +278,18 @@ export async function POST(request: NextRequest) {
     if (!VALID_SHEETS.includes(sheetName)) {
       return NextResponse.json(
         { success: false, error: `Invalid sheet. Use: ${VALID_SHEETS.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
+    // Check if this specific sheet is configured
+    const sheetConfig = getSheetConfigStatus();
+    if (!sheetConfig[sheetName]) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `No spreadsheet ID for ${sheetName}. Set SHEET_ID_${sheetName.toUpperCase()} or GOOGLE_SHEET_ID`,
+        },
         { status: 400 }
       );
     }
@@ -371,13 +384,15 @@ export async function GET() {
       })
     );
 
-    // Check configuration
+    // Check configuration (overall and per-sheet)
     const configured = isGoogleSheetsConfigured();
+    const sheetConfig = getSheetConfigStatus();
 
     return NextResponse.json({
       success: true,
       data: {
         configured,
+        sheetConfig,
         stats,
         lastSyncs,
       },

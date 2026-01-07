@@ -518,7 +518,7 @@ Update: bookingCode = "20260201L0005"
 
 ## Integration Points
 
-### 1. Google Sheets API (Sync)
+### 1. Google Sheets API (Sync) [Phase 01 Multi-Spreadsheet Support]
 
 **Purpose**: Bidirectional sync with Google Sheets as source of truth
 
@@ -533,16 +533,29 @@ Google Sheets (Source of Truth)
 PostgreSQL Database (Cache)
 ```
 
-**Sheets**:
-- Request sheet: Tracks customer requests (F1-F5 funnel)
-- Operator sheet: Tracks services and costs
-- Revenue sheet: Tracks payments
-- Internal_Knowledge sheet: Knowledge base for AI
+**Sheets Configuration** (Phase 01 - Per-Sheet IDs):
+- **Request sheet**: Tracks customer requests (F1-F5 funnel) → `SHEET_ID_REQUEST`
+- **Operator sheet**: Tracks services and costs → `SHEET_ID_OPERATOR`
+- **Revenue sheet**: Tracks payments → `SHEET_ID_REVENUE`
+- **Fallback**: `GOOGLE_SHEET_ID` for single spreadsheet (backward compatible)
+- **Internal_Knowledge sheet**: Knowledge base for AI (same spreadsheet as configured sheets)
+
+**Configuration Strategy**:
+- Each sheet type supports independent spreadsheet IDs
+- Enables multi-workspace setups (separate sheets for different teams/divisions)
+- Fallback to single GOOGLE_SHEET_ID if per-sheet IDs not set
+- Graceful configuration status checking via `getSheetConfigStatus()`
+
+**Private Key Parsing**:
+- Handles escaped newlines from environment variables (`\\n` → `\n`)
+- Auto-adds PEM headers if raw base64 key provided
+- Robust error handling with clear error messages
 
 **Sync Direction**:
 - **Initial**: Pull from Sheets to PostgreSQL
 - **Ongoing**: Bidirectional with conflict resolution
 - **Tracking**: sheetRowIndex field for row mapping
+- **Per-Sheet Tracking**: Each sheet type synced independently
 
 ### 2. Gmail API (Email Integration)
 

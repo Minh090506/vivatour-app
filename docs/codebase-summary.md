@@ -2,7 +2,7 @@
 
 MyVivaTour Platform - Comprehensive directory structure and implementation details.
 
-**Last Updated**: 2026-01-05 (Phase 04: Login Page)
+**Last Updated**: 2026-01-07 (Phase 01: Multi-Spreadsheet Support)
 
 ---
 
@@ -196,6 +196,91 @@ const roleRoutes = {
 
 ---
 
+## Phase 01: Multi-Spreadsheet Support (Google Sheets Sync)
+
+### Key Features
+
+**Per-Sheet Configuration**:
+- Support separate spreadsheet IDs for Request, Operator, and Revenue sheets
+- Environment variables: `SHEET_ID_REQUEST`, `SHEET_ID_OPERATOR`, `SHEET_ID_REVENUE`
+- Backward compatible with single `GOOGLE_SHEET_ID` fallback
+- Configuration status checking via `getSheetConfigStatus()`
+
+### Core Files
+
+| File | Purpose |
+|------|---------|
+| `src/lib/google-sheets.ts` | Google Sheets API client with multi-sheet support |
+| `src/app/api/sync/sheets/route.ts` | Sync endpoints (POST trigger, GET status) |
+| `.env.example` | Environment variable templates for per-sheet IDs |
+
+### Implementation Details
+
+**src/lib/google-sheets.ts** (Key functions):
+- `getSheetIdForType(sheetName)`: Resolves spreadsheet ID for sheet type (Request, Operator, Revenue)
+  - Checks per-sheet env var first (`SHEET_ID_*`)
+  - Falls back to `GOOGLE_SHEET_ID`
+  - Throws error if no ID configured for sheet
+- `parsePrivateKey(key)`: Parses Google service account private key
+  - Handles escaped newlines (`\\n` → `\n`)
+  - Auto-adds PEM headers if missing
+  - Supports raw base64 or formatted PEM keys
+- `getSheetConfigStatus()`: Returns configuration status per sheet
+  - Returns object: `{ Request: boolean, Operator: boolean, Revenue: boolean }`
+  - Checks both per-sheet and fallback env vars
+- `getSheetData(sheetName, startRow, spreadsheetId?)`: Fetches rows from sheet tab
+- `getLastSyncedRow(sheetName)`: Returns last successfully synced row
+- `getSheetHeaders(sheetName, spreadsheetId?)`: Fetches first row (headers)
+- `isGoogleSheetsConfigured()`: Overall configuration check (credentials + any sheet ID)
+
+**src/app/api/sync/sheets/route.ts** (API endpoints):
+
+**POST `/api/sync/sheets`** - Trigger sync for a sheet
+- Request body: `{ sheetName: "Request" | "Operator" | "Revenue" }`
+- Auth: Admin only (via middleware)
+- Response: `{ success: boolean, message: string, synced: number, errors: number, lastRowIndex?: number }`
+- Flow:
+  1. Check auth (admin required)
+  2. Verify Google Sheets configured
+  3. Validate sheet name in VALID_SHEETS
+  4. Check per-sheet configuration status
+  5. Get last synced row from SyncLog
+  6. Fetch new rows from Google Sheets API
+  7. Call appropriate sync function (syncRequestSheet, syncOperatorSheet, syncRevenueSheet)
+  8. Log all results in SyncLog table
+
+**GET `/api/sync/sheets`** - Get sync status & statistics
+- Auth: Authenticated users
+- Response: `{ success: boolean, data: { configured: boolean, sheetConfig: Record<string, boolean>, stats: Array, lastSyncs: Array } }`
+- Returns:
+  - `configured`: Boolean, overall Google Sheets enabled (credentials + any sheet ID)
+  - `sheetConfig`: Per-sheet configuration status (Request, Operator, Revenue)
+  - `stats`: Sync statistics grouped by sheet and status (SUCCESS/FAILED)
+  - `lastSyncs`: Last sync timestamp and row index per sheet
+
+**Sync Functions** (src/app/api/sync/sheets/route.ts):
+- `syncRequestSheet(rows)`: Upserts requests by code, logs sync status per row
+- `syncOperatorSheet(rows)`: Creates operators (allows duplicates), links to requests, logs status
+- `syncRevenueSheet(rows)`: Creates revenue records (allows multiple per request), links to requests, logs status
+
+### Environment Variables
+
+```env
+# Google Sheets Service Account (required for sync)
+GOOGLE_SERVICE_ACCOUNT_EMAIL="your-sa@project.iam.gserviceaccount.com"
+GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
+
+# Per-sheet configuration (Phase 01 - multi-spreadsheet support)
+SHEET_ID_REQUEST="spreadsheet-id-for-requests"
+SHEET_ID_OPERATOR="spreadsheet-id-for-operators"
+SHEET_ID_REVENUE="spreadsheet-id-for-revenues"
+
+# Fallback for single spreadsheet (backward compatible)
+GOOGLE_SHEET_ID="fallback-if-all-same-spreadsheet"
+```
+
+---
+
 ## Tech Stack Summary
 
 - **Frontend**: Next.js 16, React 19, TypeScript
@@ -259,10 +344,10 @@ GOOGLE_SHEETS_API_KEY="xxx"
 
 | Phase | Component | Status | Date |
 |-------|-----------|--------|------|
-| 01 | Supplier Module | Complete | 2026-01-01 |
-| 02 | Dashboard Layout | Complete | 2026-01-02 |
-| 03 | Auth Middleware | Complete | 2026-01-04 |
-| 04 | Login Page | Complete | 2026-01-05 |
+| 01 | Supplier Module + Multi-Spreadsheet Support | Complete | 2026-01-01, 2026-01-07 |
+| 02 | Dashboard Layout + Google Sheets Sync API | Complete | 2026-01-02 |
+| 03 | Auth Middleware + Request/Operator/Revenue Sync | Complete | 2026-01-04 |
+| 04 | Login Page + RBAC | Complete | 2026-01-05 |
 | 05 | Request Module | Pending | TBD |
-| 06+ | Operator, Revenue, AI | Planned | TBD |
+| 06+ | Operator, Revenue, AI Assistant | Planned | TBD |
 
