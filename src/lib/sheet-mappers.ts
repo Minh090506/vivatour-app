@@ -134,38 +134,65 @@ export interface RequestRowData {
 /**
  * Map Request sheet row to database fields
  *
- * Expected columns (adjust indices as needed):
- * A: code, B: customerName, C: contact, D: country, E: source,
- * F: status, G: pax, H: tourDays, I: startDate, J: endDate,
- * K: expectedRevenue, L: expectedCost, M: notes
+ * Actual columns from Google Sheet:
+ * A(0): Seller
+ * B(1): Name (customerName)
+ * C(2): Contact
+ * E(4): Pax
+ * F(5): Quốc gia (country)
+ * G(6): Nguồn (source)
+ * H(7): Trạng thái (status)
+ * J(9): Số ngày đi Tour (tourDays)
+ * K(10): Ngày dự kiến đi (startDate)
+ * L(11): DT dự kiến (expectedRevenue)
+ * M(12): Chi phí dự kiến (expectedCost)
+ * N(13): Ghi chú (notes)
+ * T(19): Mã khách (code) - UNIQUE REQUEST CODE
+ * Z(25): Ngày dự kiến kết thúc (endDate)
  */
 export async function mapRequestRow(
   row: string[],
   rowIndex: number
 ): Promise<RequestRowData | null> {
-  const [
-    code,
-    customerName,
-    contact,
-    country,
-    source,
-    status,
-    pax,
-    tourDays,
-    startDate,
-    endDate,
-    expectedRevenue,
-    expectedCost,
-    notes,
-  ] = row;
+  // Extract by actual column indices
+  const sellerName = row[0]; // A: Seller
+  const customerName = row[1]; // B: Name
+  const contact = row[2]; // C: Contact
+  const pax = row[4]; // E: Pax
+  const country = row[5]; // F: Quốc gia
+  const source = row[6]; // G: Nguồn
+  const status = row[7]; // H: Trạng thái
+  const tourDays = row[9]; // J: Số ngày đi Tour
+  const startDate = row[10]; // K: Ngày dự kiến đi
+  const expectedRevenue = row[11]; // L: DT dự kiến
+  const expectedCost = row[12]; // M: Chi phí dự kiến
+  const notes = row[13]; // N: Ghi chú
+  const code = row[19]; // T: Mã khách (UNIQUE CODE)
+  const endDate = row[25]; // Z: Ngày dự kiến kết thúc
 
-  // Skip empty rows
-  if (!code?.trim() || !customerName?.trim()) {
+  // Skip empty rows or header rows
+  if (!code?.trim() || code === "Mã khách") {
     return null;
   }
 
-  // Find default seller (first SELLER user)
-  const seller = await prisma.user.findFirst({ where: { role: "SELLER" } });
+  // Skip if no customer name (required field)
+  if (!customerName?.trim()) {
+    return null;
+  }
+
+  // Find seller by name or use default
+  let seller = await prisma.user.findFirst({
+    where: {
+      role: "SELLER",
+      name: { contains: sellerName?.trim() || "", mode: "insensitive" },
+    },
+  });
+
+  // Fallback to first SELLER user if not found
+  if (!seller) {
+    seller = await prisma.user.findFirst({ where: { role: "SELLER" } });
+  }
+
   if (!seller) {
     throw new Error("No SELLER user found for import");
   }
