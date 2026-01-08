@@ -110,6 +110,7 @@ src/
 │   ├── operator-validation.ts        # Zod schemas for operators
 │   ├── id-utils.ts                   # ID generation (RequestID, ServiceID, RevenueID) - Phase 01 Foundation
 │   ├── lock-utils.ts                 # Lock tier utilities (3-tier lock: KT/Admin/Final) - Phase 01 Foundation
+│   ├── revenue-history.ts            # Revenue audit trail + history retrieval with user names (Phase 2b)
 │   ├── logger.ts                     # Structured logging
 │   ├── utils.ts                      # cn(), formatCurrency(), formatDate()
 │   └── validations/                  # Zod schemas
@@ -310,14 +311,23 @@ PUT    /api/supplier-transactions/[id]   # Update transaction
 DELETE /api/supplier-transactions/[id]   # Delete transaction
 ```
 
-### Revenue Endpoints (4)
+### Revenue Endpoints (7) - Phase 2b Complete
 ```
-GET    /api/revenue                      # List revenue records
-POST   /api/revenue                      # Create revenue
-GET    /api/revenue/[id]                 # Get revenue detail
-PUT    /api/revenue/[id]                 # Update revenue
-DELETE /api/revenue/[id]                 # Delete revenue
+GET    /api/revenues                     # List revenues with filters (requestId, paymentType, paymentSource, currency, date range, lock status)
+POST   /api/revenues                     # Create revenue with revenueId generation from bookingCode
+GET    /api/revenues/[id]                # Get revenue detail
+PUT    /api/revenues/[id]                # Update revenue
+DELETE /api/revenues/[id]                # Delete revenue
+POST   /api/revenues/[id]/lock           # Lock revenue - {tier: "KT"|"Admin"|"Final"} - 3-tier lock with role permissions
+POST   /api/revenues/[id]/unlock         # Unlock revenue - {tier: "KT"|"Admin"|"Final"} - reverse unlock order (Final → Admin → KT)
+GET    /api/revenues/[id]/history        # Get revenue history with userName - full audit trail
 ```
+
+**Lock Tier System Details**:
+- Sequential lock: KT (ACCOUNTANT) → Admin (ADMIN) → Final (ADMIN)
+- Reverse unlock: Final → Admin → KT
+- Each lock/unlock creates history entry with action, changes, userId
+- History includes user.name from user lookup
 
 ### Report Endpoints (3)
 ```
@@ -485,6 +495,45 @@ GOOGLE_SHEET_ID="fallback-if-all-same-spreadsheet"
 
 ---
 
+## Phase 2b: Revenue History Utility
+
+### Core File
+**src/lib/revenue-history.ts** - Revenue audit trail management with history retrieval
+
+#### History Actions
+- **CRUD**: CREATE, UPDATE, DELETE
+- **Locking**: LOCK_KT, LOCK_ADMIN, LOCK_FINAL
+- **Unlocking**: UNLOCK_KT, UNLOCK_ADMIN, UNLOCK_FINAL
+
+#### Key Functions
+- `createRevenueHistory(input)`: Create audit entry
+  - Records: revenueId, action, changes (before/after values), userId, createdAt
+  - Changes use structured format: `{ field: { before?, after? } }`
+  - Automatically timestamped via Prisma createdAt default
+- `getRevenueHistory(revenueId)`: Retrieve with user names
+  - Fetches all history entries ordered by createdAt DESC
+  - Looks up user.name for each unique userId
+  - Returns merged array with userName field (fallback: "Unknown")
+  - Efficient: single user batch lookup via Set deduplication
+
+#### Data Structure
+```typescript
+interface RevenueHistoryInput {
+  revenueId: string;
+  action: RevenueHistoryAction;
+  changes: Record<string, { before?: unknown; after?: unknown }>;
+  userId: string;
+}
+```
+
+#### Integration Points
+- **POST /api/revenues**: Creates history on revenue creation with initial revenueId, amount, type, source
+- **POST /api/revenues/[id]/lock**: Records lock action with before/after tier state
+- **POST /api/revenues/[id]/unlock**: Records unlock action with before/after tier state
+- **GET /api/revenues/[id]/history**: Returns full audit trail
+
+---
+
 ## Phase 01: Lock System (3-Tier)
 
 ### Core Files
@@ -602,6 +651,7 @@ GOOGLE_SHEETS_API_KEY="xxx"
 | **01 Foundation** | Lock System (3-tier: KT/Admin/Final) + RevenueHistory | Complete | 2026-01-08 |
 | 02a | Dashboard Layout + Google Sheets Sync API | Complete | 2026-01-02 |
 | 02b | Auth Middleware + Request/Operator/Revenue Sync | Complete | 2026-01-04 |
+| 02b | Revenue API: Lock/Unlock (3-tier) + History (audit trail) | Complete | 2026-01-08 |
 | 02c | Request Sync Fix: Request ID Key + Booking Code Deduplication | Complete | 2026-01-08 |
 | 03 | Login Page + RBAC (4 roles, 24 permissions) | Complete | 2026-01-05 |
 | 04 | Responsive Layouts (Master-Detail, Mobile Sheets) | Complete | 2026-01-05 |

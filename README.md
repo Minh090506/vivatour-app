@@ -143,7 +143,7 @@ src/
 
 ---
 
-## API Endpoints (33 Total)
+## API Endpoints (36 Total)
 
 | Category | Endpoints | Purpose |
 |----------|-----------|---------|
@@ -151,7 +151,7 @@ src/
 | **Operators** | 8 | CRUD + approve/lock + pending approval queue |
 | **Suppliers** | 5 | CRUD + code generation |
 | **Transactions** | 5 | Supplier transaction tracking |
-| **Revenue** | 4 | CRUD + multi-currency support |
+| **Revenue** | 7 | CRUD + lock/unlock (3-tier) + history (audit trail) |
 | **Reports** | 3 | Supplier balance, operator costs, payments |
 | **Config** | 8 | Follow-ups, sellers, user prefs, sync trigger |
 | **Auth** | 5 | NextAuth.js v5 endpoints |

@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db';
 import { PAYMENT_TYPE_KEYS, CURRENCY_KEYS } from '@/config/revenue-config';
 import { auth } from '@/auth';
 import { hasPermission, type Role } from '@/lib/permissions';
+import { generateRevenueId } from '@/lib/id-utils';
+import { createRevenueHistory, REVENUE_HISTORY_ACTIONS } from '@/lib/revenue-history';
 
 // GET /api/revenues - List with filters
 export async function GET(request: NextRequest) {
@@ -124,9 +126,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate request exists
+    // Validate request exists and get bookingCode for revenueId generation
     const req = await prisma.request.findUnique({
       where: { id: body.requestId },
+      select: { id: true, bookingCode: true },
     });
 
     if (!req) {
@@ -135,6 +138,9 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       );
     }
+
+    // Generate revenueId using bookingCode or requestId fallback
+    const revenueId = await generateRevenueId(req.bookingCode || body.requestId);
 
     // Calculate amountVND from foreign currency if needed
     const currency = body.currency || 'VND';
@@ -176,6 +182,7 @@ export async function POST(request: NextRequest) {
     // Create revenue - use authenticated user ID from session
     const revenue = await prisma.revenue.create({
       data: {
+        revenueId,
         requestId: body.requestId,
         paymentDate: new Date(body.paymentDate),
         paymentType: body.paymentType,
@@ -191,6 +198,19 @@ export async function POST(request: NextRequest) {
         request: { select: { code: true, customerName: true, bookingCode: true } },
         user: { select: { id: true, name: true } },
       },
+    });
+
+    // Create history entry for CREATE action
+    await createRevenueHistory({
+      revenueId: revenue.id,
+      action: REVENUE_HISTORY_ACTIONS.CREATE,
+      changes: {
+        revenueId: { after: revenueId },
+        amountVND: { after: amountVND },
+        paymentType: { after: body.paymentType },
+        paymentSource: { after: body.paymentSource },
+      },
+      userId: session.user.id,
     });
 
     return NextResponse.json({ success: true, data: revenue }, { status: 201 });

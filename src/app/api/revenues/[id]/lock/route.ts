@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { auth } from '@/auth';
-import { hasPermission, type Role } from '@/lib/permissions';
+import { type Role } from '@/lib/permissions';
+import {
+  canLock,
+  canLockTier,
+  getLockFields,
+  type LockTier,
+  LOCK_TIERS,
+} from '@/lib/lock-utils';
+import { createRevenueHistory } from '@/lib/revenue-history';
 
-// POST /api/revenues/[id]/lock - ACCOUNTANT can lock
+// POST /api/revenues/[id]/lock - Lock revenue with tier support
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -18,19 +26,37 @@ export async function POST(
       );
     }
 
-    // Verify permission
-    const role = session.user.role as Role;
-    if (!hasPermission(role, 'revenue:manage')) {
+    const { id } = await params;
+    const body = await request.json();
+    const tier = body.tier as LockTier;
+
+    // Validate tier parameter
+    if (!tier || !LOCK_TIERS.includes(tier)) {
       return NextResponse.json(
-        { success: false, error: 'Không có quyền khóa thu nhập' },
+        { success: false, error: 'Tier không hợp lệ. Phải là: KT, Admin, hoặc Final' },
+        { status: 400 }
+      );
+    }
+
+    // Permission check using role-based lock permissions
+    const role = session.user.role as Role;
+    if (!canLock(role, tier)) {
+      return NextResponse.json(
+        { success: false, error: `Không có quyền khóa tier ${tier}` },
         { status: 403 }
       );
     }
 
-    const { id } = await params;
-    const userId = session.user.id;
-
-    const revenue = await prisma.revenue.findUnique({ where: { id } });
+    // Get current revenue state
+    const revenue = await prisma.revenue.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        lockKT: true,
+        lockAdmin: true,
+        lockFinal: true,
+      },
+    });
 
     if (!revenue) {
       return NextResponse.json(
@@ -39,28 +65,43 @@ export async function POST(
       );
     }
 
-    if (revenue.isLocked) {
+    // Validate tier progression (KT -> Admin -> Final)
+    const lockState = {
+      lockKT: revenue.lockKT,
+      lockAdmin: revenue.lockAdmin,
+      lockFinal: revenue.lockFinal,
+    };
+
+    if (!canLockTier(lockState, tier)) {
       return NextResponse.json(
-        { success: false, error: 'Thu nhập đã được khóa' },
+        {
+          success: false,
+          error: `Không thể khóa tier ${tier}. Phải khóa theo thứ tự: KT → Admin → Final`,
+          currentState: lockState,
+        },
         { status: 400 }
       );
     }
 
-    const lockedAt = new Date();
-
+    // Update with tier-specific fields
+    const lockFields = getLockFields(tier, session.user.id, true);
     const updated = await prisma.revenue.update({
       where: { id },
-      data: {
-        isLocked: true,
-        lockedAt,
-        lockedBy: userId,
-      },
+      data: lockFields,
       include: {
-        request: { select: { code: true, customerName: true } },
+        request: { select: { code: true, customerName: true, bookingCode: true } },
       },
     });
 
-    return NextResponse.json({ success: true, data: updated });
+    // Create history entry
+    await createRevenueHistory({
+      revenueId: id,
+      action: `LOCK_${tier.toUpperCase()}` as 'LOCK_KT' | 'LOCK_ADMIN' | 'LOCK_FINAL',
+      changes: { [tier]: { before: false, after: true } },
+      userId: session.user.id,
+    });
+
+    return NextResponse.json({ success: true, tier, data: updated });
   } catch (error) {
     console.error('Error locking revenue:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';

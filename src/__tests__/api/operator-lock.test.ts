@@ -2,8 +2,9 @@
  * @jest-environment node
  */
 
-// Tests for Operator Lock API routes
+// Tests for Operator Lock API routes (3-tier lock system)
 // Covers: GET/POST /api/operators/lock-period, POST /api/operators/[id]/lock, POST /api/operators/[id]/unlock
+// Lock tiers: KT (Accountant) → Admin → Final (sequential progression)
 
 import { NextRequest } from 'next/server';
 import { prismaMock } from '@/lib/__mocks__/db';
@@ -35,11 +36,14 @@ describe('GET /api/operators/lock-period', () => {
     jest.clearAllMocks();
   });
 
-  it('should return lock status for a month', async () => {
+  it('should return tier breakdown for a month', async () => {
+    // New API returns tier breakdown: total, tiers.KT, tiers.Admin, tiers.Final, unlocked
     prismaMock.operator.count
       .mockResolvedValueOnce(10 as never) // total
-      .mockResolvedValueOnce(7 as never)  // locked
-      .mockResolvedValueOnce(3 as never); // unlocked
+      .mockResolvedValueOnce(7 as never)  // lockedKT
+      .mockResolvedValueOnce(5 as never)  // lockedAdmin
+      .mockResolvedValueOnce(3 as never)  // lockedFinal
+      .mockResolvedValueOnce(3 as never); // unlocked (not locked at KT)
 
     const request = createMockRequest('http://localhost:3000/api/operators/lock-period?month=2026-01');
     const response = await getLockStatus(request);
@@ -49,15 +53,19 @@ describe('GET /api/operators/lock-period', () => {
     expect(data.success).toBe(true);
     expect(data.data.month).toBe('2026-01');
     expect(data.data.total).toBe(10);
-    expect(data.data.locked).toBe(7);
+    expect(data.data.tiers.KT).toBe(7);
+    expect(data.data.tiers.Admin).toBe(5);
+    expect(data.data.tiers.Final).toBe(3);
     expect(data.data.unlocked).toBe(3);
-    expect(data.data.isFullyLocked).toBe(false);
+    expect(data.data.isFullyLocked).toBe(false); // Not all at Final tier
   });
 
-  it('should return isFullyLocked=true when all locked', async () => {
+  it('should return isFullyLocked=true when all at Final tier', async () => {
     prismaMock.operator.count
       .mockResolvedValueOnce(5 as never)  // total
-      .mockResolvedValueOnce(5 as never)  // locked
+      .mockResolvedValueOnce(5 as never)  // lockedKT
+      .mockResolvedValueOnce(5 as never)  // lockedAdmin
+      .mockResolvedValueOnce(5 as never)  // lockedFinal (all at final)
       .mockResolvedValueOnce(0 as never); // unlocked
 
     const request = createMockRequest('http://localhost:3000/api/operators/lock-period?month=2026-01');
@@ -65,6 +73,22 @@ describe('GET /api/operators/lock-period', () => {
     const data = await response.json();
 
     expect(data.data.isFullyLocked).toBe(true);
+  });
+
+  it('should return operators eligible for specific tier', async () => {
+    const mockOperators = [
+      { id: 'op-1', serviceName: 'Hotel', serviceDate: new Date(), totalCost: 1000000, lockKT: false, lockAdmin: false, lockFinal: false },
+    ];
+    prismaMock.operator.findMany.mockResolvedValue(mockOperators as never);
+
+    const request = createMockRequest('http://localhost:3000/api/operators/lock-period?month=2026-01&tier=KT');
+    const response = await getLockStatus(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.data.tier).toBe('KT');
+    expect(data.data.count).toBe(1);
+    expect(data.data.operators).toHaveLength(1);
   });
 
   it('should return 400 for invalid month format', async () => {
@@ -91,34 +115,7 @@ describe('POST /api/operators/lock-period', () => {
     jest.clearAllMocks();
   });
 
-  // Base mock operator template for reference (not directly used in this describe block)
-  const _mockOperatorTemplate = {
-    id: 'op-1',
-    requestId: 'req-1',
-    supplierId: 'sup-1',
-    serviceDate: new Date('2026-01-15'),
-    serviceType: 'HOTEL',
-    serviceName: 'Hotel Room',
-    supplier: 'Hotel ABC',
-    costBeforeTax: 1000000,
-    vat: 100000,
-    totalCost: 1100000,
-    paymentDeadline: new Date('2026-01-10'),
-    paymentStatus: 'PAID',
-    paymentDate: new Date('2026-01-08'),
-    bankAccount: null,
-    isLocked: false,
-    lockedAt: null,
-    lockedBy: null,
-    notes: null,
-    userId: 'user-1',
-    sheetRowIndex: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-  void _mockOperatorTemplate; // Suppress unused warning
-
-  it('should lock all operators in a period', async () => {
+  it('should lock operators at KT tier (default)', async () => {
     prismaMock.operator.findMany.mockResolvedValue([
       { id: 'op-1' },
       { id: 'op-2' },
@@ -131,7 +128,7 @@ describe('POST /api/operators/lock-period', () => {
             updateMany: jest.fn().mockResolvedValue({ count: 2 }),
           },
           operatorHistory: {
-            create: jest.fn().mockResolvedValue({}),
+            createMany: jest.fn().mockResolvedValue({ count: 2 }),
           },
         });
       }
@@ -139,7 +136,7 @@ describe('POST /api/operators/lock-period', () => {
 
     const request = createMockRequest('http://localhost:3000/api/operators/lock-period', {
       method: 'POST',
-      body: JSON.stringify({ month: '2026-01', userId: 'user-1' }),
+      body: JSON.stringify({ month: '2026-01' }), // tier defaults to 'KT'
     });
 
     const response = await lockPeriod(request);
@@ -148,7 +145,39 @@ describe('POST /api/operators/lock-period', () => {
     expect(response.status).toBe(200);
     expect(data.success).toBe(true);
     expect(data.data.count).toBe(2);
+    expect(data.data.tier).toBe('KT');
     expect(data.data.period).toBe('2026-01');
+  });
+
+  it('should lock operators at Admin tier', async () => {
+    prismaMock.operator.findMany.mockResolvedValue([
+      { id: 'op-1' },
+    ] as never);
+
+    prismaMock.$transaction.mockImplementation(async (fn) => {
+      if (typeof fn === 'function') {
+        return fn({
+          operator: {
+            updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+          },
+          operatorHistory: {
+            createMany: jest.fn().mockResolvedValue({ count: 1 }),
+          },
+        });
+      }
+    });
+
+    const request = createMockRequest('http://localhost:3000/api/operators/lock-period', {
+      method: 'POST',
+      body: JSON.stringify({ month: '2026-01', tier: 'Admin' }),
+    });
+
+    const response = await lockPeriod(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.success).toBe(true);
+    expect(data.data.tier).toBe('Admin');
   });
 
   it('should return count=0 when no operators to lock', async () => {
@@ -156,7 +185,7 @@ describe('POST /api/operators/lock-period', () => {
 
     const request = createMockRequest('http://localhost:3000/api/operators/lock-period', {
       method: 'POST',
-      body: JSON.stringify({ month: '2025-12', userId: 'user-1' }),
+      body: JSON.stringify({ month: '2025-12' }),
     });
 
     const response = await lockPeriod(request);
@@ -192,6 +221,19 @@ describe('POST /api/operators/lock-period', () => {
     expect(response.status).toBe(400);
     expect(data.success).toBe(false);
   });
+
+  it('should return 400 for invalid tier', async () => {
+    const request = createMockRequest('http://localhost:3000/api/operators/lock-period', {
+      method: 'POST',
+      body: JSON.stringify({ month: '2026-01', tier: 'Invalid' }),
+    });
+
+    const response = await lockPeriod(request);
+    const data = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(data.success).toBe(false);
+  });
 });
 
 describe('POST /api/operators/[id]/lock', () => {
@@ -199,45 +241,30 @@ describe('POST /api/operators/[id]/lock', () => {
     jest.clearAllMocks();
   });
 
+  // Mock operator with 3-tier lock fields (all unlocked)
   const mockOperator = {
     id: 'op-1',
-    requestId: 'req-1',
-    supplierId: 'sup-1',
-    serviceDate: new Date(),
-    serviceType: 'HOTEL',
     serviceName: 'Hotel Room',
-    supplier: 'Hotel ABC',
-    costBeforeTax: 1000000,
-    vat: 100000,
-    totalCost: 1100000,
-    paymentDeadline: new Date(),
-    paymentStatus: 'PAID',
-    paymentDate: new Date(),
-    bankAccount: null,
-    isLocked: false,
-    lockedAt: null,
-    lockedBy: null,
-    notes: null,
-    userId: 'user-1',
-    sheetRowIndex: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    lockKT: false,
+    lockAdmin: false,
+    lockFinal: false,
   };
 
   const mockParams = Promise.resolve({ id: 'op-1' });
 
-  it('should lock a single operator successfully', async () => {
+  it('should lock at KT tier successfully', async () => {
     prismaMock.operator.findUnique.mockResolvedValue(mockOperator as never);
     prismaMock.operator.update.mockResolvedValue({
       ...mockOperator,
+      lockKT: true,
+      lockKTAt: new Date(),
+      lockKTBy: 'user-1',
       isLocked: true,
-      lockedAt: new Date(),
-      lockedBy: 'user-1',
     } as never);
 
     const request = createMockRequest('http://localhost:3000/api/operators/op-1/lock', {
       method: 'POST',
-      body: JSON.stringify({ userId: 'user-1' }),
+      body: JSON.stringify({ tier: 'KT' }),
     });
 
     const response = await lockSingle(request, { params: mockParams });
@@ -245,7 +272,7 @@ describe('POST /api/operators/[id]/lock', () => {
 
     expect(response.status).toBe(200);
     expect(data.success).toBe(true);
-    expect(data.data.isLocked).toBe(true);
+    expect(data.data.tier).toBe('KT');
   });
 
   it('should return 404 when operator not found', async () => {
@@ -253,32 +280,52 @@ describe('POST /api/operators/[id]/lock', () => {
 
     const request = createMockRequest('http://localhost:3000/api/operators/op-999/lock', {
       method: 'POST',
-      body: JSON.stringify({ userId: 'user-1' }),
+      body: JSON.stringify({ tier: 'KT' }),
     });
 
     const response = await lockSingle(request, { params: Promise.resolve({ id: 'op-999' }) });
     const data = await response.json();
 
     expect(response.status).toBe(404);
-    expect(data.error).toContain('không tồn tại');
+    expect(data.success).toBe(false);
   });
 
-  it('should return 400 when already locked', async () => {
+  it('should return 400 when tier already locked', async () => {
     prismaMock.operator.findUnique.mockResolvedValue({
       ...mockOperator,
-      isLocked: true,
+      lockKT: true, // Already locked at KT
     } as never);
 
     const request = createMockRequest('http://localhost:3000/api/operators/op-1/lock', {
       method: 'POST',
-      body: JSON.stringify({ userId: 'user-1' }),
+      body: JSON.stringify({ tier: 'KT' }),
     });
 
     const response = await lockSingle(request, { params: mockParams });
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toContain('đã được khóa');
+    expect(data.success).toBe(false);
+  });
+
+  it('should return 400 when trying to skip tier progression', async () => {
+    // Trying to lock Admin without KT locked first
+    prismaMock.operator.findUnique.mockResolvedValue({
+      ...mockOperator,
+      lockKT: false, // KT not locked
+      lockAdmin: false,
+    } as never);
+
+    const request = createMockRequest('http://localhost:3000/api/operators/op-1/lock', {
+      method: 'POST',
+      body: JSON.stringify({ tier: 'Admin' }),
+    });
+
+    const response = await lockSingle(request, { params: mockParams });
+    const data = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(data.success).toBe(false);
   });
 });
 
@@ -287,45 +334,30 @@ describe('POST /api/operators/[id]/unlock', () => {
     jest.clearAllMocks();
   });
 
-  const mockOperator = {
+  // Mock operator locked at KT tier
+  const mockOperatorKTLocked = {
     id: 'op-1',
-    requestId: 'req-1',
-    supplierId: 'sup-1',
-    serviceDate: new Date(),
-    serviceType: 'HOTEL',
     serviceName: 'Hotel Room',
-    supplier: 'Hotel ABC',
-    costBeforeTax: 1000000,
-    vat: 100000,
-    totalCost: 1100000,
-    paymentDeadline: new Date(),
-    paymentStatus: 'PAID',
-    paymentDate: new Date(),
-    bankAccount: null,
-    isLocked: true,
-    lockedAt: new Date(),
-    lockedBy: 'user-1',
-    notes: null,
-    userId: 'user-1',
-    sheetRowIndex: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    lockKT: true,
+    lockAdmin: false,
+    lockFinal: false,
   };
 
   const mockParams = Promise.resolve({ id: 'op-1' });
 
-  it('should unlock a locked operator successfully', async () => {
-    prismaMock.operator.findUnique.mockResolvedValue(mockOperator as never);
+  it('should unlock KT tier successfully', async () => {
+    prismaMock.operator.findUnique.mockResolvedValue(mockOperatorKTLocked as never);
     prismaMock.operator.update.mockResolvedValue({
-      ...mockOperator,
+      ...mockOperatorKTLocked,
+      lockKT: false,
+      lockKTAt: null,
+      lockKTBy: null,
       isLocked: false,
-      lockedAt: null,
-      lockedBy: null,
     } as never);
 
     const request = createMockRequest('http://localhost:3000/api/operators/op-1/unlock', {
       method: 'POST',
-      body: JSON.stringify({ userId: 'admin-1' }),
+      body: JSON.stringify({ tier: 'KT' }),
     });
 
     const response = await unlockSingle(request, { params: mockParams });
@@ -333,7 +365,7 @@ describe('POST /api/operators/[id]/unlock', () => {
 
     expect(response.status).toBe(200);
     expect(data.success).toBe(true);
-    expect(data.data.isLocked).toBe(false);
+    expect(data.data.tier).toBe('KT');
   });
 
   it('should return 404 when operator not found', async () => {
@@ -341,32 +373,57 @@ describe('POST /api/operators/[id]/unlock', () => {
 
     const request = createMockRequest('http://localhost:3000/api/operators/op-999/unlock', {
       method: 'POST',
-      body: JSON.stringify({ userId: 'admin-1' }),
+      body: JSON.stringify({ tier: 'KT' }),
     });
 
     const response = await unlockSingle(request, { params: Promise.resolve({ id: 'op-999' }) });
     const data = await response.json();
 
     expect(response.status).toBe(404);
-    expect(data.error).toContain('không tồn tại');
+    expect(data.success).toBe(false);
   });
 
-  it('should return 400 when not locked', async () => {
+  it('should return 400 when tier not locked', async () => {
     prismaMock.operator.findUnique.mockResolvedValue({
-      ...mockOperator,
-      isLocked: false,
+      id: 'op-1',
+      serviceName: 'Hotel Room',
+      lockKT: false, // Not locked
+      lockAdmin: false,
+      lockFinal: false,
     } as never);
 
     const request = createMockRequest('http://localhost:3000/api/operators/op-1/unlock', {
       method: 'POST',
-      body: JSON.stringify({ userId: 'admin-1' }),
+      body: JSON.stringify({ tier: 'KT' }),
     });
 
     const response = await unlockSingle(request, { params: mockParams });
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toContain('chưa được khóa');
+    expect(data.success).toBe(false);
+  });
+
+  it('should return 400 when trying to unlock out of order', async () => {
+    // Trying to unlock KT when Admin is still locked (wrong order)
+    prismaMock.operator.findUnique.mockResolvedValue({
+      id: 'op-1',
+      serviceName: 'Hotel Room',
+      lockKT: true,
+      lockAdmin: true, // Admin locked - must unlock this first
+      lockFinal: false,
+    } as never);
+
+    const request = createMockRequest('http://localhost:3000/api/operators/op-1/unlock', {
+      method: 'POST',
+      body: JSON.stringify({ tier: 'KT' }),
+    });
+
+    const response = await unlockSingle(request, { params: mockParams });
+    const data = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(data.success).toBe(false);
   });
 });
 
