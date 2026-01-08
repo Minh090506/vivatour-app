@@ -197,6 +197,18 @@ See: `phase-02b-revenue-api.md`
 3. Add history tracking to all operations
 4. Update revenue creation with revenueId
 
+#### Phase 2C: Request Improvements (Window 2 or 3)
+See: `phase-02c-request-improvements.md`
+
+**Tasks:**
+1. Fix seller permission gap (SELLERs see only own requests)
+2. Implement infinite scroll pagination
+3. Add missing list item fields (Seller, Country, Date)
+4. Add quick filter chips + URL param persistence
+
+**Priority:** P0 bugs + P1/P2 improvements
+**Duration:** ~2h (can run parallel with 2A/2B)
+
 ---
 
 ### Phase 3: UI Components (1h) - Windows 2 & 3 parallel
@@ -369,6 +381,7 @@ plans/260108-1215-vivatour-parallel-impl/
 ├── phase-01-foundation.md
 ├── phase-02a-operator-api.md
 ├── phase-02b-revenue-api.md
+├── phase-02c-request-improvements.md  <-- NEW
 ├── phase-03a-operator-ui.md
 ├── phase-03b-revenue-ui.md
 └── phase-04-integration.md
