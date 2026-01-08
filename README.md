@@ -110,76 +110,55 @@ src/
 
 ---
 
-## Key Features (MVP)
+## Key Features (Status)
 
-### ✅ Supplier Module (Complete)
-- List, create, edit, delete suppliers
-- Payment model configuration (PREPAID, PAY_PER_USE, CREDIT)
-- Transaction tracking (deposits, refunds, adjustments, fees)
-- Real-time balance calculation
-- Type classification (Hotel, Transport, Guide, etc.)
+### ✅ Phase 01: Supplier Module
+- CRUD with payment models (PREPAID, PAY_PER_USE, CREDIT)
+- Transaction tracking with real-time balance
+- Multi-spreadsheet support for different data sources
 
-### ✅ Dashboard
-- Business overview layout
-- Floating AI Assistant widget
-- Navigation header
-- Responsive design
+### ✅ Phase 02-03: Authentication & RBAC
+- NextAuth.js v5 with Credentials provider
+- 4 roles: ADMIN, SELLER, OPERATOR, ACCOUNTANT
+- 24 granular permissions (request:view, operator:approve, etc.)
+- Middleware route protection
 
-### 🚧 Request Module (Planned)
-- Customer request CRUD
-- Funnel status tracking (F1-F5)
-- Follow-up scheduling
-- Contact management
+### ✅ Phase 04-05: Core Layouts
+- Responsive master-detail layout (resizable desktop, sheet mobile)
+- Login page with open redirect protection
+- Session management with JWT
 
-### 🚧 Operator Module (Planned)
-- Service/cost management
-- Payment status tracking
-- Supplier linking
-- Accounting lock mechanism
+### ✅ Phase 06: Core Modules (75% Complete)
+- **Request Module**: List, create, detail, edit pages with filters
+- **Operator Module**: CRUD, approval workflow, accounting lock
+- **Revenue Module**: Multi-currency with exchange rates
+- 33 API endpoints across all modules
+- Google Sheets sync with per-spreadsheet IDs
 
-### 🚧 Revenue Module (Planned)
-- Payment tracking
-- Multi-currency support
-- Deposit and full payment types
-- Accounting lock
-
-### 🚧 AI Assistant (Planned)
-- Email drafting assistance
-- Knowledge base queries
-- Claude API integration
-- Gmail API integration
-
-### 🚧 Google Sheets Sync (Planned)
-- Bidirectional sync
-- Row index mapping
-- Sync log audit trail
+### 🚧 Phase 07+: Analytics & Reports
+- Operator reports (revenue, cost analysis)
+- Revenue analytics and dashboards
+- AI Assistant (email drafting, knowledge queries)
+- Email integration with Gmail API
 
 ---
 
-## API Endpoints
+## API Endpoints (33 Total)
 
-### Suppliers
-```
-GET    /api/suppliers                     # List suppliers
-POST   /api/suppliers                     # Create supplier
-GET    /api/suppliers/[id]                # Get supplier
-PUT    /api/suppliers/[id]                # Update supplier
-DELETE /api/suppliers/[id]                # Delete supplier
-```
+| Category | Endpoints | Purpose |
+|----------|-----------|---------|
+| **Requests** | 5 | CRUD + listing with filters |
+| **Operators** | 8 | CRUD + approve/lock + pending approval queue |
+| **Suppliers** | 5 | CRUD + code generation |
+| **Transactions** | 5 | Supplier transaction tracking |
+| **Revenue** | 4 | CRUD + multi-currency support |
+| **Reports** | 3 | Supplier balance, operator costs, payments |
+| **Config** | 8 | Follow-ups, sellers, user prefs, sync trigger |
+| **Auth** | 5 | NextAuth.js v5 endpoints |
+| **Sync** | 2 | Google Sheets sync + status |
+| **Users** | 5 | User management (admin) |
 
-### Supplier Transactions
-```
-GET    /api/supplier-transactions         # List transactions
-POST   /api/supplier-transactions         # Create transaction
-GET    /api/supplier-transactions/[id]    # Get transaction
-PUT    /api/supplier-transactions/[id]    # Update transaction
-DELETE /api/supplier-transactions/[id]    # Delete transaction
-```
-
-### Reports
-```
-GET    /api/reports/supplier-balance      # Get balance summary
-```
+See [docs/codebase-summary.md](./docs/codebase-summary.md) for full endpoint list.
 
 ---
 

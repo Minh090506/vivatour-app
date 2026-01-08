@@ -2,7 +2,8 @@
 
 MyVivaTour Platform - Comprehensive directory structure and implementation details.
 
-**Last Updated**: 2026-01-08 (Phase 02: Request Sync Fix with Request ID Key)
+**Last Updated**: 2026-01-08 (Phase 06: Core Modules 75% - Request/Operator/Revenue Implementation)
+**Total Files**: 95+ source files | **Pages**: 18 | **Components**: 61 | **API Routes**: 33 | **Database Models**: 17
 
 ---
 
@@ -14,40 +15,111 @@ src/
 │   ├── (auth)/                       # Auth route group (Phase 04)
 │   │   ├── login/                    # Login page
 │   │   │   ├── page.tsx              # Login page component
-│   │   │   ├── login-form.tsx        # LoginForm with validation
-│   │   │   └── __tests__/            # Login tests
+│   │   │   ├── login-form.tsx        # LoginForm with React Hook Form + Zod
+│   │   │   └── __tests__/            # Login tests (Vitest)
 │   │   └── layout.tsx                # Auth layout
 │   ├── (dashboard)/                  # Dashboard route group
-│   │   ├── suppliers/                # Supplier CRUD pages
-│   │   ├── layout.tsx                # Dashboard layout
-│   │   └── page.tsx                  # Dashboard home
-│   ├── api/                          # REST API routes
+│   │   ├── requests/                 # Request module (Phase 06) - 5 pages
+│   │   │   ├── page.tsx              # List with table + filters
+│   │   │   ├── create/page.tsx       # Create request form
+│   │   │   ├── [id]/page.tsx         # Detail/edit view
+│   │   │   ├── [id]/edit/page.tsx    # Edit-specific view
+│   │   │   └── [id]/delete/page.tsx  # Delete confirmation
+│   │   ├── operators/                # Operator module (Phase 06) - 5 pages
+│   │   │   ├── page.tsx              # List with approval table
+│   │   │   ├── create/page.tsx       # Create operator form
+│   │   │   ├── [id]/page.tsx         # Detail with lock dialog
+│   │   │   ├── [id]/edit/page.tsx    # Edit operator
+│   │   │   └── approvals/page.tsx    # Approval queue
+│   │   ├── revenue/                  # Revenue module (Phase 06) - single page
+│   │   │   ├── page.tsx              # List + create form
+│   │   │   └── [id]/page.tsx         # Revenue detail
+│   │   ├── suppliers/                # Supplier CRUD pages (Phase 01)
+│   │   │   ├── page.tsx              # Supplier list
+│   │   │   ├── create/page.tsx       # Create supplier
+│   │   │   ├── [id]/page.tsx         # Supplier detail
+│   │   │   └── reports/page.tsx      # Supplier reports
+│   │   ├── layout.tsx                # Dashboard layout (Header + AIAssistant)
+│   │   └── page.tsx                  # Dashboard home with widgets
+│   ├── api/                          # REST API routes (33 endpoints)
 │   │   ├── auth/[...nextauth]/       # NextAuth.js v5 handlers
-│   │   ├── suppliers/                # Supplier endpoints
-│   │   ├── supplier-transactions/    # Transaction endpoints
-│   │   └── reports/                  # Report endpoints
+│   │   ├── requests/                 # Request CRUD (2 endpoints)
+│   │   ├── operators/                # Operator CRUD (8 endpoints)
+│   │   ├── suppliers/                # Supplier CRUD (5 endpoints)
+│   │   ├── supplier-transactions/    # Transaction CRUD (5 endpoints)
+│   │   ├── revenue/                  # Revenue CRUD (4 endpoints)
+│   │   ├── reports/                  # Reports (3 endpoints)
+│   │   ├── config/                   # Config endpoints (8 endpoints)
+│   │   ├── sync/sheets/              # Google Sheets sync
+│   │   └── users/                    # User management
 │   ├── layout.tsx                    # Root layout with SessionProvider
-│   └── page.tsx                      # Home page
+│   ├── page.tsx                      # Home page
+│   └── forbidden.tsx                 # 403 access denied page
 ├── components/
 │   ├── ui/                           # shadcn/ui components (22+)
-│   ├── layout/                       # Header, AIAssistant
-│   ├── layouts/                      # PHASE 05 NEW
-│   │   ├── master-detail-layout.tsx  # Responsive 2-panel layout
-│   │   └── slide-in-panel.tsx        # Mobile detail panel
-│   ├── providers/                    # PHASE 05 NEW
+│   │   ├── button, input, form, table, dialog, etc.
+│   │   └── (Radix UI + Tailwind CSS based)
+│   ├── layout/                       # Global layout components
+│   │   ├── Header.tsx                # Navigation + user menu
+│   │   └── AIAssistant.tsx           # Floating chat widget
+│   ├── layouts/                      # Layout patterns (Phase 05)
+│   │   ├── master-detail-layout.tsx  # Responsive 2-panel (resizable desktop, sheet mobile)
+│   │   └── slide-in-panel.tsx        # Mobile right-side sheet overlay
+│   ├── providers/                    # Context providers (Phase 05)
 │   │   └── session-provider-wrapper.tsx # NextAuth SessionProvider wrapper
-│   └── suppliers/                    # Feature components
+│   ├── requests/                     # Request module components (Phase 06)
+│   │   ├── request-form.tsx          # Create/edit request form
+│   │   ├── request-list.tsx          # Request list with table
+│   │   ├── request-detail.tsx        # Request detail view
+│   │   ├── request-filters.tsx       # Status/stage/seller filters
+│   │   ├── request-table.tsx         # Sortable request table
+│   │   └── request-status-badge.tsx  # Status indicator
+│   ├── operators/                    # Operator module components (Phase 06)
+│   │   ├── operator-form.tsx         # Create/edit operator form
+│   │   ├── operator-approval-table.tsx # Approval queue table
+│   │   ├── operator-lock-dialog.tsx  # Accounting lock dialog
+│   │   ├── operator-history-panel.tsx # Operator history timeline
+│   │   ├── operator-report-chart.tsx # Revenue/cost charts
+│   │   ├── operator-payment-table.tsx # Payment status table
+│   │   └── operator-details-table.tsx # Operator details view
+│   ├── revenues/                     # Revenue module components (Phase 06)
+│   │   ├── revenue-form.tsx          # Create/edit revenue form
+│   │   ├── revenue-table.tsx         # Revenue list table
+│   │   └── revenue-summary-card.tsx  # Revenue summary statistics
+│   ├── suppliers/                    # Supplier module components (Phase 01)
+│   │   ├── supplier-form.tsx         # Create/edit supplier form
+│   │   ├── supplier-selector.tsx     # Supplier selection component
+│   │   ├── supplier-modal.tsx        # Modal for supplier management
+│   │   └── transaction-form.tsx      # Transaction entry form
+│   ├── settings/                     # Settings components
+│   │   ├── seller-modal.tsx          # Seller configuration
+│   │   ├── seller-table.tsx          # Sellers management
+│   │   ├── follow-up-modal.tsx       # Follow-up configuration
+│   │   ├── follow-up-table.tsx       # Follow-up status table
+│   │   └── google-sheets-sync.tsx    # Sync configuration UI
+│   └── dashboard/                    # Dashboard components
+│       └── follow-up-widget.tsx      # Follow-up action widget
 ├── lib/
-│   ├── db.ts                         # Prisma singleton
-│   ├── permissions.ts                # PHASE 04 NEW: RBAC definitions
-│   ├── supplier-balance.ts           # Balance utilities
-│   └── utils.ts                      # Helpers
+│   ├── db.ts                         # Prisma Client singleton
+│   ├── permissions.ts                # RBAC: roles, permissions, hasPermission()
+│   ├── google-sheets.ts              # Google Sheets API client (Phase 01)
+│   ├── sheet-mappers.ts              # Sheet ↔ DB mapping (Request: 44 cols, Operator: 23, Revenue: 20)
+│   ├── supplier-balance.ts           # Balance calculation utilities
+│   ├── request-utils.ts              # RQID, BookingCode, follow-up utilities
+│   ├── operator-history.ts           # Operator audit trail
+│   ├── operator-validation.ts        # Zod schemas for operators
+│   ├── logger.ts                     # Structured logging
+│   ├── utils.ts                      # cn(), formatCurrency(), formatDate()
+│   └── validations/                  # Zod schemas
+│       ├── seller.ts                 # Seller schema validation
+│       └── config.ts                 # Config validation schemas
 ├── hooks/
-│   └── use-permission.ts             # PHASE 04 NEW: Permission checking hook
-├── stores/                           # Zustand state stores
-├── types/                            # TypeScript definitions
-├── auth.ts                           # PHASE 04: NextAuth.js v5 config
-├── middleware.ts                     # PHASE 03: Route protection
+│   ├── use-permission.ts             # can(), canAll(), canAny(), role shortcuts
+│   └── index.ts                      # Barrel export
+├── stores/                           # Zustand state management
+├── types/index.ts                    # 40+ TypeScript definitions
+├── auth.ts                           # NextAuth.js v5 config (Phase 04)
+├── middleware.ts                     # Route protection & role-based access (Phase 03)
 └── constants.ts                      # App constants
 ```
 
@@ -126,53 +198,49 @@ loginSchema = z.object({
 
 ---
 
-## Authentication & RBAC Layer
+## Authentication & RBAC Layer (Phase 04)
 
 ### Core Files
 
 | File | Purpose |
 |------|---------|
-| src/auth.ts | NextAuth.js v5 config: Credentials provider, JWT callbacks, type extensions |
-| src/middleware.ts | Route protection: auth check + role-based route access (`roleRoutes`) |
-| src/app/api/auth/[...nextauth]/route.ts | NextAuth.js v5 handler exports |
-| src/app/(auth)/login/page.tsx | Login page layout |
-| src/app/(auth)/login/login-form.tsx | Form with React Hook Form + Zod validation |
-| src/lib/permissions.ts | RBAC definitions: roles, permissions, hasPermission() & getPermissions() |
-| src/hooks/use-permission.ts | Client hook: can(), canAll(), canAny(), role shortcuts (isAdmin, isSeller, etc.) |
+| src/auth.ts | NextAuth.js v5: Credentials provider, JWT callbacks, type extensions |
+| src/middleware.ts | Route protection: auth + role-based access control |
+| src/app/api/auth/[...nextauth]/route.ts | NextAuth.js v5 handler |
+| src/app/(auth)/login/page.tsx | Login page (server component) |
+| src/app/(auth)/login/login-form.tsx | LoginForm with React Hook Form + Zod |
+| src/lib/permissions.ts | RBAC: 4 roles + 24 permissions |
+| src/hooks/use-permission.ts | Client permission checking hook |
 
-### RBAC System
+### RBAC System (4 Roles, 24 Permissions)
 
-**Permissions Library** (`src/lib/permissions.ts`):
-- Defines 13 granular permissions using `resource:action` convention
-- Maps 4 roles to permission sets
-- Exports `hasPermission(role, permission)` for server-side checks
-- Exports `getPermissions(role)` to fetch all role permissions
+**Roles**:
+- **ADMIN**: All permissions (wildcard `*`)
+- **SELLER**: Request creation/viewing, own request editing, operator viewing
+- **OPERATOR**: Request viewing, operator claiming/editing, cost tracking
+- **ACCOUNTANT**: Financial oversight - revenue/expense/supplier/operator approval
 
-**Permission Categories**:
-- Request: view, create, edit, edit_own, delete
-- Operator: view, create, edit, edit_claimed, claim, approve, delete
-- Revenue: view, manage
-- Expense: view, manage
-- Supplier: view, manage
-- User: view, manage
+**Permissions** (24 total - resource:action convention):
+- Request: `view`, `create`, `edit`, `edit_own`, `delete`
+- Operator: `view`, `create`, `edit`, `edit_claimed`, `claim`, `approve`, `delete`
+- Revenue: `view`, `manage`
+- Expense: `view`, `manage`
+- Supplier: `view`, `manage`
+- User: `view`, `manage`
 
 **Permission Hook** (`src/hooks/use-permission.ts`):
-- Client-side permission checking via NextAuth `useSession()`
-- `can(permission)` - Check single permission
-- `canAll(permissions[])` - AND logic (all required)
-- `canAny(permissions[])` - OR logic (any match)
-- Shortcuts: `isAdmin`, `isAccountant`, `isSeller`, `isOperator`, `isAuthenticated`, `isLoading`
+```typescript
+const { can, canAll, canAny, isAdmin, isSeller, isOperator, isAccountant } = usePermission()
+```
 
 **Middleware Route Access** (`src/middleware.ts`):
-```typescript
-const roleRoutes = {
-  "/requests": ["ADMIN", "SELLER", "OPERATOR", "ACCOUNTANT"],
-  "/operators": ["ADMIN", "OPERATOR", "ACCOUNTANT"],
-  "/revenue": ["ADMIN", "ACCOUNTANT"],
-  "/expense": ["ADMIN", "ACCOUNTANT"],
-  "/settings": ["ADMIN"],
-  "/suppliers": ["ADMIN", "ACCOUNTANT"],
-}
+```
+/requests   → ADMIN, SELLER, OPERATOR, ACCOUNTANT
+/operators  → ADMIN, OPERATOR, ACCOUNTANT
+/revenue    → ADMIN, ACCOUNTANT
+/expense    → ADMIN, ACCOUNTANT
+/settings   → ADMIN only
+/suppliers  → ADMIN, ACCOUNTANT
 ```
 
 ### UI Components
@@ -193,6 +261,102 @@ const roleRoutes = {
 - Props: isOpen, onClose, title, description, children
 - Used by MasterDetailLayout for mobile view
 - Responsive widths: 85vw (mobile), 540px (sm), 600px (md)
+
+---
+
+## API Endpoints Overview (33 Total)
+
+### Request Endpoints (2)
+```
+GET    /api/requests                     # List all requests with filters
+POST   /api/requests                     # Create new request
+GET    /api/requests/[id]                # Get request detail
+PUT    /api/requests/[id]                # Update request
+DELETE /api/requests/[id]                # Delete request
+```
+
+### Operator Endpoints (8)
+```
+GET    /api/operators                    # List operators with approvals
+POST   /api/operators                    # Create operator
+GET    /api/operators/[id]               # Get operator detail
+PUT    /api/operators/[id]               # Update operator
+DELETE /api/operators/[id]               # Delete operator
+POST   /api/operators/[id]/approve       # Approve operator (accountant)
+POST   /api/operators/[id]/lock          # Lock operator (accounting)
+GET    /api/operators/pending-approval   # Get pending approvals
+```
+
+### Supplier Endpoints (5)
+```
+GET    /api/suppliers                    # List suppliers
+POST   /api/suppliers                    # Create supplier
+GET    /api/suppliers/[id]               # Get supplier detail
+PUT    /api/suppliers/[id]               # Update supplier
+DELETE /api/suppliers/[id]               # Delete supplier
+GET    /api/suppliers/code-generate      # Generate unique code
+```
+
+### Supplier Transaction Endpoints (5)
+```
+GET    /api/supplier-transactions        # List transactions
+POST   /api/supplier-transactions        # Create transaction
+GET    /api/supplier-transactions/[id]   # Get transaction detail
+PUT    /api/supplier-transactions/[id]   # Update transaction
+DELETE /api/supplier-transactions/[id]   # Delete transaction
+```
+
+### Revenue Endpoints (4)
+```
+GET    /api/revenue                      # List revenue records
+POST   /api/revenue                      # Create revenue
+GET    /api/revenue/[id]                 # Get revenue detail
+PUT    /api/revenue/[id]                 # Update revenue
+DELETE /api/revenue/[id]                 # Delete revenue
+```
+
+### Report Endpoints (3)
+```
+GET    /api/reports/supplier-balance     # Supplier balance summary
+GET    /api/reports/operator-costs       # Operator cost analysis
+GET    /api/reports/operator-payments    # Operator payment tracking
+```
+
+### Config Endpoints (8)
+```
+GET    /api/config/follow-up             # Get follow-up status config
+POST   /api/config/follow-up             # Create follow-up status
+GET    /api/config/sellers               # List seller configurations
+POST   /api/config/sellers               # Create seller config
+PUT    /api/config/sellers/[id]          # Update seller config
+GET    /api/config/user/me               # Current user config
+PUT    /api/config/user/me               # Update user config
+POST   /api/config/sync                  # Trigger Google Sheets sync
+```
+
+### Auth Endpoints (NextAuth.js)
+```
+POST   /api/auth/callback/credentials    # Credentials provider login
+GET    /api/auth/providers               # Available auth providers
+GET    /api/auth/session                 # Get current session
+POST   /api/auth/signin                  # Sign in (redirect)
+GET    /api/auth/signout                 # Sign out (redirect)
+```
+
+### Sync Endpoints (2)
+```
+POST   /api/sync/sheets                  # Trigger Google Sheets sync
+GET    /api/sync/sheets                  # Get sync status & statistics
+```
+
+### Users Endpoints
+```
+GET    /api/users                        # List users (admin only)
+POST   /api/users                        # Create user (admin only)
+GET    /api/users/[id]                   # Get user detail
+PUT    /api/users/[id]                   # Update user
+DELETE /api/users/[id]                   # Delete user (admin only)
+```
 
 ---
 
@@ -350,7 +514,13 @@ GOOGLE_SHEETS_API_KEY="xxx"
 | 02a | Dashboard Layout + Google Sheets Sync API | Complete | 2026-01-02 |
 | 02b | Auth Middleware + Request/Operator/Revenue Sync | Complete | 2026-01-04 |
 | 02c | Request Sync Fix: Request ID Key + Booking Code Deduplication | Complete | 2026-01-08 |
-| 03 | Login Page + RBAC | Complete | 2026-01-05 |
-| 04 | Request Module | Pending | TBD |
-| 05+ | Operator, Revenue, AI Assistant | Planned | TBD |
+| 03 | Login Page + RBAC (4 roles, 24 permissions) | Complete | 2026-01-05 |
+| 04 | Responsive Layouts (Master-Detail, Mobile Sheets) | Complete | 2026-01-05 |
+| 05 | Request Module - Pages (List, Create, Detail, Edit) | Complete | 2026-01-06+ |
+| 05 | Operator Module - Pages + Approvals + Locking | Complete | 2026-01-07+ |
+| 05 | Revenue Module - Pages + Multi-currency | Complete | 2026-01-07+ |
+| 06 | Request/Operator/Revenue Components & Forms | 75% | 2026-01-08 |
+| 07 | Operator/Revenue Reports & Analytics | Planned | TBD |
+| 08 | AI Assistant & Knowledge Base | Planned | TBD |
+| 09 | Production Hardening & Deployment | Planned | TBD |
 

@@ -1,0 +1,144 @@
+# Scout Report: Documentation Update - File Inventory
+
+Report Date: 2026-01-08
+Scope: Documentation update - src/app/ and src/components/
+Total Files Found: 94 (18 pages, 61 components, 33 API routes, 2 layouts)
+
+## I. PAGES (18 files)
+
+Dashboard Pages (2):
+- src/app/(dashboard)/page.tsx
+- src/app/(dashboard)/layout.tsx
+
+Requests Module (6):
+- src/app/(dashboard)/requests/page.tsx
+- src/app/(dashboard)/requests/[id]/page.tsx
+- src/app/(dashboard)/requests/[id]/edit/page.tsx
+- src/app/(dashboard)/requests/create/page.tsx
+
+Operators Module (5):
+- src/app/(dashboard)/operators/page.tsx
+- src/app/(dashboard)/operators/[id]/page.tsx
+- src/app/(dashboard)/operators/create/page.tsx
+- src/app/(dashboard)/operators/approvals/page.tsx
+- src/app/(dashboard)/operators/reports/page.tsx
+
+Suppliers Module (4):
+- src/app/(dashboard)/suppliers/page.tsx
+- src/app/(dashboard)/suppliers/[id]/page.tsx
+- src/app/(dashboard)/suppliers/create/page.tsx
+- src/app/(dashboard)/suppliers/reports/page.tsx
+
+Revenue Module (1):
+- src/app/(dashboard)/revenues/page.tsx
+
+Settings & Auth (3):
+- src/app/(dashboard)/settings/page.tsx
+- src/app/login/page.tsx
+- src/app/layout.tsx
+
+## II. COMPONENTS (61 files)
+
+UI Components (19): button, card, input, label, select, textarea, table, dialog, dropdown-menu, tabs, badge, avatar, separator, sheet, popover, calendar, form, command, checkbox, scroll-area, currency-input, alert, alert-dialog, sonner
+
+Layout Components (5):
+- src/components/layout/Header.tsx
+- src/components/layout/AIAssistant.tsx
+- src/components/layouts/master-detail-layout.tsx
+- src/components/layouts/slide-in-panel.tsx
+- src/components/providers/session-provider-wrapper.tsx
+
+Requests Components (8):
+- request-form.tsx, request-detail-panel.tsx, request-filters.tsx
+- request-list-panel.tsx, request-list-item.tsx, request-table.tsx
+- request-status-badge.tsx, request-services-table.tsx
+
+Operators Components (11):
+- operator-form.tsx, operator-list-filters.tsx, operator-approval-table.tsx
+- operator-lock-dialog.tsx, operator-history-panel.tsx, lock-indicator.tsx
+- approval-summary-cards.tsx, cost-by-service-chart.tsx, payment-status-cards.tsx
+- monthly-trend.tsx, cost-by-supplier-table.tsx
+
+Suppliers Components (4):
+- supplier-form.tsx, supplier-selector.tsx, edit-supplier-modal.tsx, transaction-form.tsx
+
+Revenues Components (3):
+- revenue-form.tsx, revenue-table.tsx, revenue-summary-card.tsx
+
+Settings Components (5):
+- seller-form-modal.tsx, seller-table.tsx, followup-status-table.tsx
+- followup-status-form-modal.tsx, google-sheets-sync.tsx
+
+Dashboard Components (1):
+- follow-up-widget.tsx
+
+## III. API ROUTES (33 endpoints)
+
+Requests (2): /api/requests, /api/requests/[id]
+Operators (8): /api/operators/*, /api/operators/[id]/*, pending-payments, lock-period
+Suppliers (5): /api/suppliers/*, /api/supplier-transactions/*
+Revenues (4): /api/revenues/*, lock/unlock
+Reports (3): supplier-balance, operator-costs, operator-payments
+Config (8): follow-up*, sellers*, user*
+Auth & Sync (3): /api/auth, /api/sync/sheets, /api/users
+
+## IV. CORE LIBRARY
+
+Authentication & Permissions:
+- src/auth.ts (NextAuth.js v5)
+- src/middleware.ts (route protection)
+- src/lib/permissions.ts (RBAC: 13 permissions, 4 roles)
+- src/hooks/use-permission.ts (permission hook)
+
+Data & Utilities:
+- src/types/index.ts (TypeScript definitions)
+- src/lib/db.ts (Prisma singleton)
+- src/lib/supplier-balance.ts (balance utilities)
+- src/lib/utils.ts (cn() utility)
+- src/lib/google-sheets.ts (Sheets API client)
+- src/constants.ts (app constants)
+- src/config/* (request, operator, revenue configs)
+
+## V. KEY FEATURES
+
+Requests: Full CRUD, 2-panel layout, filters, debounced search, URL persistence
+Operators: Service CRUD, payment tracking, accounting lock, batch approval, reports
+Revenues: Revenue CRUD, currency conversion, filtering, lock mechanism, summary cards
+Suppliers: Full CRUD, code generation, payment models, transaction tracking, reports
+Settings: Seller management, follow-up config, Google Sheets sync control
+Auth: NextAuth.js v5, 4 roles, 13 permissions, route-based RBAC
+Sync: Multi-spreadsheet support, row mapping, booking code deduplication
+
+## VI. TECH STACK
+
+Frontend: Next.js 16, React 19, TypeScript
+UI: Tailwind CSS 4, shadcn/ui (22+ components)
+Forms: React Hook Form, Zod validation
+Auth: NextAuth.js v5
+Database: PostgreSQL (Supabase), Prisma 7
+API: REST (Next.js routes)
+External: Google Sheets, Gmail, Anthropic Claude
+
+## VII. DOCUMENTATION GAPS
+
+High Priority:
+1. Requests module
+2. Operators module
+3. Revenues module
+4. Settings/Config
+5. Lock mechanism
+6. RBAC system
+
+Medium Priority:
+7. Google Sheets sync
+8. API reference
+9. Form patterns
+10. Component architecture
+
+## VIII. UNRESOLVED QUESTIONS
+
+1. New features since Phase 02c?
+2. Status of Phase 03+ (Dashboard, Expense)?
+3. Sample/test data seeds?
+4. Release schedule for upcoming features?
+5. Documentation priorities?

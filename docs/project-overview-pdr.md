@@ -287,11 +287,14 @@ PostgreSQL (Cache)
 - [x] localStorage persistence for panel sizes
 - [x] Mobile-first responsive design
 
-### Phase 6: Core Modules (Next)
-- [ ] Customer Request module (CRUD with form builder)
-- [ ] Operator module (with claim/approve workflow)
-- [ ] Revenue module (multi-currency with exchange rates)
-- [ ] Advanced form components (date picker, multi-select, etc.)
+### Phase 6: Core Modules (75% - In Progress)
+- [x] Customer Request module (CRUD with list/detail/create/edit views)
+- [x] Operator module (CRUD with approval workflow, lock mechanism)
+- [x] Revenue module (CRUD with multi-currency support)
+- [x] Advanced form components (date picker, multi-select, filters)
+- [x] Request/Operator/Revenue detail pages with master-detail layout
+- [ ] Operator reports and analytics
+- [ ] Revenue reports and analytics
 
 ### Phase 7: Integrations (Planned)
 - [ ] Google Sheets bidirectional sync
