@@ -62,7 +62,7 @@ const customJestConfig: Config = {
 
   // Ignore ESM modules (for next-auth and other ESM packages)
   transformIgnorePatterns: [
-    'node_modules/(?!(next-auth)/)',
+    'node_modules/(?!(next-auth|@auth)/)',
   ],
 
   // Clear mocks between tests

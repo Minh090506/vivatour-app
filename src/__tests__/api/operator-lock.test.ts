@@ -13,6 +13,9 @@ jest.mock('@/lib/db', () => ({
   prisma: prismaMock,
 }));
 
+// Mock auth-utils to avoid next-auth ESM import issues
+jest.mock('@/lib/auth-utils');
+
 // Mock operator history
 jest.mock('@/lib/operator-history', () => ({
   createOperatorHistory: jest.fn().mockResolvedValue({}),

@@ -13,6 +13,9 @@ jest.mock('@/lib/db', () => ({
   prisma: prismaMock,
 }));
 
+// Mock auth-utils to avoid next-auth ESM import issues
+jest.mock('@/lib/auth-utils');
+
 // Mock supplier-balance module
 jest.mock('@/lib/supplier-balance', () => ({
   calculateSupplierBalance: jest.fn().mockResolvedValue({

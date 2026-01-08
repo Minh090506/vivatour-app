@@ -13,6 +13,9 @@ jest.mock('@/lib/db', () => ({
   prisma: prismaMock,
 }));
 
+// Mock auth-utils to avoid next-auth ESM import issues
+jest.mock('@/lib/auth-utils');
+
 import { GET, POST } from '@/app/api/supplier-transactions/route';
 
 // Helper to create mock NextRequest
@@ -506,11 +509,11 @@ describe('POST /api/supplier-transactions', () => {
     );
   });
 
-  it('should default createdBy to system', async () => {
+  it('should use authenticated user ID as createdBy', async () => {
     prismaMock.supplier.findUnique.mockResolvedValue({ id: 'sup-1' } as never);
     prismaMock.supplierTransaction.create.mockResolvedValue({
       id: 'tx-new',
-      createdBy: 'system',
+      createdBy: 'test-admin-id', // From mock auth-utils
       supplier: { code: 'TEST', name: 'Test' },
     } as never);
 
@@ -521,20 +524,21 @@ describe('POST /api/supplier-transactions', () => {
 
     await POST(request);
 
+    // createdBy should be set from authenticated user, not from body
     expect(prismaMock.supplierTransaction.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          createdBy: 'system',
+          createdBy: 'test-admin-id',
         }),
       })
     );
   });
 
-  it('should use provided createdBy', async () => {
+  it('should ignore body createdBy and use authenticated user', async () => {
     prismaMock.supplier.findUnique.mockResolvedValue({ id: 'sup-1' } as never);
     prismaMock.supplierTransaction.create.mockResolvedValue({
       id: 'tx-new',
-      createdBy: 'admin',
+      createdBy: 'test-admin-id',
       supplier: { code: 'TEST', name: 'Test' },
     } as never);
 
@@ -542,16 +546,17 @@ describe('POST /api/supplier-transactions', () => {
       method: 'POST',
       body: JSON.stringify({
         ...validTransactionData,
-        createdBy: 'admin',
+        createdBy: 'admin', // This should be ignored
       }),
     });
 
     await POST(request);
 
+    // Should use authenticated user ID, not the provided createdBy
     expect(prismaMock.supplierTransaction.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          createdBy: 'admin',
+          createdBy: 'test-admin-id',
         }),
       })
     );
