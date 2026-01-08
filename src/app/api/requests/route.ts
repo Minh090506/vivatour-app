@@ -49,7 +49,8 @@ export async function GET(request: NextRequest) {
 
     if (status) where.status = status;
     if (stage) where.stage = stage;
-    if (sellerId) where.sellerId = sellerId;
+    // Only allow sellerId filter for non-SELLER users (SELLER already restricted above)
+    if (sellerId && user.role !== 'SELLER') where.sellerId = sellerId;
     if (source) where.source = source;
     if (country) where.country = country;
 
