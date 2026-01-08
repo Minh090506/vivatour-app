@@ -57,7 +57,7 @@ export function OperatorLockDialog({ open, onOpenChange, onSuccess }: Props) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           month,
-          userId: 'current-user', // TODO: Get from auth
+          // Note: userId is extracted from session on server side
         }),
       });
 

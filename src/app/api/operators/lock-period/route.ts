@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { getSessionUser, unauthorizedResponse } from '@/lib/auth-utils';
 
-// POST /api/operators/lock-period - Lock all operators in a period
+// POST /api/operators/lock-period - Lock all operators in a period (Accountant/Admin)
 export async function POST(request: NextRequest) {
   try {
+    // Verify authentication
+    const user = await getSessionUser();
+    if (!user) {
+      return unauthorizedResponse();
+    }
+
     const body = await request.json();
 
     // Validate month format YYYY-MM
@@ -13,8 +20,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    const userId = body.userId || 'system';
 
     // Parse month range
     const [year, month] = body.month.split('-').map(Number);
@@ -52,7 +57,7 @@ export async function POST(request: NextRequest) {
         data: {
           isLocked: true,
           lockedAt,
-          lockedBy: userId,
+          lockedBy: user.id,
         },
       });
 
@@ -66,9 +71,9 @@ export async function POST(request: NextRequest) {
               changes: {
                 isLocked: { before: false, after: true },
                 lockedAt: { before: null, after: lockedAt },
-                lockedBy: { before: null, after: userId },
+                lockedBy: { before: null, after: user.id },
               },
-              userId,
+              userId: user.id,
             },
           })
         )

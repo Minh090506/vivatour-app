@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { requirePermission } from '@/lib/auth-utils';
 
-// POST /api/operators/approve - Batch approve
+// POST /api/operators/approve - Batch approve (Accountant/Admin)
 export async function POST(request: NextRequest) {
   try {
+    // Verify permission - only operator:approve can approve
+    const { user, error } = await requirePermission('operator:approve');
+    if (error) return error;
+
     const body = await request.json();
 
     // Validate
@@ -22,7 +27,6 @@ export async function POST(request: NextRequest) {
     }
 
     const paymentDate = new Date(body.paymentDate);
-    const userId = body.userId || 'system';
 
     // Verify all operators exist and are not locked
     const operators = await prisma.operator.findMany({
@@ -68,7 +72,7 @@ export async function POST(request: NextRequest) {
                 paymentStatus: { before: op?.paymentStatus || 'PENDING', after: 'PAID' },
                 paymentDate: { before: op?.paymentDate, after: paymentDate },
               },
-              userId,
+              userId: user!.id,
             },
           });
 

@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-
-// Note: In production, use proper auth middleware to get current user
-// For now, we check role from query param or header (to be replaced with proper auth)
+import { requireAdmin } from '@/lib/auth-utils';
 
 // GET /api/config/user - List all user configs (admin only)
 export async function GET(_request: NextRequest) {
   try {
-    // TODO: Replace with proper auth check when auth system is implemented
-    // For now, allow access (will be secured later)
+    // Verify admin role
+    const { error } = await requireAdmin();
+    if (error) return error;
+
     const configs = await prisma.configUser.findMany({
       include: {
         user: { select: { id: true, name: true, email: true, role: true } },
@@ -30,6 +30,10 @@ export async function GET(_request: NextRequest) {
 // POST /api/config/user - Create/update user config (admin only)
 export async function POST(request: NextRequest) {
   try {
+    // Verify admin role
+    const { error } = await requireAdmin();
+    if (error) return error;
+
     const body = await request.json();
 
     // Validate required fields
@@ -103,9 +107,13 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// DELETE /api/config/user - Delete user config
+// DELETE /api/config/user - Delete user config (admin only)
 export async function DELETE(request: NextRequest) {
   try {
+    // Verify admin role
+    const { error } = await requireAdmin();
+    if (error) return error;
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 

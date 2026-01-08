@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { getSessionUser, unauthorizedResponse } from '@/lib/auth-utils';
 
 // GET /api/supplier-transactions - List transactions with filters
 export async function GET(request: NextRequest) {
@@ -57,6 +58,12 @@ export async function GET(request: NextRequest) {
 // POST /api/supplier-transactions - Create new transaction
 export async function POST(request: NextRequest) {
   try {
+    // Verify authentication
+    const user = await getSessionUser();
+    if (!user) {
+      return unauthorizedResponse();
+    }
+
     const body = await request.json();
 
     // Validate required fields
@@ -106,7 +113,7 @@ export async function POST(request: NextRequest) {
         description: body.description || null,
         proofLink: body.proofLink || null,
         relatedBookingCode: body.relatedBookingCode || null,
-        createdBy: body.createdBy || 'system', // TODO: Get from auth
+        createdBy: user.id,
       },
       include: {
         supplier: {

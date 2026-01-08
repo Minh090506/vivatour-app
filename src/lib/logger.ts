@@ -54,6 +54,30 @@ function createLogEntry(
 }
 
 /**
+ * Send log entry to external monitoring service
+ * Configure SENTRY_DSN or LOG_ENDPOINT in environment for production logging
+ *
+ * Supported services:
+ * - Sentry (set SENTRY_DSN)
+ * - Custom endpoint (set LOG_ENDPOINT)
+ */
+function sendToExternalService(entry: LogEntry) {
+  // Skip if no external service configured
+  const logEndpoint = process.env.LOG_ENDPOINT;
+  if (!logEndpoint) return;
+
+  // Non-blocking async send
+  fetch(logEndpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(entry),
+  }).catch((err) => {
+    // Silent fail - don't let logging errors break the app
+    console.error("[Logger] Failed to send to external service:", err.message);
+  });
+}
+
+/**
  * Output log to console (extend for external services)
  */
 function outputLog(entry: LogEntry) {
@@ -72,10 +96,10 @@ function outputLog(entry: LogEntry) {
       break;
   }
 
-  // TODO: Send to external service in production
-  // if (process.env.NODE_ENV === 'production') {
-  //   sendToSentry(entry);
-  // }
+  // Send to external service in production
+  if (process.env.NODE_ENV === "production") {
+    sendToExternalService(entry);
+  }
 }
 
 /**

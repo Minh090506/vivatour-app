@@ -184,7 +184,7 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
         paymentDeadline: formData.paymentDeadline || null,
         bankAccount: formData.bankAccount?.trim() || null,
         notes: formData.notes?.trim() || null,
-        userId: 'system', // TODO: Get from auth
+        // Note: userId is now extracted from session on server side
       };
 
       const res = await fetch(url, {

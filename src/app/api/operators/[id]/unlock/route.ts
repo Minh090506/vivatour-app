@@ -1,25 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { createOperatorHistory } from '@/lib/operator-history';
+import { requireAdmin } from '@/lib/auth-utils';
 
 // POST /api/operators/[id]/unlock - Admin only
 export async function POST(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    const body = await request.json();
-    const userId = body.userId || 'system';
+    // Verify admin role - only admins can unlock operators
+    const { user, error } = await requireAdmin();
+    if (error) return error;
 
-    // TODO: Verify user is ADMIN when auth is implemented
-    // const user = await getUser(userId);
-    // if (user.role !== 'ADMIN') {
-    //   return NextResponse.json(
-    //     { success: false, error: 'Chỉ Admin được mở khóa' },
-    //     { status: 403 }
-    //   );
-    // }
+    const { id } = await params;
 
     const operator = await prisma.operator.findUnique({ where: { id } });
 
@@ -54,7 +48,7 @@ export async function POST(
         lockedAt: { before: operator.lockedAt, after: null },
         lockedBy: { before: operator.lockedBy, after: null },
       },
-      userId,
+      userId: user!.id,
     });
 
     return NextResponse.json({ success: true, data: updated });

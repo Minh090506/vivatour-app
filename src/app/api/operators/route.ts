@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { createOperatorHistory } from '@/lib/operator-history';
 import { SERVICE_TYPE_KEYS } from '@/config/operator-config';
+import { getSessionUser, unauthorizedResponse } from '@/lib/auth-utils';
 
 // GET /api/operators - List with filters
 export async function GET(request: NextRequest) {
@@ -80,6 +81,12 @@ export async function GET(request: NextRequest) {
 // POST /api/operators - Create operator
 export async function POST(request: NextRequest) {
   try {
+    // Verify authentication
+    const user = await getSessionUser();
+    if (!user) {
+      return unauthorizedResponse();
+    }
+
     const body = await request.json();
 
     // Validate required fields
@@ -155,7 +162,7 @@ export async function POST(request: NextRequest) {
         paymentDeadline: body.paymentDeadline ? new Date(body.paymentDeadline) : null,
         bankAccount: body.bankAccount?.trim() || null,
         notes: body.notes?.trim() || null,
-        userId: body.userId || 'system', // TODO: Get from auth session
+        userId: user.id,
       },
       include: {
         request: { select: { code: true, customerName: true } },
@@ -168,7 +175,7 @@ export async function POST(request: NextRequest) {
       operatorId: operator.id,
       action: 'CREATE',
       changes: { created: { before: null, after: { id: operator.id, serviceName: operator.serviceName } } },
-      userId: body.userId || 'system',
+      userId: user.id,
     });
 
     return NextResponse.json({ success: true, data: operator }, { status: 201 });
