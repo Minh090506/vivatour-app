@@ -139,6 +139,7 @@ export interface Operator {
   request?: Request;
   supplierId: string | null;
   supplierRef?: Supplier;
+  serviceId: string | null; // Business ID: {bookingCode}-{timestamp}
   serviceDate: Date;
   serviceType: string;
   serviceName: string;
@@ -150,6 +151,17 @@ export interface Operator {
   paymentStatus: PaymentStatus;
   paymentDate: Date | null;
   bankAccount: string | null;
+  // 3-tier lock system
+  lockKT: boolean;
+  lockKTAt: Date | null;
+  lockKTBy: string | null;
+  lockAdmin: boolean;
+  lockAdminAt: Date | null;
+  lockAdminBy: string | null;
+  lockFinal: boolean;
+  lockFinalAt: Date | null;
+  lockFinalBy: string | null;
+  // Legacy lock fields (deprecated, kept for backward compatibility)
   isLocked: boolean;
   lockedAt: Date | null;
   lockedBy: string | null;
@@ -178,7 +190,7 @@ export interface OperatorFormData {
 // Revenue types
 export interface Revenue {
   id: string;
-  revenueId: string | null;
+  revenueId: string | null; // Business ID: {bookingCode}-{timestamp}-{row}
   requestId: string;
   request?: Request;
   paymentDate: Date;
@@ -188,6 +200,17 @@ export interface Revenue {
   exchangeRate: number | null;
   amountVND: number;
   paymentSource: string;
+  // 3-tier lock system
+  lockKT: boolean;
+  lockKTAt: Date | null;
+  lockKTBy: string | null;
+  lockAdmin: boolean;
+  lockAdminAt: Date | null;
+  lockAdminBy: string | null;
+  lockFinal: boolean;
+  lockFinalAt: Date | null;
+  lockFinalBy: string | null;
+  // Legacy lock fields (deprecated, kept for backward compatibility)
   isLocked: boolean;
   lockedAt: Date | null;
   lockedBy: string | null;
