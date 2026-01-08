@@ -34,8 +34,16 @@ export const HISTORY_ACTIONS = {
   CREATE: { label: 'Tạo mới', color: 'green' },
   UPDATE: { label: 'Cập nhật', color: 'blue' },
   DELETE: { label: 'Xóa', color: 'red' },
+  // Legacy lock actions (kept for backward compatibility)
   LOCK: { label: 'Khóa', color: 'amber' },
   UNLOCK: { label: 'Mở khóa', color: 'purple' },
+  // 3-tier lock actions
+  LOCK_KT: { label: 'Khóa KT', color: 'amber' },
+  UNLOCK_KT: { label: 'Mở khóa KT', color: 'purple' },
+  LOCK_ADMIN: { label: 'Khóa Admin', color: 'orange' },
+  UNLOCK_ADMIN: { label: 'Mở khóa Admin', color: 'purple' },
+  LOCK_FINAL: { label: 'Khóa Cuối', color: 'red' },
+  UNLOCK_FINAL: { label: 'Mở khóa Cuối', color: 'purple' },
   APPROVE: { label: 'Duyệt TT', color: 'emerald' },
 } as const;
 

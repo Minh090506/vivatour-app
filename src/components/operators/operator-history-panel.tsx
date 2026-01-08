@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { History, Plus, Edit, Trash2, Lock, Unlock, CheckCircle } from 'lucide-react';
+import { History, Plus, Edit, Trash2, Lock, Unlock, CheckCircle, Users } from 'lucide-react';
 import { HISTORY_ACTIONS, type HistoryActionKey } from '@/config/operator-config';
 import type { OperatorHistoryEntry } from '@/types';
 
@@ -11,12 +11,19 @@ interface OperatorHistoryPanelProps {
   history: OperatorHistoryEntry[];
 }
 
-const ACTION_ICONS: Record<HistoryActionKey, typeof Plus> = {
+// Icon mapping for all action types (including 3-tier locks)
+const ACTION_ICONS: Record<string, typeof Plus> = {
   CREATE: Plus,
   UPDATE: Edit,
   DELETE: Trash2,
   LOCK: Lock,
   UNLOCK: Unlock,
+  LOCK_KT: Lock,
+  UNLOCK_KT: Unlock,
+  LOCK_ADMIN: Lock,
+  UNLOCK_ADMIN: Unlock,
+  LOCK_FINAL: Lock,
+  UNLOCK_FINAL: Unlock,
   APPROVE: CheckCircle,
 };
 
@@ -50,6 +57,19 @@ export function OperatorHistoryPanel({ history }: OperatorHistoryPanelProps) {
       isLocked: 'Khóa sổ',
       lockedAt: 'Ngày khóa',
       lockedBy: 'Người khóa',
+      // 3-tier lock fields
+      lockKT: 'Khóa KT',
+      lockKTAt: 'Ngày khóa KT',
+      lockKTBy: 'Người khóa KT',
+      lockAdmin: 'Khóa Admin',
+      lockAdminAt: 'Ngày khóa Admin',
+      lockAdminBy: 'Người khóa Admin',
+      lockFinal: 'Khóa Cuối',
+      lockFinalAt: 'Ngày khóa Cuối',
+      lockFinalBy: 'Người khóa Cuối',
+      tier: 'Mức khóa',
+      batch: 'Hàng loạt',
+      month: 'Tháng',
       created: 'Tạo mới',
       deleted: 'Xóa',
     };
@@ -81,8 +101,13 @@ export function OperatorHistoryPanel({ history }: OperatorHistoryPanelProps) {
   };
 
   const getActionIcon = (action: string) => {
-    const Icon = ACTION_ICONS[action as HistoryActionKey] || Edit;
+    const Icon = ACTION_ICONS[action] || Edit;
     return <Icon className="h-4 w-4" />;
+  };
+
+  // Check if action is a tier-specific lock action
+  const isTierLockAction = (action: string): boolean => {
+    return ['LOCK_KT', 'UNLOCK_KT', 'LOCK_ADMIN', 'UNLOCK_ADMIN', 'LOCK_FINAL', 'UNLOCK_FINAL'].includes(action);
   };
 
   if (!history || history.length === 0) {
@@ -116,7 +141,10 @@ export function OperatorHistoryPanel({ history }: OperatorHistoryPanelProps) {
           <div className="space-y-4">
             {history.map((entry) => {
               const actionInfo = getActionInfo(entry.action);
-              const changes = entry.changes as Record<string, { before: unknown; after: unknown }>;
+              const changes = entry.changes as Record<string, unknown>;
+              const isBatchLock = changes?.batch === true;
+              const tierFromChanges = changes?.tier as string | undefined;
+              const monthFromChanges = changes?.month as string | undefined;
 
               return (
                 <div
@@ -129,7 +157,7 @@ export function OperatorHistoryPanel({ history }: OperatorHistoryPanelProps) {
                   </div>
 
                   {/* Header */}
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <Badge
                       variant="outline"
                       className={`
@@ -137,6 +165,7 @@ export function OperatorHistoryPanel({ history }: OperatorHistoryPanelProps) {
                         ${actionInfo.color === 'blue' && 'border-blue-500 text-blue-600'}
                         ${actionInfo.color === 'red' && 'border-red-500 text-red-600'}
                         ${actionInfo.color === 'amber' && 'border-amber-500 text-amber-600'}
+                        ${actionInfo.color === 'orange' && 'border-orange-500 text-orange-600'}
                         ${actionInfo.color === 'purple' && 'border-purple-500 text-purple-600'}
                         ${actionInfo.color === 'emerald' && 'border-emerald-500 text-emerald-600'}
                       `}
@@ -144,6 +173,15 @@ export function OperatorHistoryPanel({ history }: OperatorHistoryPanelProps) {
                       {getActionIcon(entry.action)}
                       <span className="ml-1">{actionInfo.label}</span>
                     </Badge>
+
+                    {/* Batch indicator */}
+                    {isBatchLock && (
+                      <Badge variant="secondary" className="text-xs gap-1">
+                        <Users className="h-3 w-3" />
+                        Hàng loạt
+                      </Badge>
+                    )}
+
                     <span className="text-sm text-muted-foreground">
                       {formatDate(entry.createdAt)}
                     </span>
@@ -154,29 +192,51 @@ export function OperatorHistoryPanel({ history }: OperatorHistoryPanelProps) {
                     Bởi: <span className="font-medium">{entry.userId}</span>
                   </p>
 
-                  {/* Changes */}
+                  {/* Tier-specific info for lock actions */}
+                  {isTierLockAction(entry.action) && monthFromChanges && (
+                    <div className="text-xs text-muted-foreground mb-2 bg-muted/50 rounded px-2 py-1 inline-block">
+                      Tháng: {monthFromChanges}
+                      {tierFromChanges && ` • Tier: ${tierFromChanges}`}
+                    </div>
+                  )}
+
+                  {/* Changes - filter out tier/batch/month for tier locks */}
                   {changes && Object.keys(changes).length > 0 && (
                     <div className="bg-muted/50 rounded-md p-3 space-y-1">
-                      {Object.entries(changes).map(([field, change]) => (
-                        <div key={field} className="text-sm">
-                          <span className="font-medium">{formatFieldName(field)}:</span>{' '}
-                          {entry.action === 'CREATE' || entry.action === 'DELETE' ? (
-                            <span className="text-muted-foreground">
-                              {formatValue(change.after || change.before)}
-                            </span>
-                          ) : (
-                            <>
-                              <span className="line-through text-red-500/70">
-                                {formatValue(change.before)}
-                              </span>
-                              {' → '}
-                              <span className="text-green-600">
-                                {formatValue(change.after)}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                      ))}
+                      {Object.entries(changes)
+                        .filter(([field]) => {
+                          // For tier lock actions, skip displaying these meta fields
+                          if (isTierLockAction(entry.action)) {
+                            return !['tier', 'batch', 'month'].includes(field);
+                          }
+                          return true;
+                        })
+                        .map(([field, change]) => {
+                          // Handle both {before, after} format and direct values
+                          const changeObj = change as { before?: unknown; after?: unknown } | unknown;
+                          const hasBothValues = changeObj && typeof changeObj === 'object' && 'before' in changeObj;
+
+                          return (
+                            <div key={field} className="text-sm">
+                              <span className="font-medium">{formatFieldName(field)}:</span>{' '}
+                              {entry.action === 'CREATE' || entry.action === 'DELETE' || !hasBothValues ? (
+                                <span className="text-muted-foreground">
+                                  {formatValue(hasBothValues ? (changeObj as { after?: unknown }).after || (changeObj as { before?: unknown }).before : change)}
+                                </span>
+                              ) : (
+                                <>
+                                  <span className="line-through text-red-500/70">
+                                    {formatValue((changeObj as { before: unknown }).before)}
+                                  </span>
+                                  {' → '}
+                                  <span className="text-green-600">
+                                    {formatValue((changeObj as { after: unknown }).after)}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          );
+                        })}
                     </div>
                   )}
                 </div>

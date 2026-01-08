@@ -460,12 +460,24 @@ export interface OperatorFilters {
   isLocked?: boolean;
 }
 
-// Operator history entry
+// Operator history entry (includes 3-tier lock actions)
 export interface OperatorHistoryEntry {
   id: string;
   operatorId: string;
-  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'LOCK' | 'UNLOCK' | 'APPROVE';
-  changes: Record<string, { before: unknown; after: unknown }>;
+  action:
+    | 'CREATE'
+    | 'UPDATE'
+    | 'DELETE'
+    | 'LOCK'
+    | 'UNLOCK'
+    | 'LOCK_KT'
+    | 'UNLOCK_KT'
+    | 'LOCK_ADMIN'
+    | 'UNLOCK_ADMIN'
+    | 'LOCK_FINAL'
+    | 'UNLOCK_FINAL'
+    | 'APPROVE';
+  changes: Record<string, { before: unknown; after: unknown } | unknown>;
   userId: string;
   createdAt: Date;
 }

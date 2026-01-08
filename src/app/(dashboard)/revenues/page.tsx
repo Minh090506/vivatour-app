@@ -40,7 +40,12 @@ interface Revenue {
   amountVND: number;
   paymentSource: string;
   notes?: string | null;
-  isLocked: boolean;
+  // 3-tier lock fields
+  lockKT: boolean;
+  lockAdmin: boolean;
+  lockFinal: boolean;
+  // Legacy field for backward compatibility
+  isLocked?: boolean;
   lockedAt?: Date | string | null;
   lockedBy?: string | null;
   request?: {
@@ -56,7 +61,7 @@ interface Filters {
   toDate: string;
   paymentType: string;
   paymentSource: string;
-  isLocked: string;
+  lockStatus: string;
 }
 
 const initialFilters: Filters = {
@@ -65,8 +70,17 @@ const initialFilters: Filters = {
   toDate: '',
   paymentType: '',
   paymentSource: '',
-  isLocked: '',
+  lockStatus: '',
 };
+
+// Lock status filter options
+const LOCK_STATUS_OPTIONS = [
+  { value: 'all', label: 'Tat ca' },
+  { value: 'unlocked', label: 'Chua khoa' },
+  { value: 'lockKT', label: 'Da khoa KT' },
+  { value: 'lockAdmin', label: 'Da khoa Admin' },
+  { value: 'lockFinal', label: 'Da khoa Cuoi' },
+];
 
 export default function RevenuesPage() {
   const { can, isAdmin } = usePermission();
@@ -94,7 +108,7 @@ export default function RevenuesPage() {
       if (filters.toDate) params.set('toDate', filters.toDate);
       if (filters.paymentType) params.set('paymentType', filters.paymentType);
       if (filters.paymentSource) params.set('paymentSource', filters.paymentSource);
-      if (filters.isLocked) params.set('isLocked', filters.isLocked);
+      if (filters.lockStatus) params.set('lockStatus', filters.lockStatus);
       params.set('limit', '100');
 
       const res = await fetch(`/api/revenues?${params}`);
@@ -159,7 +173,7 @@ export default function RevenuesPage() {
     filters.toDate ||
     filters.paymentType ||
     filters.paymentSource ||
-    filters.isLocked;
+    filters.lockStatus;
 
   return (
     <div className="container mx-auto py-6 px-4 space-y-6">
@@ -198,7 +212,7 @@ export default function RevenuesPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
             {/* Search */}
             <div className="space-y-2 lg:col-span-2">
               <Label>Tìm kiếm</Label>
@@ -256,19 +270,39 @@ export default function RevenuesPage() {
 
             {/* Payment Source */}
             <div className="space-y-2">
-              <Label>Nguồn thanh toán</Label>
+              <Label>Nguon thanh toan</Label>
               <Select
                 value={filters.paymentSource}
                 onValueChange={(v) => handleFilterChange('paymentSource', v === 'all' ? '' : v)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Tất cả" />
+                  <SelectValue placeholder="Tat ca" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tất cả</SelectItem>
+                  <SelectItem value="all">Tat ca</SelectItem>
                   {(Object.keys(PAYMENT_SOURCES) as PaymentSourceKey[]).map((key) => (
                     <SelectItem key={key} value={key}>
                       {PAYMENT_SOURCES[key].label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Lock Status */}
+            <div className="space-y-2">
+              <Label>Trang thai khoa</Label>
+              <Select
+                value={filters.lockStatus}
+                onValueChange={(v) => handleFilterChange('lockStatus', v === 'all' ? '' : v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Tat ca" />
+                </SelectTrigger>
+                <SelectContent>
+                  {LOCK_STATUS_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

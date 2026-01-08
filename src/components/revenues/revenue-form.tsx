@@ -48,6 +48,11 @@ interface RevenueData {
   amountVND: number;
   paymentSource: string;
   notes?: string | null;
+  // 3-tier lock fields
+  lockKT?: boolean;
+  lockAdmin?: boolean;
+  lockFinal?: boolean;
+  // Legacy field for backward compatibility
   isLocked?: boolean;
 }
 
@@ -179,7 +184,8 @@ export function RevenueForm({ revenue, requestId, onSuccess, onCancel }: Revenue
     return <div className="text-center py-10">Đang tải dữ liệu...</div>;
   }
 
-  const isLocked = revenue?.isLocked;
+  // Check if any lock tier is active (3-tier or legacy)
+  const isLocked = revenue?.lockKT || revenue?.lockAdmin || revenue?.lockFinal || revenue?.isLocked;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
