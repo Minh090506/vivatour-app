@@ -1,61 +1,110 @@
-import { NextRequest, NextResponse } from 'next/server';
+// POST /api/operators/[id]/lock - Lock operator at specific tier
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { createOperatorHistory } from '@/lib/operator-history';
+import { getSessionUser, unauthorizedResponse, forbiddenResponse } from '@/lib/auth-utils';
+import {
+  canLock,
+  canLockTier,
+  getLockFields,
+  getLockHistoryAction,
+  type LockTier,
+  LOCK_TIERS,
+} from '@/lib/lock-utils';
 
-// POST /api/operators/[id]/lock
 export async function POST(
-  request: NextRequest,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
-    const body = await request.json();
-    const userId = body.userId || 'system';
-
-    const operator = await prisma.operator.findUnique({ where: { id } });
-
-    if (!operator) {
-      return NextResponse.json(
-        { success: false, error: 'Dịch vụ không tồn tại' },
-        { status: 404 }
-      );
+    const user = await getSessionUser();
+    if (!user) {
+      return unauthorizedResponse();
     }
 
-    if (operator.isLocked) {
+    const { id } = await params;
+    const body = await request.json();
+    const tier = (body.tier as LockTier) || 'KT';
+
+    // Validate tier
+    if (!LOCK_TIERS.includes(tier)) {
       return NextResponse.json(
-        { success: false, error: 'Dịch vụ đã được khóa' },
+        { success: false, error: `Tier khóa không hợp lệ: ${tier}` },
         { status: 400 }
       );
     }
 
-    const lockedAt = new Date();
+    // Check permission for this tier
+    if (!canLock(user.role, tier)) {
+      return forbiddenResponse(`Không có quyền khóa tier: ${tier}`);
+    }
 
+    // Get current operator state
+    const operator = await prisma.operator.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        lockKT: true,
+        lockAdmin: true,
+        lockFinal: true,
+        serviceName: true,
+      },
+    });
+
+    if (!operator) {
+      return NextResponse.json(
+        { success: false, error: 'Không tìm thấy dịch vụ' },
+        { status: 404 }
+      );
+    }
+
+    // Validate tier progression
+    const lockState = {
+      lockKT: operator.lockKT,
+      lockAdmin: operator.lockAdmin,
+      lockFinal: operator.lockFinal,
+    };
+
+    if (!canLockTier(lockState, tier)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Không thể khóa tier ${tier}. Phải theo thứ tự: KT → Admin → Final`,
+          currentState: lockState,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Apply lock + sync legacy isLocked field
+    const lockFields = getLockFields(tier, user.id, true);
     const updated = await prisma.operator.update({
       where: { id },
       data: {
-        isLocked: true,
-        lockedAt,
-        lockedBy: userId,
+        ...lockFields,
+        isLocked: true, // Keep legacy field in sync
+        lockedAt: new Date(),
+        lockedBy: user.id,
       },
     });
 
+    // Create history entry
     await createOperatorHistory({
       operatorId: id,
-      action: 'LOCK',
-      changes: {
-        isLocked: { before: false, after: true },
-        lockedAt: { before: null, after: lockedAt },
-        lockedBy: { before: null, after: userId },
-      },
-      userId,
+      action: getLockHistoryAction(tier, true),
+      changes: { tier, ...lockFields },
+      userId: user.id,
     });
 
-    return NextResponse.json({ success: true, data: updated });
+    return NextResponse.json({
+      success: true,
+      data: { tier, operator: updated },
+    });
   } catch (error) {
-    console.error('Error locking operator:', error);
+    console.error('Lock operator error:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { success: false, error: `Lỗi khóa: ${message}` },
+      { success: false, error: `Lỗi khóa dịch vụ: ${message}` },
       { status: 500 }
     );
   }

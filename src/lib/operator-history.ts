@@ -2,12 +2,25 @@
 import { prisma } from './db';
 import type { Prisma } from '@prisma/client';
 
-export type HistoryAction = 'CREATE' | 'UPDATE' | 'DELETE' | 'LOCK' | 'UNLOCK' | 'APPROVE';
+// Base actions + tier-specific lock actions (LOCK_KT, UNLOCK_ADMIN, etc.)
+export type HistoryAction =
+  | 'CREATE'
+  | 'UPDATE'
+  | 'DELETE'
+  | 'LOCK'
+  | 'UNLOCK'
+  | 'APPROVE'
+  | 'LOCK_KT'
+  | 'UNLOCK_KT'
+  | 'LOCK_ADMIN'
+  | 'UNLOCK_ADMIN'
+  | 'LOCK_FINAL'
+  | 'UNLOCK_FINAL';
 
 interface HistoryEntry {
   operatorId: string;
-  action: HistoryAction;
-  changes: Record<string, { before: unknown; after: unknown }>;
+  action: HistoryAction | string; // Allow string for flexibility with tier actions
+  changes: Record<string, unknown>; // Flexible for both before/after and direct values
   userId: string;
 }
 

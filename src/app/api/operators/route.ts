@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { createOperatorHistory } from '@/lib/operator-history';
 import { SERVICE_TYPE_KEYS } from '@/config/operator-config';
 import { getSessionUser, unauthorizedResponse } from '@/lib/auth-utils';
+import { generateServiceId } from '@/lib/id-utils';
 
 // GET /api/operators - List with filters
 export async function GET(request: NextRequest) {
@@ -108,6 +109,7 @@ export async function POST(request: NextRequest) {
     // Validate request exists and is F5
     const req = await prisma.request.findUnique({
       where: { id: body.requestId },
+      select: { id: true, status: true, bookingCode: true, code: true },
     });
 
     if (!req) {
@@ -122,6 +124,13 @@ export async function POST(request: NextRequest) {
         { success: false, error: 'Chỉ có thể thêm dịch vụ cho Booking đã xác nhận (F5)' },
         { status: 400 }
       );
+    }
+
+    // Generate serviceId from bookingCode (or fallback to request code)
+    let serviceId: string | null = null;
+    const bookingCode = req.bookingCode || req.code;
+    if (bookingCode) {
+      serviceId = await generateServiceId(bookingCode);
     }
 
     // Validate supplier if linked
@@ -147,11 +156,12 @@ export async function POST(request: NextRequest) {
     const vat = body.vat !== undefined && body.vat !== null ? Number(body.vat) : null;
     const totalCost = Number(body.totalCost) || costBeforeTax + (vat || 0);
 
-    // Create operator
+    // Create operator with serviceId and lock fields initialized
     const operator = await prisma.operator.create({
       data: {
         requestId: body.requestId,
         supplierId: body.supplierId || null,
+        serviceId, // Auto-generated from bookingCode
         serviceDate: new Date(body.serviceDate),
         serviceType: body.serviceType,
         serviceName: body.serviceName.trim(),
@@ -163,6 +173,7 @@ export async function POST(request: NextRequest) {
         bankAccount: body.bankAccount?.trim() || null,
         notes: body.notes?.trim() || null,
         userId: user.id,
+        // Lock tiers default to false (from schema)
       },
       include: {
         request: { select: { code: true, customerName: true } },
