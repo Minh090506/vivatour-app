@@ -55,6 +55,7 @@ model Request {
   code            String    @unique  // Request ID from Sheet column AR (unique sync key)
   rqid            String?   @unique  // Legacy: RQ-YYMMDD-0001 (deprecated)
   bookingCode     String?            // Booking Code from column T (for Operator/Revenue linking, NOT unique)
+  requestId       String?   @unique  // {SellerCode}{yyyyMMddHHmmssSSS}
 
   // Customer Info
   customerName    String
@@ -109,6 +110,7 @@ model Request {
   @@index([sellerId, stage])
   @@index([bookingCode])
   @@index([nextFollowUp])
+  @@index([requestId])
   @@map("requests")
 }
 
@@ -144,10 +146,24 @@ model Operator {
   paymentDate     DateTime?
   bankAccount     String?
 
-  // Lock (for accounting)
+  // Lock (for accounting) - Legacy single lock (keep for backward compat)
   isLocked        Boolean   @default(false)
   lockedAt        DateTime?
   lockedBy        String?
+
+  // 3-Tier Lock System
+  lockKT          Boolean   @default(false)
+  lockKTAt        DateTime?
+  lockKTBy        String?
+  lockAdmin       Boolean   @default(false)
+  lockAdminAt     DateTime?
+  lockAdminBy     String?
+  lockFinal       Boolean   @default(false)
+  lockFinalAt     DateTime?
+  lockFinalBy     String?
+
+  // ServiceID for unique identification
+  serviceId       String?   @unique
 
   // Notes
   notes           String?   @db.Text
@@ -167,6 +183,7 @@ model Operator {
   @@index([serviceDate])
   @@index([paymentStatus])
   @@index([supplierId])
+  @@index([serviceId])
   @@map("operators")
 }
 
@@ -213,10 +230,21 @@ model Revenue {
   // Source
   paymentSource   String    // Bank transfer, Cash, etc.
 
-  // Lock (for accounting)
+  // Lock (for accounting) - Legacy single lock (keep for backward compat)
   isLocked        Boolean   @default(false)
   lockedAt        DateTime?
   lockedBy        String?
+
+  // 3-Tier Lock System
+  lockKT          Boolean   @default(false)
+  lockKTAt        DateTime?
+  lockKTBy        String?
+  lockAdmin       Boolean   @default(false)
+  lockAdminAt     DateTime?
+  lockAdminBy     String?
+  lockFinal       Boolean   @default(false)
+  lockFinalAt     DateTime?
+  lockFinalBy     String?
 
   // Notes
   notes           String?   @db.Text
@@ -229,9 +257,30 @@ model Revenue {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
+  // Audit history
+  history         RevenueHistory[]
+
   @@index([requestId])
   @@index([paymentDate])
   @@map("revenues")
+}
+
+// ============================================
+// REVENUE HISTORY (Audit Trail)
+// ============================================
+
+model RevenueHistory {
+  id          String   @id @default(cuid())
+  revenueId   String
+  revenue     Revenue  @relation(fields: [revenueId], references: [id], onDelete: Cascade)
+  action      String   // CREATE, UPDATE, DELETE, LOCK_KT, LOCK_ADMIN, LOCK_FINAL, UNLOCK_KT, UNLOCK_ADMIN, UNLOCK_FINAL
+  changes     Json     // {field: {before, after}}
+  userId      String
+  createdAt   DateTime @default(now())
+
+  @@index([revenueId])
+  @@index([createdAt])
+  @@map("revenue_history")
 }
 
 // ============================================

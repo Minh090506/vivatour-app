@@ -2,8 +2,8 @@
 
 MyVivaTour Platform - Comprehensive directory structure and implementation details.
 
-**Last Updated**: 2026-01-08 (Phase 06: Core Modules 75% - Request/Operator/Revenue Implementation)
-**Total Files**: 95+ source files | **Pages**: 18 | **Components**: 61 | **API Routes**: 33 | **Database Models**: 17
+**Last Updated**: 2026-01-08 (Phase 01 Foundation - ID Generation & Lock System Complete)
+**Total Files**: 100+ source files | **Pages**: 18 | **Components**: 65+ | **API Routes**: 33+ | **Database Models**: 18
 
 ---
 
@@ -108,6 +108,8 @@ src/
 │   ├── request-utils.ts              # RQID, BookingCode, follow-up utilities
 │   ├── operator-history.ts           # Operator audit trail
 │   ├── operator-validation.ts        # Zod schemas for operators
+│   ├── id-utils.ts                   # ID generation (RequestID, ServiceID, RevenueID) - Phase 01 Foundation
+│   ├── lock-utils.ts                 # Lock tier utilities (3-tier lock: KT/Admin/Final) - Phase 01 Foundation
 │   ├── logger.ts                     # Structured logging
 │   ├── utils.ts                      # cn(), formatCurrency(), formatDate()
 │   └── validations/                  # Zod schemas
@@ -120,7 +122,9 @@ src/
 ├── types/index.ts                    # 40+ TypeScript definitions
 ├── auth.ts                           # NextAuth.js v5 config (Phase 04)
 ├── middleware.ts                     # Route protection & role-based access (Phase 03)
-└── constants.ts                      # App constants
+├── constants.ts                      # App constants
+└── config/                           # Configuration modules
+    └── lock-config.ts                # Lock system configuration (labels, colors, history actions) - Phase 01 Foundation
 ```
 
 ---
@@ -447,6 +451,89 @@ GOOGLE_SHEET_ID="fallback-if-all-same-spreadsheet"
 
 ---
 
+## Phase 01: ID Generation System
+
+### Core File
+**src/lib/id-utils.ts** - Centralized ID generators for Request, Operator, Revenue
+
+#### Key Functions
+
+**generateRequestId(sellerCode, timestamp?)**
+- Format: `{SellerCode}{yyyyMMddHHmmssSSS}` (25-35 chars)
+- Example: `LY20260108143045123`
+- Features:
+  - Removes Vietnamese diacritics from seller code
+  - Auto-resolves collisions via timestamp retry
+  - Verifies uniqueness in database
+
+**generateServiceId(bookingCode, timestamp?)**
+- Format: `{bookingCode}-{yyyyMMddHHmmssSSS}` (35-50 chars)
+- Example: `20260108L0001-20260108143045123`
+- Used for Operator service tracking
+- Collision-safe with database verification
+
+**generateRevenueId(bookingCode, timestamp?)**
+- Format: `{bookingCode}-{yyyyMMddHHmmss}-{rowNum}` (30-40 chars)
+- Example: `20260108L0001-20260108143045-1`
+- Multiple revenues per booking supported via rowNum suffix
+- Sequence-based numbering per timestamp prefix
+
+#### Helper Functions
+- `removeDiacritics(str)`: Vietnamese character normalization (À→A, é→e)
+- `formatTimestamp(date)`: yyyyMMddHHmmssSSS format (17 chars)
+- `formatDatePart(date)`: yyyyMMdd format (8 chars)
+
+---
+
+## Phase 01: Lock System (3-Tier)
+
+### Core Files
+
+**src/lib/lock-utils.ts** - Lock tier management utilities
+
+#### Lock Tier Hierarchy
+1. **KT** (Khóa KT) - Accountant lock (ACCOUNTANT, ADMIN)
+2. **Admin** (Khóa Admin) - Admin lock (ADMIN only)
+3. **Final** (Khóa Cuối) - Final lock (ADMIN only)
+
+Sequential progression: Records must be locked KT → Admin → Final in order. Unlocking reverses: Final → Admin → KT.
+
+#### Key Functions
+- `canLock(role, tier)`: Check permission to lock tier
+- `canUnlock(role, tier)`: Check permission to unlock tier
+- `getCurrentLockTier(state)`: Get highest active tier
+- `canLockTier(state, tier)`: Validate sequential progression
+- `canUnlockTier(state, tier)`: Validate unlock order
+- `isEditable(state)`: Check if record has no locks
+- `getLockFields(tier, userId, lock)`: DB update payload
+- `getActiveLockTiers(state)`: List all locked tiers
+- `hasAnyLock(state)`: Check if any lock active
+
+#### LockState Interface
+```typescript
+interface LockState {
+  lockKT: boolean;
+  lockAdmin: boolean;
+  lockFinal: boolean;
+}
+```
+
+**src/config/lock-config.ts** - Lock configuration & labels
+
+#### Configuration Constants
+- `LOCK_TIER_LABELS`: Vietnamese labels (Khóa KT, Khóa Admin, Khóa Cuối)
+- `LOCK_TIER_COLORS`: Tailwind colors (amber, orange, red)
+- `HISTORY_ACTION_LABELS`: Action labels (Khóa KT, Mở khóa KT, etc.)
+- `HISTORY_ACTION_COLORS`: Action colors for history UI
+
+#### Helper Functions
+- `getLockTierLabel(tier)`: Get Vietnamese label
+- `getLockTierColor(tier)`: Get Tailwind color
+- `getHistoryActionLabel(action)`: Get history label
+- `getHistoryActionColor(action)`: Get history color
+
+---
+
 ## Tech Stack Summary
 
 - **Frontend**: Next.js 16, React 19, TypeScript
@@ -510,7 +597,9 @@ GOOGLE_SHEETS_API_KEY="xxx"
 
 | Phase | Component | Status | Date |
 |-------|-----------|--------|------|
-| 01 | Supplier Module + Multi-Spreadsheet Support | Complete | 2026-01-01, 2026-01-07 |
+| **01 Foundation** | Supplier Module + Multi-Spreadsheet Support | Complete | 2026-01-01, 2026-01-07 |
+| **01 Foundation** | ID Generation System (RequestID, ServiceID, RevenueID) | Complete | 2026-01-08 |
+| **01 Foundation** | Lock System (3-tier: KT/Admin/Final) + RevenueHistory | Complete | 2026-01-08 |
 | 02a | Dashboard Layout + Google Sheets Sync API | Complete | 2026-01-02 |
 | 02b | Auth Middleware + Request/Operator/Revenue Sync | Complete | 2026-01-04 |
 | 02c | Request Sync Fix: Request ID Key + Booking Code Deduplication | Complete | 2026-01-08 |
