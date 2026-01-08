@@ -62,7 +62,7 @@ export default function ApprovalsPage() {
         body: JSON.stringify({
           operatorIds: ids,
           paymentDate: paymentDate.toISOString(),
-          userId: 'current-user', // TODO: Get from auth
+          // Note: userId is extracted from session on server side
         }),
       });
 
