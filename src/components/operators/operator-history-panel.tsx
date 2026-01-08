@@ -213,24 +213,24 @@ export function OperatorHistoryPanel({ history }: OperatorHistoryPanelProps) {
                         })
                         .map(([field, change]) => {
                           // Handle both {before, after} format and direct values
-                          const changeObj = change as { before?: unknown; after?: unknown } | unknown;
-                          const hasBothValues = changeObj && typeof changeObj === 'object' && 'before' in changeObj;
+                          const isObjectChange = change && typeof change === 'object' && ('before' in change || 'after' in change);
+                          const changeObj = isObjectChange ? (change as { before?: unknown; after?: unknown }) : null;
 
                           return (
                             <div key={field} className="text-sm">
                               <span className="font-medium">{formatFieldName(field)}:</span>{' '}
-                              {entry.action === 'CREATE' || entry.action === 'DELETE' || !hasBothValues ? (
+                              {entry.action === 'CREATE' || entry.action === 'DELETE' || !changeObj ? (
                                 <span className="text-muted-foreground">
-                                  {formatValue(hasBothValues ? (changeObj as { after?: unknown }).after || (changeObj as { before?: unknown }).before : change)}
+                                  {formatValue(changeObj ? (changeObj.after ?? changeObj.before) : change)}
                                 </span>
                               ) : (
                                 <>
                                   <span className="line-through text-red-500/70">
-                                    {formatValue((changeObj as { before: unknown }).before)}
+                                    {formatValue(changeObj.before)}
                                   </span>
                                   {' → '}
                                   <span className="text-green-600">
-                                    {formatValue((changeObj as { after: unknown }).after)}
+                                    {formatValue(changeObj.after)}
                                   </span>
                                 </>
                               )}

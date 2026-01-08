@@ -29,7 +29,12 @@ interface RevenueFromApi {
   amountVND: number;
   paymentSource: string;
   notes?: string | null;
-  isLocked: boolean;
+  // 3-tier lock fields
+  lockKT: boolean;
+  lockAdmin: boolean;
+  lockFinal: boolean;
+  // Legacy field for backward compatibility
+  isLocked?: boolean;
   lockedAt?: Date | string | null;
   lockedBy?: string | null;
   request?: {

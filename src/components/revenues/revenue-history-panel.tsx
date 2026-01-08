@@ -164,9 +164,9 @@ export function RevenueHistoryPanel({ revenueId }: RevenueHistoryPanelProps) {
                 <p className="text-xs text-muted-foreground">
                   {entry.userName || entry.userId} • {formatDate(entry.createdAt)}
                 </p>
-                {entry.changes?.tier && (
+                {typeof entry.changes?.tier === 'string' && (
                   <Badge variant="outline" className="mt-1 text-xs">
-                    {entry.changes.tier as string}
+                    {entry.changes.tier}
                   </Badge>
                 )}
               </div>
