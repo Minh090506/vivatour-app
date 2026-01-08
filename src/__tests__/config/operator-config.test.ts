@@ -91,17 +91,27 @@ describe('PAYMENT_STATUSES configuration', () => {
 });
 
 describe('HISTORY_ACTIONS configuration', () => {
-  it('should have 6 history action types', () => {
-    expect(Object.keys(HISTORY_ACTIONS)).toHaveLength(6);
+  it('should have 12 history action types (including 3-tier locks)', () => {
+    // 6 base actions + 6 tier-specific lock actions
+    expect(Object.keys(HISTORY_ACTIONS)).toHaveLength(12);
   });
 
-  it('should include all expected action types', () => {
+  it('should include all expected base action types', () => {
     expect(HISTORY_ACTIONS).toHaveProperty('CREATE');
     expect(HISTORY_ACTIONS).toHaveProperty('UPDATE');
     expect(HISTORY_ACTIONS).toHaveProperty('DELETE');
     expect(HISTORY_ACTIONS).toHaveProperty('LOCK');
     expect(HISTORY_ACTIONS).toHaveProperty('UNLOCK');
     expect(HISTORY_ACTIONS).toHaveProperty('APPROVE');
+  });
+
+  it('should include 3-tier lock action types', () => {
+    expect(HISTORY_ACTIONS).toHaveProperty('LOCK_KT');
+    expect(HISTORY_ACTIONS).toHaveProperty('UNLOCK_KT');
+    expect(HISTORY_ACTIONS).toHaveProperty('LOCK_ADMIN');
+    expect(HISTORY_ACTIONS).toHaveProperty('UNLOCK_ADMIN');
+    expect(HISTORY_ACTIONS).toHaveProperty('LOCK_FINAL');
+    expect(HISTORY_ACTIONS).toHaveProperty('UNLOCK_FINAL');
   });
 
   it('should have labels and colors for all actions', () => {
@@ -111,7 +121,7 @@ describe('HISTORY_ACTIONS configuration', () => {
     });
   });
 
-  it('should have correct Vietnamese labels', () => {
+  it('should have correct Vietnamese labels for base actions', () => {
     expect(HISTORY_ACTIONS.CREATE.label).toBe('Tạo mới');
     expect(HISTORY_ACTIONS.UPDATE.label).toBe('Cập nhật');
     expect(HISTORY_ACTIONS.DELETE.label).toBe('Xóa');
@@ -120,13 +130,31 @@ describe('HISTORY_ACTIONS configuration', () => {
     expect(HISTORY_ACTIONS.APPROVE.label).toBe('Duyệt TT');
   });
 
-  it('should have appropriate colors', () => {
+  it('should have correct Vietnamese labels for 3-tier lock actions', () => {
+    expect(HISTORY_ACTIONS.LOCK_KT.label).toBe('Khóa KT');
+    expect(HISTORY_ACTIONS.UNLOCK_KT.label).toBe('Mở khóa KT');
+    expect(HISTORY_ACTIONS.LOCK_ADMIN.label).toBe('Khóa Admin');
+    expect(HISTORY_ACTIONS.UNLOCK_ADMIN.label).toBe('Mở khóa Admin');
+    expect(HISTORY_ACTIONS.LOCK_FINAL.label).toBe('Khóa Cuối');
+    expect(HISTORY_ACTIONS.UNLOCK_FINAL.label).toBe('Mở khóa Cuối');
+  });
+
+  it('should have appropriate colors for base actions', () => {
     expect(HISTORY_ACTIONS.CREATE.color).toBe('green');
     expect(HISTORY_ACTIONS.UPDATE.color).toBe('blue');
     expect(HISTORY_ACTIONS.DELETE.color).toBe('red');
     expect(HISTORY_ACTIONS.LOCK.color).toBe('amber');
     expect(HISTORY_ACTIONS.UNLOCK.color).toBe('purple');
     expect(HISTORY_ACTIONS.APPROVE.color).toBe('emerald');
+  });
+
+  it('should have appropriate colors for 3-tier lock actions', () => {
+    expect(HISTORY_ACTIONS.LOCK_KT.color).toBe('amber');
+    expect(HISTORY_ACTIONS.UNLOCK_KT.color).toBe('purple');
+    expect(HISTORY_ACTIONS.LOCK_ADMIN.color).toBe('orange');
+    expect(HISTORY_ACTIONS.UNLOCK_ADMIN.color).toBe('purple');
+    expect(HISTORY_ACTIONS.LOCK_FINAL.color).toBe('red');
+    expect(HISTORY_ACTIONS.UNLOCK_FINAL.color).toBe('purple');
   });
 });
 
