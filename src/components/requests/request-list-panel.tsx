@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef, useCallback, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Search, Loader2 } from 'lucide-react';
@@ -13,6 +14,11 @@ interface RequestListPanelProps {
   isLoading: boolean;
   searchValue: string;
   onSearchChange: (value: string) => void;
+  // Pagination props
+  total?: number;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
+  onLoadMore?: () => void;
 }
 
 /**
@@ -26,7 +32,36 @@ export function RequestListPanel({
   isLoading,
   searchValue,
   onSearchChange,
+  total = 0,
+  hasMore = false,
+  isLoadingMore = false,
+  onLoadMore,
 }: RequestListPanelProps) {
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  // Intersection Observer callback for infinite scroll
+  const lastItemRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (isLoading || isLoadingMore) return;
+      if (observerRef.current) observerRef.current.disconnect();
+
+      observerRef.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore && onLoadMore) {
+          onLoadMore();
+        }
+      });
+
+      if (node) observerRef.current.observe(node);
+    },
+    [isLoading, isLoadingMore, hasMore, onLoadMore]
+  );
+
+  // Cleanup observer on unmount
+  useEffect(() => {
+    return () => {
+      if (observerRef.current) observerRef.current.disconnect();
+    };
+  }, []);
   return (
     <div className="w-[350px] lg:w-[350px] md:w-[280px] border-r flex flex-col h-full bg-background">
       {/* Search input */}
@@ -54,20 +89,32 @@ export function RequestListPanel({
             Không có yêu cầu nào
           </div>
         ) : (
-          requests.map((req) => (
-            <RequestListItem
-              key={req.id}
-              request={req}
-              isSelected={req.id === selectedId}
-              onClick={() => onSelect(req.id)}
-            />
-          ))
+          <>
+            {requests.map((req, index) => {
+              const isLastItem = index === requests.length - 1;
+              return (
+                <div key={req.id} ref={isLastItem ? lastItemRef : undefined}>
+                  <RequestListItem
+                    request={req}
+                    isSelected={req.id === selectedId}
+                    onClick={() => onSelect(req.id)}
+                  />
+                </div>
+              );
+            })}
+            {isLoadingMore && (
+              <div className="p-3 flex items-center justify-center text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Đang tải thêm...
+              </div>
+            )}
+          </>
         )}
       </ScrollArea>
 
       {/* Count footer */}
       <div className="p-2 border-t text-xs text-muted-foreground text-center">
-        {requests.length} yêu cầu
+        {total > 0 ? `Hiển thị ${requests.length} / ${total} yêu cầu` : `${requests.length} yêu cầu`}
       </div>
     </div>
   );

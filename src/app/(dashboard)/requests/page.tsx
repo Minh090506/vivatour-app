@@ -40,6 +40,12 @@ function RequestsPageContent() {
     toDate: '',
   });
 
+  // Pagination state
+  const [total, setTotal] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const LIMIT = 50;
+
   // Detail state
   const [selectedRequest, setSelectedRequest] = useState<RequestWithDetails | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -48,29 +54,59 @@ function RequestsPageContent() {
   const [canViewAll, setCanViewAll] = useState(false);
   const [sellers, setSellers] = useState<User[]>([]);
 
-  // Fetch requests list with filters
+  // Build query params for requests API
+  const buildQueryParams = useCallback((offset = 0) => {
+    const params = new URLSearchParams();
+    if (filters.search) params.set('search', filters.search);
+    if (filters.stage) params.set('stage', filters.stage);
+    if (filters.status) params.set('status', filters.status);
+    if (filters.seller) params.set('sellerId', filters.seller);
+    if (filters.fromDate) params.set('fromDate', filters.fromDate);
+    if (filters.toDate) params.set('toDate', filters.toDate);
+    params.set('limit', String(LIMIT));
+    params.set('offset', String(offset));
+    return params;
+  }, [filters]);
+
+  // Fetch requests list with filters (initial load / filter change)
   const fetchRequests = useCallback(async () => {
     setListLoading(true);
     try {
-      const params = new URLSearchParams();
-      if (filters.search) params.set('search', filters.search);
-      if (filters.stage) params.set('stage', filters.stage);
-      if (filters.status) params.set('status', filters.status);
-      if (filters.seller) params.set('sellerId', filters.seller);
-      if (filters.fromDate) params.set('fromDate', filters.fromDate);
-      if (filters.toDate) params.set('toDate', filters.toDate);
-
+      const params = buildQueryParams(0);
       const res = await fetch(`/api/requests?${params}`);
       const data = await res.json();
       if (data.success) {
         setRequests(data.data);
+        setTotal(data.total || 0);
+        setHasMore(data.hasMore || false);
       }
     } catch (err) {
       console.error('Error fetching requests:', err);
     } finally {
       setListLoading(false);
     }
-  }, [filters]);
+  }, [buildQueryParams]);
+
+  // Load more requests (infinite scroll)
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || !hasMore) return;
+
+    setIsLoadingMore(true);
+    try {
+      const newOffset = requests.length;
+      const params = buildQueryParams(newOffset);
+      const res = await fetch(`/api/requests?${params}`);
+      const data = await res.json();
+      if (data.success) {
+        setRequests((prev) => [...prev, ...data.data]);
+        setHasMore(data.hasMore || false);
+      }
+    } catch (err) {
+      console.error('Error loading more requests:', err);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [buildQueryParams, hasMore, isLoadingMore, requests.length]);
 
   // Fetch selected request details
   const fetchRequestDetail = useCallback(async (id: string) => {
@@ -191,6 +227,10 @@ function RequestsPageContent() {
           isLoading={listLoading}
           searchValue={searchInput}
           onSearchChange={handleSearchChange}
+          total={total}
+          hasMore={hasMore}
+          isLoadingMore={isLoadingMore}
+          onLoadMore={loadMore}
         />
         <RequestDetailPanel
           request={selectedRequest}
