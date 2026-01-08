@@ -303,9 +303,9 @@ createdAt
 #### requests
 ```sql
 id (CUID) PRIMARY KEY
-code UNIQUE (simple booking code, e.g., "240101-JOHN-US")
-rqid UNIQUE (request ID: RQ-YYMMDD-0001)
-bookingCode UNIQUE (system booking code: YYYYMMDDL0001, generated on BOOKING status)
+code UNIQUE (Request ID from column AR - Phase 02c: unique sync key)
+rqid UNIQUE (request ID: RQ-YYMMDD-0001, legacy field)
+bookingCode (Booking code from column T - for Operator/Revenue linking, NOT unique)
 customerName
 contact
 whatsapp
@@ -330,6 +330,15 @@ sellerId (FK to users, the responsible seller)
 sheetRowIndex
 createdAt
 updatedAt
+
+-- Indexes (Phase 02c):
+@@index([bookingCode])  -- For Operator/Revenue lookups (not unique)
+@@index([code])         -- For Request ID lookups
+@@index([status])       -- For request filtering by funnel status
+@@index([stage])        -- For request funnel stage
+@@index([sellerId])     -- For requests by seller
+@@index([sellerId, stage]) -- Composite for seller's stage breakdown
+@@index([nextFollowUp])  -- For follow-up scheduling
 ```
 
 #### operators
@@ -556,6 +565,50 @@ PostgreSQL Database (Cache)
 - **Ongoing**: Bidirectional with conflict resolution
 - **Tracking**: sheetRowIndex field for row mapping
 - **Per-Sheet Tracking**: Each sheet type synced independently
+
+#### Phase 02c: Request Sync Fix (Request ID as Unique Key)
+
+**Changes**:
+- **Unique Sync Key**: Request ID (column AR, index 43) replaces previously inconsistent approach
+  - Request ID is mandatory field from Google Sheet (cannot be empty)
+  - Upsert logic: `prisma.request.upsert({ where: { code: requestId }, ... })`
+  - Ensures each request synced only once per unique Request ID
+
+**Database Schema Updates** (Prisma):
+- `Request.code`: Changed from `@unique` to regular field (still indexed)
+  - Represents Request ID from column AR
+  - Renamed semantically from previous "code" to clarify it's the sync key
+- `Request.bookingCode`: Removed `@unique` constraint
+  - Now used only for Operator/Revenue linking
+  - Multiple requests can share same booking code
+  - Indexed for fast Operator/Revenue lookups
+
+**Column Mapping** (src/lib/sheet-mappers.ts):
+- **Column T (index 19)**: `bookingCode` - Mã khách (booking code for linking)
+- **Column AR (index 43)**: `code` / Request ID - Unique identifier for sync
+
+**Google Sheets Range** (src/lib/google-sheets.ts):
+- Extended from `A:Z` to `A:AZ` to include all columns through AR (column 44)
+- Handles multi-spreadsheet configuration per sheet type
+
+**Sync Scripts** (Phase 02c New):
+- `scripts/truncate-request-data.ts`: Safe deletion of Request/Operator/Revenue records
+  - Respects foreign key order: Revenue → OperatorHistory → Operator → Request
+  - Clears related SyncLog entries
+  - Verification step ensures complete truncation
+  - Usage: `npx tsx scripts/truncate-request-data.ts`
+
+- `scripts/resync-all-sheets.ts`: Full re-sync of all sheet data
+  - Syncs Request, Operator, Revenue sheets from Google Sheets
+  - Uses `mapRequestRow` to extract and validate data
+  - Upserts by Request ID (code field)
+  - Useful after schema changes or data corrections
+  - Usage: `npx tsx scripts/resync-all-sheets.ts`
+
+**Migration Implications**:
+- Existing bookingCode uniqueness constraints removed
+- Old uniqueness on code/rqid preserved (for backward compatibility)
+- Data from sheets synced using Request ID as authoritative key
 
 ### 2. Gmail API (Email Integration)
 

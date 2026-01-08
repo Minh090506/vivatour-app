@@ -2,7 +2,7 @@
 
 MyVivaTour Platform - Comprehensive directory structure and implementation details.
 
-**Last Updated**: 2026-01-07 (Phase 01: Multi-Spreadsheet Support)
+**Last Updated**: 2026-01-08 (Phase 02: Request Sync Fix with Request ID Key)
 
 ---
 
@@ -229,6 +229,8 @@ const roleRoutes = {
   - Returns object: `{ Request: boolean, Operator: boolean, Revenue: boolean }`
   - Checks both per-sheet and fallback env vars
 - `getSheetData(sheetName, startRow, spreadsheetId?)`: Fetches rows from sheet tab
+  - **Phase 02**: Extended range from `A:Z` to `A:AZ` to include all columns through AR
+  - Returns array of SheetRow with rowIndex and values
 - `getLastSyncedRow(sheetName)`: Returns last successfully synced row
 - `getSheetHeaders(sheetName, spreadsheetId?)`: Fetches first row (headers)
 - `isGoogleSheetsConfigured()`: Overall configuration check (credentials + any sheet ID)
@@ -345,9 +347,10 @@ GOOGLE_SHEETS_API_KEY="xxx"
 | Phase | Component | Status | Date |
 |-------|-----------|--------|------|
 | 01 | Supplier Module + Multi-Spreadsheet Support | Complete | 2026-01-01, 2026-01-07 |
-| 02 | Dashboard Layout + Google Sheets Sync API | Complete | 2026-01-02 |
-| 03 | Auth Middleware + Request/Operator/Revenue Sync | Complete | 2026-01-04 |
-| 04 | Login Page + RBAC | Complete | 2026-01-05 |
-| 05 | Request Module | Pending | TBD |
-| 06+ | Operator, Revenue, AI Assistant | Planned | TBD |
+| 02a | Dashboard Layout + Google Sheets Sync API | Complete | 2026-01-02 |
+| 02b | Auth Middleware + Request/Operator/Revenue Sync | Complete | 2026-01-04 |
+| 02c | Request Sync Fix: Request ID Key + Booking Code Deduplication | Complete | 2026-01-08 |
+| 03 | Login Page + RBAC | Complete | 2026-01-05 |
+| 04 | Request Module | Pending | TBD |
+| 05+ | Operator, Revenue, AI Assistant | Planned | TBD |
 

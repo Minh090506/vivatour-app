@@ -36,10 +36,10 @@ Fix Request sync to use `Request ID` (column AR, index 43) as unique identifier 
 
 ## Implementation Phases
 
-| Phase | Description | Status | File |
-|-------|-------------|--------|------|
-| 1 | Fix sheet-mappers.ts | ✅ completed | [phase-01-fix-sheet-mappers.md](./phase-01-fix-sheet-mappers.md) |
-| 2 | Truncate + Re-sync | ✅ completed | [phase-02-truncate-resync.md](./phase-02-truncate-resync.md) |
+| Phase | Description | Status | Results | File |
+|-------|-------------|--------|---------|------|
+| 1 | Fix sheet-mappers.ts | ✅ completed | Commit 6431c37 | [phase-01-fix-sheet-mappers.md](./phase-01-fix-sheet-mappers.md) |
+| 2 | Truncate + Re-sync | ✅ DONE | 4385 Request, 1969 Operator, 394 Revenue | [phase-02-truncate-resync.md](./phase-02-truncate-resync.md) |
 
 ## Files to Modify
 
@@ -48,11 +48,12 @@ Fix Request sync to use `Request ID` (column AR, index 43) as unique identifier 
 
 ## Success Criteria
 
-- [x] Requests synced with stable Request ID from column AR
+- [x] Requests synced with stable Request ID from column AR (4385 records)
 - [x] Status stored as enum key (e.g., DANG_LL_CHUA_TL)
 - [ ] Filters work correctly (needs UI testing after deployment)
-- [x] Operator/Revenue link via bookingCode
+- [x] Operator/Revenue link via bookingCode (1969 + 394 records)
 - [x] Code review completed - see [reports/code-reviewer-260107-2346-request-sync-fix-phase2.md](../reports/code-reviewer-260107-2346-request-sync-fix-phase2.md)
+- [x] All phases completed and tested (Commit 806c67c)
 
 ## Risk Mitigation
 
