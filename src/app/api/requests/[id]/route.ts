@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { calculateNextFollowUp, calculateEndDate, generateBookingCode } from '@/lib/request-utils';
 import { getStageFromStatus, isFollowUpStatus, type RequestStatus } from '@/config/request-config';
+import { getSessionUser, unauthorizedResponse, forbiddenResponse } from '@/lib/auth-utils';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -10,6 +11,12 @@ interface RouteParams {
 // GET /api/requests/[id] - Get single request
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
+    // Verify authentication
+    const user = await getSessionUser();
+    if (!user) {
+      return unauthorizedResponse();
+    }
+
     const { id } = await params;
 
     const req = await prisma.request.findUnique({
@@ -34,6 +41,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
+    // SELLER can only view their own requests
+    if (user.role === 'SELLER' && req.sellerId !== user.id) {
+      return forbiddenResponse('Bạn không có quyền xem yêu cầu này');
+    }
+
     return NextResponse.json({ success: true, data: req });
   } catch (error) {
     console.error('Error fetching request:', error);
@@ -48,6 +60,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // PUT /api/requests/[id] - Update request
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
+    // Verify authentication
+    const user = await getSessionUser();
+    if (!user) {
+      return unauthorizedResponse();
+    }
+
     const { id } = await params;
     const body = await request.json();
 
@@ -58,6 +76,16 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         { success: false, error: 'Không tìm thấy yêu cầu' },
         { status: 404 }
       );
+    }
+
+    // SELLER can only edit their own requests
+    if (user.role === 'SELLER' && existing.sellerId !== user.id) {
+      return forbiddenResponse('Bạn không có quyền chỉnh sửa yêu cầu này');
+    }
+
+    // ACCOUNTANT can only view, not edit
+    if (user.role === 'ACCOUNTANT') {
+      return forbiddenResponse('Kế toán không có quyền chỉnh sửa yêu cầu');
     }
 
     // Build update data
@@ -178,6 +206,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 // DELETE /api/requests/[id] - Delete request
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
+    // Verify authentication
+    const user = await getSessionUser();
+    if (!user) {
+      return unauthorizedResponse();
+    }
+
     const { id } = await params;
 
     // Check if request exists
@@ -191,6 +225,16 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
         { success: false, error: 'Không tìm thấy yêu cầu' },
         { status: 404 }
       );
+    }
+
+    // SELLER can only delete their own requests
+    if (user.role === 'SELLER' && existing.sellerId !== user.id) {
+      return forbiddenResponse('Bạn không có quyền xóa yêu cầu này');
+    }
+
+    // Only ADMIN can delete requests (SELLER can delete own, ACCOUNTANT cannot delete)
+    if (user.role === 'ACCOUNTANT') {
+      return forbiddenResponse('Kế toán không có quyền xóa yêu cầu');
     }
 
     // Prevent deletion if has related records

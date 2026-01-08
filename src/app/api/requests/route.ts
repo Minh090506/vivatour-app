@@ -2,10 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { generateRQID, calculateNextFollowUp, getFollowUpDateBoundaries } from '@/lib/request-utils';
 import { getStageFromStatus, isFollowUpStatus, type RequestStatus } from '@/config/request-config';
+import { getSessionUser, unauthorizedResponse } from '@/lib/auth-utils';
 
 // GET /api/requests - List with filters
 export async function GET(request: NextRequest) {
   try {
+    // Verify authentication
+    const user = await getSessionUser();
+    if (!user) {
+      return unauthorizedResponse();
+    }
+
     const { searchParams } = new URL(request.url);
 
     // Extract filters
@@ -24,6 +31,11 @@ export async function GET(request: NextRequest) {
     // Build where clause
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: Record<string, any> = {};
+
+    // SELLER can only view their own requests
+    if (user.role === 'SELLER') {
+      where.sellerId = user.id;
+    }
 
     if (search) {
       where.OR = [
@@ -94,12 +106,22 @@ export async function GET(request: NextRequest) {
 // POST /api/requests - Create request
 export async function POST(request: NextRequest) {
   try {
+    // Verify authentication
+    const user = await getSessionUser();
+    if (!user) {
+      return unauthorizedResponse();
+    }
+
     const body = await request.json();
 
+    // SELLER must create requests for themselves only
+    // ADMIN can create for any seller
+    const sellerId = user.role === 'SELLER' ? user.id : (body.sellerId || user.id);
+
     // Validate required fields
-    if (!body.customerName || !body.contact || !body.country || !body.source || !body.sellerId) {
+    if (!body.customerName || !body.contact || !body.country || !body.source) {
       return NextResponse.json(
-        { success: false, error: 'Thiếu thông tin bắt buộc: customerName, contact, country, source, sellerId' },
+        { success: false, error: 'Thiếu thông tin bắt buộc: customerName, contact, country, source' },
         { status: 400 }
       );
     }
@@ -147,7 +169,7 @@ export async function POST(request: NextRequest) {
         lastContactDate: body.lastContactDate ? new Date(body.lastContactDate) : null,
         nextFollowUp,
         notes: body.notes?.trim() || null,
-        sellerId: body.sellerId,
+        sellerId,
       },
       include: {
         seller: { select: { id: true, name: true, email: true } },
