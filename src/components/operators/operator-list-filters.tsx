@@ -2,8 +2,10 @@
 
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Search, X } from 'lucide-react';
+import { Search, X, Archive } from 'lucide-react';
 import { SERVICE_TYPES, SERVICE_TYPE_KEYS, PAYMENT_STATUSES, PAYMENT_STATUS_KEYS } from '@/config/operator-config';
 import type { OperatorFilters } from '@/types';
 
@@ -25,6 +27,7 @@ export function OperatorListFilters({ filters, onFilterChange }: OperatorListFil
       fromDate: '',
       toDate: '',
       isLocked: undefined,
+      includeArchived: false,
     });
   };
 
@@ -34,7 +37,8 @@ export function OperatorListFilters({ filters, onFilterChange }: OperatorListFil
     filters.paymentStatus ||
     filters.fromDate ||
     filters.toDate ||
-    filters.isLocked !== undefined;
+    filters.isLocked !== undefined ||
+    filters.includeArchived;
 
   return (
     <div className="space-y-4">
@@ -120,6 +124,17 @@ export function OperatorListFilters({ filters, onFilterChange }: OperatorListFil
             <SelectItem value="unlocked">Chưa khóa</SelectItem>
           </SelectContent>
         </Select>
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="includeArchived"
+            checked={filters.includeArchived || false}
+            onCheckedChange={(checked: boolean) => updateFilter('includeArchived', checked)}
+          />
+          <Label htmlFor="includeArchived" className="text-sm flex items-center gap-1 cursor-pointer">
+            <Archive className="h-4 w-4" />
+            Hiện đã lưu trữ
+          </Label>
+        </div>
         {hasFilters && (
           <Button variant="ghost" size="sm" onClick={clearFilters}>
             <X className="h-4 w-4 mr-1" />

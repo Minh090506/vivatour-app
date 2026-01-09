@@ -10,6 +10,8 @@ export type HistoryAction =
   | 'LOCK'
   | 'UNLOCK'
   | 'APPROVE'
+  | 'ARCHIVE'
+  | 'UNARCHIVE'
   | 'LOCK_KT'
   | 'UNLOCK_KT'
   | 'LOCK_ADMIN'

@@ -814,6 +814,62 @@ function shouldArchive(row) {
 }
 ```
 
+### 5.6 WebApp Auto-Archive API
+
+WebApp có sẵn API tự động lưu trữ Operator:
+
+```http
+POST /api/operators/archive
+Content-Type: application/json
+
+# Manual archive by IDs
+{ "ids": ["op_id_1", "op_id_2"] }
+
+# Auto-archive completed operators
+{ "autoArchive": true }
+```
+
+**Auto-archive logic:**
+- `request.endDate <= lastDayOfPreviousMonth`
+- `paidAmount >= totalCost` (fully paid)
+
+### 5.7 n8n Workflow Suggestion
+
+Tạo n8n workflow để tự động lưu trữ đầu mỗi tháng:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  n8n Workflow: Auto-Archive Completed Operators                         │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  ┌──────────────────┐     ┌──────────────────┐     ┌───────────────┐   │
+│  │  Schedule Trigger │ ──► │  HTTP Request    │ ──► │  Notification │   │
+│  │  (CRON: 0 0 1 * *)│     │  POST /archive   │     │  (Slack/Email)│   │
+│  │  Ngày 1 mỗi tháng │     │  autoArchive:true│     │  Summary      │   │
+│  └──────────────────┘     └──────────────────┘     └───────────────┘   │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+**Workflow Configuration:**
+
+1. **Schedule Trigger**
+   - Type: Cron
+   - Expression: `0 0 1 * *` (00:00 ngày đầu tháng)
+   - Timezone: Asia/Ho_Chi_Minh
+
+2. **HTTP Request**
+   - Method: POST
+   - URL: `{{$env.APP_URL}}/api/operators/archive`
+   - Authentication: Bearer Token hoặc Cookie Session
+   - Body: `{ "autoArchive": true }`
+
+3. **IF Node (Optional)**
+   - Condition: `{{ $json.data.archivedCount > 0 }}`
+
+4. **Notification (Slack/Email)**
+   - Message: "Đã tự động lưu trữ {{ $json.data.archivedCount }} dịch vụ hoàn thành"
+
 ---
 
 ## 6. CHI TIẾT FILE REVENUE

@@ -24,6 +24,8 @@ import {
   CreditCard,
   FileText,
   Unlock,
+  Archive,
+  ArchiveRestore,
 } from 'lucide-react';
 import { OperatorForm } from '@/components/operators/operator-form';
 import { OperatorHistoryPanel } from '@/components/operators/operator-history-panel';
@@ -55,6 +57,8 @@ interface OperatorDetail {
   isLocked: boolean;
   lockedAt: Date | null;
   lockedBy: string | null;
+  isArchived: boolean;
+  archivedAt: Date | null;
   userId: string;
   sheetRowIndex: number | null;
   createdAt: Date;
@@ -79,6 +83,7 @@ export default function OperatorDetailPage({ params }: { params: Promise<PagePar
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
+  const [unarchiving, setUnarchiving] = useState(false);
 
   // Safe params validation
   const isValidId = id && typeof id === 'string' && id.length > 0;
@@ -137,6 +142,22 @@ export default function OperatorDetailPage({ params }: { params: Promise<PagePar
       fetchOperator();
     }
     setUnlocking(false);
+  };
+
+  const handleUnarchive = async () => {
+    setUnarchiving(true);
+    const { data, error: unarchiveError } = await safePost<{ success: boolean; message: string }>(
+      '/api/operators/unarchive',
+      { ids: [id] }
+    );
+
+    if (unarchiveError) {
+      toast.error(unarchiveError);
+    } else if (data) {
+      toast.success('Đã khôi phục dịch vụ');
+      fetchOperator();
+    }
+    setUnarchiving(false);
   };
 
   const formatCurrency = (value: number) => {
@@ -232,6 +253,12 @@ export default function OperatorDetailPage({ params }: { params: Promise<PagePar
             <h1 className="text-2xl font-bold flex items-center gap-2">
               <ClipboardList className="h-6 w-6" />
               {operator.serviceName}
+              {operator.isArchived && (
+                <Badge variant="secondary" className="bg-gray-100 text-gray-600">
+                  <Archive className="h-3 w-3 mr-1" />
+                  Đã lưu trữ
+                </Badge>
+              )}
             </h1>
             <LockIndicator
               isLocked={operator.isLocked}
@@ -245,7 +272,12 @@ export default function OperatorDetailPage({ params }: { params: Promise<PagePar
           </div>
         </div>
         <div className="flex gap-2">
-          {operator.isLocked ? (
+          {operator.isArchived ? (
+            <Button variant="outline" onClick={handleUnarchive} disabled={unarchiving}>
+              <ArchiveRestore className="mr-2 h-4 w-4" />
+              {unarchiving ? 'Đang khôi phục...' : 'Khôi phục'}
+            </Button>
+          ) : operator.isLocked ? (
             <Button variant="outline" onClick={handleUnlock} disabled={unlocking}>
               <Unlock className="mr-2 h-4 w-4" />
               {unlocking ? 'Đang mở...' : 'Mở khóa'}

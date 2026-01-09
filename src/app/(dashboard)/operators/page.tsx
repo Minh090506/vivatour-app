@@ -6,12 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, ClipboardList, Lock, RefreshCw } from 'lucide-react';
+import { Plus, ClipboardList, Lock, RefreshCw, Archive, ArchiveRestore } from 'lucide-react';
 import { OperatorListFilters } from '@/components/operators/operator-list-filters';
 import { OperatorLockDialog } from '@/components/operators/operator-lock-dialog';
 import { SERVICE_TYPES, PAYMENT_STATUSES, type ServiceTypeKey, type PaymentStatusKey } from '@/config/operator-config';
-import { safeFetch } from '@/lib/api/fetch-utils';
+import { safeFetch, safePost } from '@/lib/api/fetch-utils';
 import { ErrorFallback } from '@/components/ui/error-fallback';
+import { toast } from 'sonner';
 import type { OperatorFilters } from '@/types';
 
 interface OperatorListItem {
@@ -23,8 +24,10 @@ interface OperatorListItem {
   serviceName: string;
   supplier: string | null;
   totalCost: number;
+  paidAmount: number;
   paymentStatus: string;
   isLocked: boolean;
+  isArchived: boolean;
   request?: { code: string; customerName: string };
   supplierRef?: { code: string; name: string };
 }
@@ -46,8 +49,10 @@ export default function OperatorsPage() {
     fromDate: '',
     toDate: '',
     isLocked: undefined,
+    includeArchived: false,
   });
   const [lockDialogOpen, setLockDialogOpen] = useState(false);
+  const [archiving, setArchiving] = useState(false);
 
   const fetchOperators = useCallback(async () => {
     setLoading(true);
@@ -60,6 +65,7 @@ export default function OperatorsPage() {
     if (filters.fromDate) params.set('fromDate', filters.fromDate);
     if (filters.toDate) params.set('toDate', filters.toDate);
     if (filters.isLocked !== undefined) params.set('isLocked', String(filters.isLocked));
+    if (filters.includeArchived) params.set('includeArchived', 'true');
 
     const { data, error: fetchError } = await safeFetch<OperatorListResponse>(
       `/api/operators?${params}`
@@ -79,6 +85,22 @@ export default function OperatorsPage() {
   useEffect(() => {
     fetchOperators();
   }, [fetchOperators]);
+
+  // Archive completed operators (paidAmount >= totalCost)
+  const handleAutoArchive = async () => {
+    setArchiving(true);
+    const { data, error } = await safePost<{ archivedCount: number; message: string }>(
+      '/api/operators/archive',
+      { autoArchive: true }
+    );
+    if (error) {
+      toast.error(error);
+    } else if (data) {
+      toast.success(data.message);
+      fetchOperators();
+    }
+    setArchiving(false);
+  };
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('vi-VN').format(value);
@@ -108,6 +130,15 @@ export default function OperatorsPage() {
           <p className="text-muted-foreground">Chi phí dịch vụ theo Booking</p>
         </div>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleAutoArchive}
+            disabled={archiving}
+            title="Tự động lưu trữ dịch vụ đã hoàn thành thanh toán của tháng trước"
+          >
+            <Archive className="mr-2 h-4 w-4" />
+            {archiving ? 'Đang xử lý...' : 'Lưu trữ đã hoàn thành'}
+          </Button>
           <Button variant="outline" onClick={() => setLockDialogOpen(true)}>
             <Lock className="mr-2 h-4 w-4" /> Khóa kỳ
           </Button>
@@ -231,11 +262,19 @@ export default function OperatorsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {op.isLocked && (
-                          <span title="Đã khóa sổ">
-                            <Lock className="h-4 w-4 text-muted-foreground" />
-                          </span>
-                        )}
+                        <div className="flex items-center gap-1">
+                          {op.isArchived && (
+                            <Badge variant="secondary" className="bg-gray-100 text-gray-600">
+                              <ArchiveRestore className="h-3 w-3 mr-1" />
+                              Đã lưu trữ
+                            </Badge>
+                          )}
+                          {op.isLocked && (
+                            <span title="Đã khóa sổ">
+                              <Lock className="h-4 w-4 text-muted-foreground" />
+                            </span>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   );

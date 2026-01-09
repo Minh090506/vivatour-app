@@ -178,6 +178,10 @@ model Operator {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
+  // Archive status
+  isArchived      Boolean   @default(false)
+  archivedAt      DateTime?
+
   // Audit history
   history         OperatorHistory[]
 
@@ -186,6 +190,7 @@ model Operator {
   @@index([paymentStatus])
   @@index([supplierId])
   @@index([serviceId])
+  @@index([isArchived])
   @@map("operators")
 }
 

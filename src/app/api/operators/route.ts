@@ -22,12 +22,18 @@ export async function GET(request: NextRequest) {
     const fromDate = searchParams.get('fromDate') || '';
     const toDate = searchParams.get('toDate') || '';
     const isLocked = searchParams.get('isLocked');
+    const includeArchived = searchParams.get('includeArchived') === 'true';
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
     // Build where clause
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: Record<string, any> = {};
+
+    // Default: exclude archived unless includeArchived=true
+    if (!includeArchived) {
+      where.isArchived = false;
+    }
 
     if (search) {
       where.OR = [

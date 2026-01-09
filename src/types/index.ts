@@ -167,6 +167,9 @@ export interface Operator {
   isLocked: boolean;
   lockedAt: Date | null;
   lockedBy: string | null;
+  // Archive status
+  isArchived: boolean;
+  archivedAt: Date | null;
   notes: string | null;
   userId: string;
   sheetRowIndex: number | null;
@@ -489,6 +492,7 @@ export interface OperatorFilters {
   fromDate?: string;
   toDate?: string;
   isLocked?: boolean;
+  includeArchived?: boolean;
 }
 
 // Operator history entry (includes 3-tier lock actions)
@@ -501,6 +505,8 @@ export interface OperatorHistoryEntry {
     | 'DELETE'
     | 'LOCK'
     | 'UNLOCK'
+    | 'ARCHIVE'
+    | 'UNARCHIVE'
     | 'LOCK_KT'
     | 'UNLOCK_KT'
     | 'LOCK_ADMIN'
