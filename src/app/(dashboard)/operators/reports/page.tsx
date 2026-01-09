@@ -11,6 +11,8 @@ import { CostByServiceChart } from '@/components/operators/reports/cost-by-servi
 import { CostBySupplierTable } from '@/components/operators/reports/cost-by-supplier-table';
 import { MonthlyTrend } from '@/components/operators/reports/monthly-trend';
 import { PaymentStatusCards } from '@/components/operators/reports/payment-status-cards';
+import { ErrorFallback } from '@/components/ui/error-fallback';
+import { safeFetch } from '@/lib/api/fetch-utils';
 import { formatCurrency } from '@/lib/utils';
 import type { OperatorCostReport, PaymentStatusReport } from '@/types';
 
@@ -20,31 +22,31 @@ export default function OperatorReportsPage() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchReports = useCallback(async () => {
     setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (fromDate) params.set('fromDate', fromDate);
-      if (toDate) params.set('toDate', toDate);
+    setError(null);
 
-      const [costRes, paymentRes] = await Promise.all([
-        fetch(`/api/reports/operator-costs?${params}`),
-        fetch('/api/reports/operator-payments'),
-      ]);
+    const params = new URLSearchParams();
+    if (fromDate) params.set('fromDate', fromDate);
+    if (toDate) params.set('toDate', toDate);
 
-      const [costData, paymentData] = await Promise.all([
-        costRes.json(),
-        paymentRes.json(),
-      ]);
+    const [costResult, paymentResult] = await Promise.all([
+      safeFetch<OperatorCostReport>(`/api/reports/operator-costs?${params}`),
+      safeFetch<PaymentStatusReport>('/api/reports/operator-payments'),
+    ]);
 
-      if (costData.success) setCostReport(costData.data);
-      if (paymentData.success) setPaymentReport(paymentData.data);
-    } catch (error) {
-      console.error('Error fetching reports:', error);
-    } finally {
-      setLoading(false);
+    // Handle errors
+    if (costResult.error || paymentResult.error) {
+      setError(costResult.error || paymentResult.error);
     }
+
+    // Set data if available
+    if (costResult.data) setCostReport(costResult.data);
+    if (paymentResult.data) setPaymentReport(paymentResult.data);
+
+    setLoading(false);
   }, [fromDate, toDate]);
 
   useEffect(() => {
@@ -116,8 +118,18 @@ export default function OperatorReportsPage() {
         </div>
       )}
 
+      {/* Error state */}
+      {!loading && error && (
+        <ErrorFallback
+          title="Lỗi tải báo cáo"
+          message={error}
+          onRetry={fetchReports}
+          retryLabel="Tải lại"
+        />
+      )}
+
       {/* Cost report tabs */}
-      {!loading && costReport && (
+      {!loading && !error && costReport && (
         <>
           {/* Summary */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -171,7 +183,7 @@ export default function OperatorReportsPage() {
       )}
 
       {/* Empty state */}
-      {!loading && costReport && costReport.summary.totalCount === 0 && (
+      {!loading && !error && costReport && costReport.summary.totalCount === 0 && (
         <Card>
           <CardContent className="pt-6">
             <p className="text-center text-muted-foreground py-8">

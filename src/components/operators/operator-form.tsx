@@ -13,8 +13,8 @@ import type { Supplier } from '@/types';
 import {
   validateOperatorForm,
   type OperatorFormErrors,
-  parseOperatorNumericInput,
 } from '@/lib/validations/operator-validation';
+import { safeParseFloat, safeNonNegativeFloat } from '@/lib/utils/parse-utils';
 
 interface Request {
   id: string;
@@ -109,8 +109,8 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
 
   // Auto-calculate totalCost when costBeforeTax or vat changes
   const calculateTotal = useCallback(() => {
-    const cost = parseFloat(formData.costBeforeTax) || 0;
-    const vatAmount = parseFloat(formData.vat) || 0;
+    const cost = safeParseFloat(formData.costBeforeTax, 0);
+    const vatAmount = safeParseFloat(formData.vat, 0);
     const total = cost + vatAmount;
     setFormData((prev) => ({ ...prev, totalCost: total.toString() }));
   }, [formData.costBeforeTax, formData.vat]);
@@ -121,7 +121,7 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
 
   // Auto-fill VAT when costBeforeTax changes (default 10%)
   const handleCostChange = (value: string) => {
-    const cost = parseFloat(value) || 0;
+    const cost = safeParseFloat(value, 0);
     const vatAmount = Math.round(cost * DEFAULT_VAT_RATE / 100);
     setFormData((prev) => ({
       ...prev,
@@ -155,7 +155,7 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
     setFieldErrors({});
 
     try {
-      // Build data for validation
+      // Build data for validation with safe parsing for costs
       const dataToValidate = {
         requestId: formData.requestId,
         serviceDate: formData.serviceDate,
@@ -163,10 +163,10 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
         serviceName: formData.serviceName,
         supplierId: formData.supplierId || null,
         supplier: formData.supplier || null,
-        costBeforeTax: parseOperatorNumericInput(formData.costBeforeTax, 0),
-        vat: formData.vat ? parseOperatorNumericInput(formData.vat, 0) : null,
-        totalCost: parseOperatorNumericInput(formData.totalCost, 0),
-        paidAmount: parseOperatorNumericInput(formData.paidAmount, 0),
+        costBeforeTax: safeNonNegativeFloat(formData.costBeforeTax, 0),
+        vat: formData.vat ? safeNonNegativeFloat(formData.vat, 0) : null,
+        totalCost: safeNonNegativeFloat(formData.totalCost, 0),
+        paidAmount: safeNonNegativeFloat(formData.paidAmount, 0),
         paymentDeadline: formData.paymentDeadline || null,
         bankAccount: formData.bankAccount || null,
         notes: formData.notes || null,
@@ -395,7 +395,7 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
               )}
               {formData.costBeforeTax && !fieldErrors.costBeforeTax && (
                 <p className="text-sm text-muted-foreground">
-                  {formatCurrency(parseFloat(formData.costBeforeTax) || 0)} ₫
+                  {formatCurrency(safeParseFloat(formData.costBeforeTax, 0))} ₫
                 </p>
               )}
             </div>
@@ -410,7 +410,7 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
               />
               {formData.vat && (
                 <p className="text-sm text-muted-foreground">
-                  {formatCurrency(parseFloat(formData.vat) || 0)} ₫
+                  {formatCurrency(safeParseFloat(formData.vat, 0))} ₫
                 </p>
               )}
             </div>
@@ -428,7 +428,7 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
               )}
               {formData.totalCost && !fieldErrors.totalCost && (
                 <p className="text-sm font-medium text-primary">
-                  {formatCurrency(parseFloat(formData.totalCost) || 0)} ₫
+                  {formatCurrency(safeParseFloat(formData.totalCost, 0))} ₫
                 </p>
               )}
             </div>
@@ -471,9 +471,9 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
               {fieldErrors.paidAmount && (
                 <p className="text-sm text-red-500">{fieldErrors.paidAmount}</p>
               )}
-              {formData.paidAmount && parseFloat(formData.paidAmount) > 0 && !fieldErrors.paidAmount && (
+              {formData.paidAmount && safeParseFloat(formData.paidAmount, 0) > 0 && !fieldErrors.paidAmount && (
                 <p className="text-sm text-green-600">
-                  {formatCurrency(parseFloat(formData.paidAmount))} ₫
+                  {formatCurrency(safeParseFloat(formData.paidAmount, 0))} ₫
                 </p>
               )}
             </div>
@@ -481,12 +481,12 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
               <Label>Còn nợ</Label>
               <div className="h-10 px-3 py-2 rounded-md border bg-gray-100 flex items-center">
                 <span className={`font-medium ${
-                  (parseFloat(formData.totalCost) || 0) - (parseFloat(formData.paidAmount) || 0) > 0
+                  safeParseFloat(formData.totalCost, 0) - safeParseFloat(formData.paidAmount, 0) > 0
                     ? 'text-red-600'
                     : 'text-green-600'
                 }`}>
                   {formatCurrency(
-                    Math.max(0, (parseFloat(formData.totalCost) || 0) - (parseFloat(formData.paidAmount) || 0))
+                    Math.max(0, safeParseFloat(formData.totalCost, 0) - safeParseFloat(formData.paidAmount, 0))
                   )} ₫
                 </span>
               </div>

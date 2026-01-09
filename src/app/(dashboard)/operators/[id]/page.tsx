@@ -28,6 +28,8 @@ import {
 import { OperatorForm } from '@/components/operators/operator-form';
 import { OperatorHistoryPanel } from '@/components/operators/operator-history-panel';
 import { LockIndicator } from '@/components/operators/lock-indicator';
+import { ErrorFallback } from '@/components/ui/error-fallback';
+import { safeFetch, safeDelete, safePost } from '@/lib/api/fetch-utils';
 import { toast } from 'sonner';
 import { SERVICE_TYPES, PAYMENT_STATUSES, type ServiceTypeKey, type PaymentStatusKey } from '@/config/operator-config';
 import type { OperatorHistoryEntry } from '@/types';
@@ -72,76 +74,69 @@ export default function OperatorDetailPage({ params }: { params: Promise<PagePar
 
   const [operator, setOperator] = useState<OperatorDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
 
+  // Safe params validation
+  const isValidId = id && typeof id === 'string' && id.length > 0;
+
   useEffect(() => {
-    fetchOperator();
+    if (isValidId) {
+      fetchOperator();
+    } else {
+      setError('ID không hợp lệ');
+      setLoading(false);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id, isValidId]);
 
   const fetchOperator = async () => {
     setLoading(true);
-    try {
-      const res = await fetch(`/api/operators/${id}`);
-      const data = await res.json();
-      if (data.success) {
-        setOperator(data.data);
-      } else {
-        setError(data.error || 'Không tìm thấy dịch vụ');
-      }
-    } catch (err) {
-      console.error('Error fetching operator:', err);
-      setError('Lỗi tải dữ liệu');
-    } finally {
-      setLoading(false);
+    setError(null);
+
+    const { data, error: fetchError } = await safeFetch<OperatorDetail>(
+      `/api/operators/${id}`
+    );
+
+    if (fetchError) {
+      setError(fetchError);
+      setOperator(null);
+    } else if (data) {
+      setOperator(data);
     }
+    setLoading(false);
   };
 
   const handleDelete = async () => {
     setDeleting(true);
-    try {
-      const res = await fetch(`/api/operators/${id}`, { method: 'DELETE' });
-      const data = await res.json();
-      if (data.success) {
-        router.push('/operators');
-      } else {
-        setError(data.error || 'Lỗi xóa dịch vụ');
-        setDeleteDialogOpen(false);
-      }
-    } catch (err) {
-      console.error('Error deleting operator:', err);
-      setError('Lỗi xóa dịch vụ');
+    const { error: deleteError } = await safeDelete<void>(`/api/operators/${id}`);
+
+    if (deleteError) {
+      toast.error(deleteError);
       setDeleteDialogOpen(false);
-    } finally {
-      setDeleting(false);
+    } else {
+      router.push('/operators');
     }
+    setDeleting(false);
   };
 
   const handleUnlock = async () => {
     setUnlocking(true);
-    try {
-      const res = await fetch(`/api/operators/${id}/unlock`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: 'current-user' }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success('Đã mở khóa dịch vụ');
-        fetchOperator();
-      } else {
-        toast.error(data.error || 'Lỗi mở khóa');
-      }
-    } catch (err) {
-      console.error('Error unlocking operator:', err);
-      toast.error('Lỗi mở khóa dịch vụ');
-    } finally {
-      setUnlocking(false);
+    const { data, error: unlockError } = await safePost<{ success: boolean }>(
+      `/api/operators/${id}/unlock`,
+      { userId: 'current-user' }
+    );
+
+    if (unlockError) {
+      toast.error(unlockError);
+    } else if (data) {
+      toast.success('Đã mở khóa dịch vụ');
+      fetchOperator();
     }
+    setUnlocking(false);
   };
 
   const formatCurrency = (value: number) => {
@@ -180,11 +175,14 @@ export default function OperatorDetailPage({ params }: { params: Promise<PagePar
           </Button>
           <h1 className="text-2xl font-bold">Chi tiết dịch vụ</h1>
         </div>
-        <Card>
-          <CardContent className="py-10 text-center text-red-500">
-            {error || 'Không tìm thấy dịch vụ'}
-          </CardContent>
-        </Card>
+        <ErrorFallback
+          title="Lỗi tải dịch vụ"
+          message={error || 'Không tìm thấy dịch vụ'}
+          onRetry={isValidId ? fetchOperator : undefined}
+          onBack={() => router.push('/operators')}
+          backLabel="Về danh sách"
+          retryLabel="Thử lại"
+        />
       </div>
     );
   }

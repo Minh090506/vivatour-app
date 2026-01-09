@@ -12,12 +12,16 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { ErrorFallback } from '@/components/ui/error-fallback';
+import { safeParseFloat } from '@/lib/utils/parse-utils';
 import type { ApprovalQueueItem } from '@/types';
 
 interface Props {
   items: ApprovalQueueItem[];
   onApprove: (ids: string[], paymentDate: Date) => Promise<void>;
   loading?: boolean;
+  error?: string | null;
+  onRetry?: () => void;
 }
 
 const formatCurrency = (value: number) => {
@@ -29,7 +33,7 @@ const formatDate = (date: Date | string | null) => {
   return new Date(date).toLocaleDateString('vi-VN');
 };
 
-export function OperatorApprovalTable({ items, onApprove, loading }: Props) {
+export function OperatorApprovalTable({ items, onApprove, loading, error, onRetry }: Props) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [approving, setApproving] = useState(false);
 
@@ -70,6 +74,17 @@ export function OperatorApprovalTable({ items, onApprove, loading }: Props) {
       setApproving(false);
     }
   };
+
+  if (error) {
+    return (
+      <ErrorFallback
+        title="Lỗi tải danh sách duyệt"
+        message={error}
+        onRetry={onRetry}
+        retryLabel="Thử lại"
+      />
+    );
+  }
 
   if (loading) {
     return <div className="text-center py-10 text-muted-foreground">Đang tải...</div>;
@@ -146,13 +161,13 @@ export function OperatorApprovalTable({ items, onApprove, loading }: Props) {
               </TableCell>
               <TableCell>{item.supplierName || '-'}</TableCell>
               <TableCell className="text-right font-medium">
-                {formatCurrency(item.totalCost)} ₫
+                {formatCurrency(safeParseFloat(item.totalCost, 0))} ₫
               </TableCell>
               <TableCell className="text-right text-green-600">
-                {formatCurrency(item.paidAmount || 0)} ₫
+                {formatCurrency(safeParseFloat(item.paidAmount, 0))} ₫
               </TableCell>
-              <TableCell className={`text-right font-medium ${item.debt > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                {formatCurrency(item.debt || 0)} ₫
+              <TableCell className={`text-right font-medium ${safeParseFloat(item.debt, 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                {formatCurrency(safeParseFloat(item.debt, 0))} ₫
               </TableCell>
               <TableCell className="whitespace-nowrap">
                 {formatDate(item.paymentDeadline)}

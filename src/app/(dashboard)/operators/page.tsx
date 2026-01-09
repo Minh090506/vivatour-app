@@ -6,10 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, ClipboardList, Lock } from 'lucide-react';
+import { Plus, ClipboardList, Lock, RefreshCw } from 'lucide-react';
 import { OperatorListFilters } from '@/components/operators/operator-list-filters';
 import { OperatorLockDialog } from '@/components/operators/operator-lock-dialog';
 import { SERVICE_TYPES, PAYMENT_STATUSES, type ServiceTypeKey, type PaymentStatusKey } from '@/config/operator-config';
+import { safeFetch } from '@/lib/api/fetch-utils';
+import { ErrorFallback } from '@/components/ui/error-fallback';
 import type { OperatorFilters } from '@/types';
 
 interface OperatorListItem {
@@ -27,9 +29,15 @@ interface OperatorListItem {
   supplierRef?: { code: string; name: string };
 }
 
+interface OperatorListResponse {
+  data: OperatorListItem[];
+  total: number;
+}
+
 export default function OperatorsPage() {
   const [operators, setOperators] = useState<OperatorListItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
   const [filters, setFilters] = useState<OperatorFilters>({
     search: '',
@@ -43,6 +51,7 @@ export default function OperatorsPage() {
 
   const fetchOperators = useCallback(async () => {
     setLoading(true);
+    setError(null);
     const params = new URLSearchParams();
 
     if (filters.search) params.set('search', filters.search);
@@ -52,18 +61,19 @@ export default function OperatorsPage() {
     if (filters.toDate) params.set('toDate', filters.toDate);
     if (filters.isLocked !== undefined) params.set('isLocked', String(filters.isLocked));
 
-    try {
-      const res = await fetch(`/api/operators?${params}`);
-      const data = await res.json();
-      if (data.success) {
-        setOperators(data.data || []);
-        setTotal(data.total || 0);
-      }
-    } catch (err) {
-      console.error('Error fetching operators:', err);
-    } finally {
-      setLoading(false);
+    const { data, error: fetchError } = await safeFetch<OperatorListResponse>(
+      `/api/operators?${params}`
+    );
+
+    if (fetchError) {
+      setError(fetchError);
+      setOperators([]);
+      setTotal(0);
+    } else if (data) {
+      setOperators(data.data || []);
+      setTotal(data.total || 0);
     }
+    setLoading(false);
   }, [filters]);
 
   useEffect(() => {
@@ -118,11 +128,24 @@ export default function OperatorsPage() {
 
       {/* Table */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Danh sách dịch vụ ({total})</CardTitle>
+          {error && (
+            <Button variant="outline" size="sm" onClick={fetchOperators}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Thử lại
+            </Button>
+          )}
         </CardHeader>
         <CardContent>
-          {loading ? (
+          {error ? (
+            <ErrorFallback
+              title="Lỗi tải danh sách"
+              message={error}
+              onRetry={fetchOperators}
+              retryLabel="Tải lại"
+            />
+          ) : loading ? (
             <div className="text-center py-10 text-muted-foreground">Đang tải...</div>
           ) : operators.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">
