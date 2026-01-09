@@ -9,6 +9,7 @@ import {
   RequestDetailPanel,
   RequestFilters,
 } from '@/components/requests';
+import { safeFetch } from '@/lib/api/fetch-utils';
 import type { Request, RequestFilters as FiltersType, Operator, User } from '@/types';
 
 // Extended request type with relations
@@ -49,6 +50,11 @@ function RequestsPageContent() {
   // Detail state
   const [selectedRequest, setSelectedRequest] = useState<RequestWithDetails | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
+
+  // List error state
+  const [listError, setListError] = useState<string | null>(null);
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
 
   // Permission state
   const [canViewAll, setCanViewAll] = useState(false);
@@ -68,23 +74,31 @@ function RequestsPageContent() {
     return params;
   }, [filters]);
 
+  // API response type for list
+  interface ListResponse {
+    data: Request[];
+    total: number;
+    hasMore: boolean;
+  }
+
   // Fetch requests list with filters (initial load / filter change)
   const fetchRequests = useCallback(async () => {
     setListLoading(true);
-    try {
-      const params = buildQueryParams(0);
-      const res = await fetch(`/api/requests?${params}`);
-      const data = await res.json();
-      if (data.success) {
-        setRequests(data.data);
-        setTotal(data.total || 0);
-        setHasMore(data.hasMore || false);
-      }
-    } catch (err) {
-      console.error('Error fetching requests:', err);
-    } finally {
-      setListLoading(false);
+    setListError(null);
+
+    const params = buildQueryParams(0);
+    const { data, error } = await safeFetch<ListResponse>(`/api/requests?${params}`);
+
+    if (error) {
+      setListError(error);
+      setRequests([]);
+    } else if (data) {
+      setRequests(data.data || []);
+      setTotal(data.total || 0);
+      setHasMore(data.hasMore || false);
     }
+
+    setListLoading(false);
   }, [buildQueryParams]);
 
   // Load more requests (infinite scroll)
@@ -92,57 +106,53 @@ function RequestsPageContent() {
     if (isLoadingMore || !hasMore) return;
 
     setIsLoadingMore(true);
-    try {
-      const newOffset = requests.length;
-      const params = buildQueryParams(newOffset);
-      const res = await fetch(`/api/requests?${params}`);
-      const data = await res.json();
-      if (data.success) {
-        setRequests((prev) => [...prev, ...data.data]);
-        setHasMore(data.hasMore || false);
-      }
-    } catch (err) {
-      console.error('Error loading more requests:', err);
-    } finally {
-      setIsLoadingMore(false);
+    setLoadMoreError(null);
+
+    const newOffset = requests.length;
+    const params = buildQueryParams(newOffset);
+    const { data, error } = await safeFetch<ListResponse>(`/api/requests?${params}`);
+
+    if (error) {
+      setLoadMoreError(error);
+    } else if (data) {
+      setRequests((prev) => [...prev, ...(data.data || [])]);
+      setHasMore(data.hasMore || false);
     }
+
+    setIsLoadingMore(false);
   }, [buildQueryParams, hasMore, isLoadingMore, requests.length]);
 
   // Fetch selected request details
   const fetchRequestDetail = useCallback(async (id: string) => {
     setDetailLoading(true);
-    try {
-      const res = await fetch(`/api/requests/${id}`);
-      const data = await res.json();
-      if (data.success) {
-        setSelectedRequest(data.data);
-      } else {
-        // Request not found - clear selection
+    setDetailError(null);
+
+    const { data, error, status } = await safeFetch<RequestWithDetails>(`/api/requests/${id}`);
+
+    if (error) {
+      // For 404, redirect to list; for others, show error
+      if (status === 404) {
         setSelectedRequest(null);
         router.replace('/requests');
+      } else {
+        setDetailError(error);
+        setSelectedRequest(null);
       }
-    } catch (err) {
-      console.error('Error fetching request detail:', err);
-      setSelectedRequest(null);
-    } finally {
-      setDetailLoading(false);
+    } else if (data) {
+      setSelectedRequest(data);
     }
+
+    setDetailLoading(false);
   }, [router]);
 
   // Init: check permissions and fetch sellers
   useEffect(() => {
     async function init() {
-      try {
-        const configRes = await fetch('/api/config/user/me');
-        const configData = await configRes.json();
-        if (configData.success && configData.data?.canViewAll) {
-          setCanViewAll(true);
-          const sellersRes = await fetch('/api/users?role=SELLER');
-          const sellersData = await sellersRes.json();
-          if (sellersData.success) setSellers(sellersData.data);
-        }
-      } catch (err) {
-        console.error('Error initializing:', err);
+      const { data: configData } = await safeFetch<{ canViewAll: boolean }>('/api/config/user/me');
+      if (configData?.canViewAll) {
+        setCanViewAll(true);
+        const { data: sellersData } = await safeFetch<User[]>('/api/users?role=SELLER');
+        if (sellersData) setSellers(sellersData);
       }
     }
     init();
@@ -227,14 +237,18 @@ function RequestsPageContent() {
           isLoading={listLoading}
           searchValue={searchInput}
           onSearchChange={handleSearchChange}
+          error={listError}
+          onRetry={fetchRequests}
           total={total}
           hasMore={hasMore}
           isLoadingMore={isLoadingMore}
+          loadMoreError={loadMoreError}
           onLoadMore={loadMore}
         />
         <RequestDetailPanel
           request={selectedRequest}
           isLoading={detailLoading}
+          error={detailError}
           onEditClick={handleEditClick}
           onRefresh={handleRefresh}
         />

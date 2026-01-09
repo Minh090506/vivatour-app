@@ -13,7 +13,7 @@ import { RequestStatusBadge } from './request-status-badge';
 import { RequestServicesTable } from './request-services-table';
 import { RevenueTable, RevenueForm, RevenueSummaryCard } from '@/components/revenues';
 import { usePermission } from '@/hooks/use-permission';
-import { Edit, Plus } from 'lucide-react';
+import { Edit, Plus, AlertTriangle, RefreshCw } from 'lucide-react';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import type { Request, RequestStatus, Operator, User } from '@/types';
 
@@ -54,6 +54,7 @@ interface RequestWithDetails extends Request {
 interface RequestDetailPanelProps {
   request: RequestWithDetails | null;
   isLoading: boolean;
+  error?: string | null;
   onEditClick?: () => void;
   onRefresh: () => void;
 }
@@ -86,6 +87,7 @@ function DetailSkeleton() {
 export function RequestDetailPanel({
   request,
   isLoading,
+  error,
   onEditClick,
   onRefresh,
 }: RequestDetailPanelProps) {
@@ -147,6 +149,25 @@ export function RequestDetailPanel({
   // Loading state
   if (isLoading) {
     return <DetailSkeleton />;
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center">
+          <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-3" />
+          <p className="text-lg font-medium text-destructive mb-2">
+            Không thể tải chi tiết
+          </p>
+          <p className="text-sm text-muted-foreground mb-4">{error}</p>
+          <Button variant="outline" onClick={onRefresh}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Thử lại
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   // Empty state - no request selected

@@ -3,7 +3,8 @@
 import { useRef, useCallback, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Search, Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { RequestListItem } from './request-list-item';
 import type { Request } from '@/types';
 
@@ -14,10 +15,14 @@ interface RequestListPanelProps {
   isLoading: boolean;
   searchValue: string;
   onSearchChange: (value: string) => void;
+  // Error handling props
+  error?: string | null;
+  onRetry?: () => void;
   // Pagination props
   total?: number;
   hasMore?: boolean;
   isLoadingMore?: boolean;
+  loadMoreError?: string | null;
   onLoadMore?: () => void;
 }
 
@@ -32,9 +37,12 @@ export function RequestListPanel({
   isLoading,
   searchValue,
   onSearchChange,
+  error,
+  onRetry,
   total = 0,
   hasMore = false,
   isLoadingMore = false,
+  loadMoreError,
   onLoadMore,
 }: RequestListPanelProps) {
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -84,6 +92,17 @@ export function RequestListPanel({
             <Loader2 className="h-5 w-5 animate-spin mr-2" />
             Đang tải...
           </div>
+        ) : error ? (
+          <div className="p-4 flex flex-col items-center justify-center text-center">
+            <AlertTriangle className="h-8 w-8 text-destructive mb-2" />
+            <p className="text-sm text-destructive mb-3">{error}</p>
+            {onRetry && (
+              <Button variant="outline" size="sm" onClick={onRetry}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Thử lại
+              </Button>
+            )}
+          </div>
         ) : requests.length === 0 ? (
           <div className="p-4 text-center text-muted-foreground">
             Không có yêu cầu nào
@@ -106,6 +125,14 @@ export function RequestListPanel({
               <div className="p-3 flex items-center justify-center text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 Đang tải thêm...
+              </div>
+            )}
+            {loadMoreError && (
+              <div className="p-3 flex flex-col items-center text-center">
+                <p className="text-xs text-destructive mb-2">{loadMoreError}</p>
+                <Button variant="ghost" size="sm" onClick={onLoadMore}>
+                  Thử lại
+                </Button>
               </div>
             )}
           </>

@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, AlertTriangle, RefreshCw } from 'lucide-react';
 import { RequestForm, RequestStatusBadge } from '@/components/requests';
+import { safeFetch, safePut } from '@/lib/api/fetch-utils';
 import type { Request, RequestFormData, RequestStatus } from '@/types';
 
 /**
@@ -18,38 +19,37 @@ export default function RequestEditPage() {
 
   const [request, setRequest] = useState<Request | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchRequest = async () => {
+    setLoading(true);
+    setError(null);
+
+    const { data, error: fetchError, status } = await safeFetch<Request>(`/api/requests/${id}`);
+
+    if (fetchError) {
+      if (status === 404) {
+        router.replace('/requests');
+      } else {
+        setError(fetchError);
+      }
+    } else if (data) {
+      setRequest(data);
+    }
+
+    setLoading(false);
+  };
 
   useEffect(() => {
-    async function fetchRequest() {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/requests/${id}`);
-        const data = await res.json();
-        if (data.success) {
-          setRequest(data.data);
-        } else {
-          router.replace('/requests');
-        }
-      } catch (err) {
-        console.error('Error fetching request:', err);
-        router.replace('/requests');
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchRequest();
-  }, [id, router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   const handleUpdate = async (data: RequestFormData) => {
-    const res = await fetch(`/api/requests/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
+    const { error: updateError } = await safePut<Request>(`/api/requests/${id}`, data);
 
-    const result = await res.json();
-    if (!result.success) {
-      throw new Error(result.error);
+    if (updateError) {
+      throw new Error(updateError);
     }
 
     // Navigate back to requests list with this request selected
@@ -61,11 +61,31 @@ export default function RequestEditPage() {
   };
 
   if (loading) {
-    return <div className="p-8 text-center">Đang tải...</div>;
+    return <div className="p-8 text-center text-muted-foreground">Đang tải...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="p-8 flex flex-col items-center justify-center">
+        <AlertTriangle className="h-12 w-12 text-destructive mb-3" />
+        <p className="text-lg font-medium text-destructive mb-2">Lỗi tải dữ liệu</p>
+        <p className="text-sm text-muted-foreground mb-4">{error}</p>
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={handleCancel}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Quay lại
+          </Button>
+          <Button variant="outline" onClick={fetchRequest}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Thử lại
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   if (!request) {
-    return <div className="p-8 text-center">Không tìm thấy yêu cầu</div>;
+    return <div className="p-8 text-center text-muted-foreground">Không tìm thấy yêu cầu</div>;
   }
 
   return (

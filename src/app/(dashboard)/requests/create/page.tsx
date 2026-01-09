@@ -3,7 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { RequestForm } from '@/components/requests';
-import type { RequestFormData } from '@/types';
+import { safeFetch, safePost } from '@/lib/api/fetch-utils';
+import type { Request, RequestFormData } from '@/types';
+
+interface UserConfig {
+  userId: string;
+  canViewAll?: boolean;
+}
 
 export default function CreateRequestPage() {
   const router = useRouter();
@@ -13,20 +19,17 @@ export default function CreateRequestPage() {
 
   useEffect(() => {
     async function fetchCurrentUser() {
-      try {
-        const res = await fetch('/api/config/user/me');
-        const data = await res.json();
-        if (data.success && data.data?.userId) {
-          setCurrentUserId(data.data.userId);
-        } else {
-          setError('Không thể xác định người dùng hiện tại');
-        }
-      } catch (err) {
-        console.error('Error fetching current user:', err);
-        setError('Lỗi kết nối');
-      } finally {
-        setLoading(false);
+      const { data, error: fetchError } = await safeFetch<UserConfig>('/api/config/user/me');
+
+      if (fetchError) {
+        setError(fetchError);
+      } else if (data?.userId) {
+        setCurrentUserId(data.userId);
+      } else {
+        setError('Không thể xác định người dùng hiện tại');
       }
+
+      setLoading(false);
     }
     fetchCurrentUser();
   }, []);
@@ -36,21 +39,18 @@ export default function CreateRequestPage() {
       throw new Error('Không thể xác định người dùng hiện tại');
     }
 
-    const res = await fetch('/api/requests', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...data,
-        sellerId: currentUserId,
-      }),
+    const { data: result, error: submitError } = await safePost<Request>('/api/requests', {
+      ...data,
+      sellerId: currentUserId,
     });
 
-    const result = await res.json();
-    if (!result.success) {
-      throw new Error(result.error);
+    if (submitError) {
+      throw new Error(submitError);
     }
 
-    router.push(`/requests/${result.data.id}`);
+    if (result?.id) {
+      router.push(`/requests/${result.id}`);
+    }
   };
 
   if (loading) {
