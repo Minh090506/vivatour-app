@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { RequestForm } from '@/components/requests';
 import { safeFetch, safePost } from '@/lib/api/fetch-utils';
 import type { Request, RequestFormData } from '@/types';
@@ -45,10 +46,12 @@ export default function CreateRequestPage() {
     });
 
     if (submitError) {
+      toast.error(`Có lỗi xảy ra: ${submitError}`);
       throw new Error(submitError);
     }
 
     if (result?.id) {
+      toast.success('Đã tạo yêu cầu thành công');
       router.push(`/requests/${result.id}`);
     }
   };

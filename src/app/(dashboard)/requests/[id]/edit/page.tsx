@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, AlertTriangle, RefreshCw } from 'lucide-react';
 import { RequestForm, RequestStatusBadge } from '@/components/requests';
@@ -49,9 +50,11 @@ export default function RequestEditPage() {
     const { error: updateError } = await safePut<Request>(`/api/requests/${id}`, data);
 
     if (updateError) {
+      toast.error(`Có lỗi xảy ra: ${updateError}`);
       throw new Error(updateError);
     }
 
+    toast.success('Đã cập nhật yêu cầu');
     // Navigate back to requests list with this request selected
     router.push(`/requests?id=${id}`);
   };

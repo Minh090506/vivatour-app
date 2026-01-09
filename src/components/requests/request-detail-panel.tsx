@@ -99,6 +99,7 @@ export function RequestDetailPanel({
   const [editingRevenue, setEditingRevenue] = useState<RevenueFromApi | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [loadingRevenues, setLoadingRevenues] = useState(false);
+  const [revenueError, setRevenueError] = useState<string | null>(null);
 
   // Fetch revenues for this request
   const fetchRevenues = useCallback(async () => {
@@ -107,14 +108,18 @@ export function RequestDetailPanel({
       return;
     }
     setLoadingRevenues(true);
+    setRevenueError(null);
     try {
       const res = await fetch(`/api/revenues?requestId=${request.id}`);
       const data = await res.json();
       if (data.success) {
         setRevenues(data.data || []);
+      } else {
+        setRevenueError(data.error || 'Không thể tải doanh thu');
       }
     } catch (err) {
       console.error('Error fetching revenues:', err);
+      setRevenueError('Không thể kết nối đến máy chủ');
     } finally {
       setLoadingRevenues(false);
     }
@@ -289,6 +294,14 @@ export function RequestDetailPanel({
             {loadingRevenues ? (
               <div className="text-center py-4 text-muted-foreground">
                 Đang tải dữ liệu...
+              </div>
+            ) : revenueError ? (
+              <div className="text-center py-4">
+                <p className="text-sm text-destructive mb-2">{revenueError}</p>
+                <Button variant="ghost" size="sm" onClick={fetchRevenues}>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Thử lại
+                </Button>
               </div>
             ) : (
               <>
