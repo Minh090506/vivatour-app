@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -85,26 +85,40 @@ export default function OperatorDetailPage({ params }: { params: Promise<PagePar
   const [unlocking, setUnlocking] = useState(false);
   const [unarchiving, setUnarchiving] = useState(false);
 
+  // AbortController ref for race condition prevention
+  const abortRef = useRef<AbortController | null>(null);
+
   // Safe params validation
   const isValidId = id && typeof id === 'string' && id.length > 0;
 
   useEffect(() => {
     if (isValidId) {
-      fetchOperator();
+      // Cancel previous request
+      abortRef.current?.abort();
+      abortRef.current = new AbortController();
+      fetchOperator(abortRef.current.signal);
     } else {
       setError('ID không hợp lệ');
       setLoading(false);
     }
+
+    return () => {
+      abortRef.current?.abort();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, isValidId]);
 
-  const fetchOperator = async () => {
+  const fetchOperator = async (signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
 
     const { data, error: fetchError } = await safeFetch<OperatorDetail>(
-      `/api/operators/${id}`
+      `/api/operators/${id}`,
+      { signal }
     );
+
+    // Ignore if aborted
+    if (signal?.aborted) return;
 
     if (fetchError) {
       setError(fetchError);

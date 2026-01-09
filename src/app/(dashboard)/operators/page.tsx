@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -54,7 +54,10 @@ export default function OperatorsPage() {
   const [lockDialogOpen, setLockDialogOpen] = useState(false);
   const [archiving, setArchiving] = useState(false);
 
-  const fetchOperators = useCallback(async () => {
+  // AbortController ref for race condition prevention
+  const abortRef = useRef<AbortController | null>(null);
+
+  const fetchOperators = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
     const params = new URLSearchParams();
@@ -68,8 +71,12 @@ export default function OperatorsPage() {
     if (filters.includeArchived) params.set('includeArchived', 'true');
 
     const { data, error: fetchError } = await safeFetch<OperatorListResponse>(
-      `/api/operators?${params}`
+      `/api/operators?${params}`,
+      { signal }
     );
+
+    // Ignore if aborted
+    if (signal?.aborted) return;
 
     if (fetchError) {
       setError(fetchError);
@@ -82,8 +89,17 @@ export default function OperatorsPage() {
     setLoading(false);
   }, [filters]);
 
+  // Fetch on filter change with abort handling
   useEffect(() => {
-    fetchOperators();
+    // Cancel previous request
+    abortRef.current?.abort();
+    abortRef.current = new AbortController();
+
+    fetchOperators(abortRef.current.signal);
+
+    return () => {
+      abortRef.current?.abort();
+    };
   }, [fetchOperators]);
 
   // Archive completed operators (paidAmount >= totalCost)
@@ -162,7 +178,7 @@ export default function OperatorsPage() {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Danh sách dịch vụ ({total})</CardTitle>
           {error && (
-            <Button variant="outline" size="sm" onClick={fetchOperators}>
+            <Button variant="outline" size="sm" onClick={() => fetchOperators()}>
               <RefreshCw className="mr-2 h-4 w-4" />
               Thử lại
             </Button>
@@ -173,7 +189,7 @@ export default function OperatorsPage() {
             <ErrorFallback
               title="Lỗi tải danh sách"
               message={error}
-              onRetry={fetchOperators}
+              onRetry={() => fetchOperators()}
               retryLabel="Tải lại"
             />
           ) : loading ? (
