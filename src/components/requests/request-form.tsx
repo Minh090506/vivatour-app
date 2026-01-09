@@ -29,6 +29,7 @@ import {
   parseNumericInput,
 } from '@/lib/validations/request-validation';
 import { cn } from '@/lib/utils';
+import { safePositiveInt, parseOptionalInt, parseOptionalFloat } from '@/lib/utils/parse-utils';
 
 // Client-safe utility - calculate end date from start + tourDays
 function calculateEndDate(startDate: Date, tourDays: number): Date {
@@ -244,7 +245,7 @@ export function RequestForm({ initialData, onSubmit, onCancel, isEditing = false
               min="1"
               max="100"
               value={formData.pax}
-              onChange={(e) => handleChange('pax', parseInt(e.target.value) || 1)}
+              onChange={(e) => handleChange('pax', safePositiveInt(e.target.value, 1))}
               onBlur={() => handleBlur('pax')}
               className={inputClassName('pax')}
             />
@@ -282,9 +283,7 @@ export function RequestForm({ initialData, onSubmit, onCancel, isEditing = false
               min="1"
               max="365"
               value={formData.tourDays || ''}
-              onChange={(e) =>
-                handleChange('tourDays', e.target.value ? parseInt(e.target.value) : undefined)
-              }
+              onChange={(e) => handleChange('tourDays', parseOptionalInt(e.target.value))}
               onBlur={() => handleBlur('tourDays')}
               className={inputClassName('tourDays')}
             />
@@ -306,9 +305,7 @@ export function RequestForm({ initialData, onSubmit, onCancel, isEditing = false
               type="number"
               min="0"
               value={formData.expectedRevenue || ''}
-              onChange={(e) =>
-                handleChange('expectedRevenue', e.target.value ? parseFloat(e.target.value) : undefined)
-              }
+              onChange={(e) => handleChange('expectedRevenue', parseOptionalFloat(e.target.value))}
               onBlur={() => handleBlur('expectedRevenue')}
               placeholder="VND"
               className={inputClassName('expectedRevenue')}
@@ -319,9 +316,7 @@ export function RequestForm({ initialData, onSubmit, onCancel, isEditing = false
               type="number"
               min="0"
               value={formData.expectedCost || ''}
-              onChange={(e) =>
-                handleChange('expectedCost', e.target.value ? parseFloat(e.target.value) : undefined)
-              }
+              onChange={(e) => handleChange('expectedCost', parseOptionalFloat(e.target.value))}
               onBlur={() => handleBlur('expectedCost')}
               placeholder="VND"
               className={inputClassName('expectedCost')}

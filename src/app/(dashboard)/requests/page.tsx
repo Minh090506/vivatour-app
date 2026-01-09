@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, useCallback, Suspense, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
@@ -60,6 +60,10 @@ function RequestsPageContent() {
   const [canViewAll, setCanViewAll] = useState(false);
   const [sellers, setSellers] = useState<User[]>([]);
 
+  // AbortController refs for race condition prevention
+  const listAbortRef = useRef<AbortController | null>(null);
+  const detailAbortRef = useRef<AbortController | null>(null);
+
   // Build query params for requests API
   const buildQueryParams = useCallback((offset = 0) => {
     const params = new URLSearchParams();
@@ -82,12 +86,15 @@ function RequestsPageContent() {
   }
 
   // Fetch requests list with filters (initial load / filter change)
-  const fetchRequests = useCallback(async () => {
+  const fetchRequests = useCallback(async (signal?: AbortSignal) => {
     setListLoading(true);
     setListError(null);
 
     const params = buildQueryParams(0);
-    const { data, error } = await safeFetch<ListResponse>(`/api/requests?${params}`);
+    const { data, error } = await safeFetch<ListResponse>(`/api/requests?${params}`, { signal });
+
+    // Ignore if aborted
+    if (signal?.aborted) return;
 
     if (error) {
       setListError(error);
@@ -123,11 +130,14 @@ function RequestsPageContent() {
   }, [buildQueryParams, hasMore, isLoadingMore, requests.length]);
 
   // Fetch selected request details
-  const fetchRequestDetail = useCallback(async (id: string) => {
+  const fetchRequestDetail = useCallback(async (id: string, signal?: AbortSignal) => {
     setDetailLoading(true);
     setDetailError(null);
 
-    const { data, error, status } = await safeFetch<RequestWithDetails>(`/api/requests/${id}`);
+    const { data, error, status } = await safeFetch<RequestWithDetails>(`/api/requests/${id}`, { signal });
+
+    // Ignore if aborted
+    if (signal?.aborted) return;
 
     if (error) {
       // For 404, redirect to list; for others, show error
@@ -168,16 +178,32 @@ function RequestsPageContent() {
 
   // Fetch list on filter change
   useEffect(() => {
-    fetchRequests();
+    // Cancel previous request
+    listAbortRef.current?.abort();
+    listAbortRef.current = new AbortController();
+
+    fetchRequests(listAbortRef.current.signal);
+
+    return () => {
+      listAbortRef.current?.abort();
+    };
   }, [fetchRequests]);
 
   // Fetch detail when selection changes
   useEffect(() => {
+    // Cancel previous request
+    detailAbortRef.current?.abort();
+
     if (selectedId) {
-      fetchRequestDetail(selectedId);
+      detailAbortRef.current = new AbortController();
+      fetchRequestDetail(selectedId, detailAbortRef.current.signal);
     } else {
       setSelectedRequest(null);
     }
+
+    return () => {
+      detailAbortRef.current?.abort();
+    };
   }, [selectedId, fetchRequestDetail]);
 
   // Handle request selection - update URL

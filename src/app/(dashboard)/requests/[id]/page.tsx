@@ -10,5 +10,11 @@ interface PageProps {
  */
 export default async function RequestDetailRedirect({ params }: PageProps) {
   const { id } = await params;
+
+  // Safe params validation - redirect to list if invalid ID
+  if (!id || typeof id !== 'string') {
+    redirect('/requests');
+  }
+
   redirect(`/requests?id=${id}`);
 }

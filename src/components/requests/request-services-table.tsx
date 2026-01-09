@@ -22,6 +22,7 @@ import { Plus, Edit2, Trash2, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { SERVICE_TYPES } from '@/config/operator-config';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { safeNonNegativeFloat } from '@/lib/utils/parse-utils';
 import type { Operator } from '@/types';
 
 interface RequestServicesTableProps {
@@ -86,9 +87,9 @@ export function RequestServicesTable({
         serviceType: editingRow.serviceType,
         serviceName: editingRow.serviceName,
         supplier: editingRow.supplier,
-        costBeforeTax: parseFloat(editingRow.totalCost) || 0,
+        costBeforeTax: safeNonNegativeFloat(editingRow.totalCost),
         vat: 0,
-        totalCost: parseFloat(editingRow.totalCost) || 0,
+        totalCost: safeNonNegativeFloat(editingRow.totalCost),
       };
 
       const url = editingRow.id

@@ -16,7 +16,16 @@ import type { Request, RequestFormData, RequestStatus } from '@/types';
 export default function RequestEditPage() {
   const router = useRouter();
   const params = useParams();
-  const id = params.id as string;
+
+  // Safe params validation - handle undefined or array
+  const rawId = params.id;
+  const id = typeof rawId === 'string' ? rawId : Array.isArray(rawId) ? rawId[0] : '';
+
+  // Redirect if invalid ID
+  if (!id) {
+    router.replace('/requests');
+    return null;
+  }
 
   const [request, setRequest] = useState<Request | null>(null);
   const [loading, setLoading] = useState(true);
