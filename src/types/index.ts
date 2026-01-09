@@ -580,3 +580,32 @@ export interface PaymentStatusReport {
   overdue: { count: number; total: number };
   paidThisMonth: { count: number; total: number };
 }
+
+// ============================================
+// PROFIT REPORT TYPES
+// ============================================
+
+// Profit data per booking
+export interface ProfitByBooking {
+  bookingCode: string;
+  customerName: string;
+  totalCost: number;
+  totalRevenue: number;
+  profit: number;
+  profitMargin: number; // percentage
+}
+
+// Profit report summary
+export interface ProfitReportSummary {
+  totalCost: number;
+  totalRevenue: number;
+  totalProfit: number;
+  avgProfitMargin: number;
+  bookingCount: number;
+}
+
+// Full profit report
+export interface ProfitReport {
+  bookings: ProfitByBooking[];
+  summary: ProfitReportSummary;
+}
