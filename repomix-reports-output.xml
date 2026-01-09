@@ -1,0 +1,845 @@
+This file is a merged representation of a subset of the codebase, containing specifically included files, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of a subset of the repository's contents that is considered the most important context.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Only files matching these patterns are included: src/hooks/use-reports.ts, src/components/reports/**, src/app/(dashboard)/reports/page.tsx
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+src/app/(dashboard)/reports/page.tsx
+src/components/reports/cost-breakdown-chart.tsx
+src/components/reports/date-range-selector.tsx
+src/components/reports/funnel-chart.tsx
+src/components/reports/kpi-cards.tsx
+src/components/reports/revenue-trend-chart.tsx
+src/hooks/use-reports.ts
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="src/app/(dashboard)/reports/page.tsx">
+'use client';
+
+import { useState } from 'react';
+import { usePermission } from '@/hooks/use-permission';
+import { useReports, type DateRangeOption } from '@/hooks/use-reports';
+import { ErrorFallback } from '@/components/ui/error-fallback';
+import { DateRangeSelector } from '@/components/reports/date-range-selector';
+import { KPICards } from '@/components/reports/kpi-cards';
+import { RevenueTrendChart } from '@/components/reports/revenue-trend-chart';
+import { CostBreakdownChart } from '@/components/reports/cost-breakdown-chart';
+import { FunnelChart } from '@/components/reports/funnel-chart';
+import { BarChart3 } from 'lucide-react';
+
+export default function ReportsPage() {
+  const { isAdmin, isAccountant, isLoading: authLoading } = usePermission();
+  const [dateRange, setDateRange] = useState<DateRangeOption>('last6Months');
+  const { dashboard, trend, costBreakdown, funnel, loading, error, refetch } =
+    useReports(dateRange);
+
+  // Permission check
+  if (authLoading) {
+    return <div className="text-center py-10">Đang tải...</div>;
+  }
+
+  if (!isAdmin && !isAccountant) {
+    return (
+      <ErrorFallback
+        title="Không có quyền truy cập"
+        message="Bạn cần quyền Admin hoặc Kế toán để xem báo cáo."
+      />
+    );
+  }
+
+  if (error) {
+    return (
+      <ErrorFallback
+        title="Lỗi tải báo cáo"
+        message={error}
+        onRetry={refetch}
+        retryLabel="Tải lại"
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <BarChart3 className="h-6 w-6" />
+            Báo cáo Tổng quan
+          </h1>
+          <p className="text-muted-foreground">Phân tích hiệu suất kinh doanh</p>
+        </div>
+        <DateRangeSelector value={dateRange} onChange={setDateRange} />
+      </div>
+
+      {/* KPI Cards */}
+      <KPICards data={dashboard} loading={loading} />
+
+      {/* Revenue Trend */}
+      <RevenueTrendChart data={trend} loading={loading} />
+
+      {/* Cost Breakdown & Funnel */}
+      <div className="grid md:grid-cols-2 gap-6">
+        <CostBreakdownChart data={costBreakdown} loading={loading} />
+        <FunnelChart data={funnel} loading={loading} />
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="src/components/reports/cost-breakdown-chart.tsx">
+'use client';
+
+import { memo, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { PieChartIcon } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
+import type { CostBreakdownResponse } from '@/lib/report-utils';
+
+interface Props {
+  data: CostBreakdownResponse | null;
+  loading?: boolean;
+}
+
+const COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+
+const SERVICE_TYPE_LABELS: Record<string, string> = {
+  HOTEL: 'Khách sạn',
+  FLIGHT: 'Vé máy bay',
+  TRANSPORT: 'Vận chuyển',
+  TOUR: 'Tour',
+  VISA: 'Visa',
+  INSURANCE: 'Bảo hiểm',
+  OTHER: 'Khác',
+};
+
+const PAYMENT_LABELS: Record<string, { label: string; color: string }> = {
+  paid: { label: 'Đã thanh toán', color: '#22c55e' },
+  partial: { label: 'Thanh toán một phần', color: '#f59e0b' },
+  unpaid: { label: 'Chưa thanh toán', color: '#ef4444' },
+};
+
+interface TooltipPayload {
+  name: string;
+  value: number;
+}
+
+function CustomTooltip({
+  active,
+  payload
+}: {
+  active?: boolean;
+  payload?: Array<{ payload: TooltipPayload }>;
+}) {
+  if (!active || !payload?.length) return null;
+  const item = payload[0].payload;
+  return (
+    <div className="bg-white p-2 border rounded shadow text-sm">
+      <p>{item.name}: {formatCurrency(item.value)} ₫</p>
+    </div>
+  );
+}
+
+export const CostBreakdownChart = memo(function CostBreakdownChart({ data, loading }: Props) {
+  const { pieData, paymentBars } = useMemo(() => {
+    if (!data) return { pieData: [], paymentBars: [] };
+
+    const pie = data.byServiceType.map((item) => ({
+      name: SERVICE_TYPE_LABELS[item.type] || item.type,
+      value: item.amount,
+    }));
+
+    const totalPayment = data.paymentStatus.paid + data.paymentStatus.partial + data.paymentStatus.unpaid;
+
+    const bars = Object.entries(PAYMENT_LABELS).map(([key, { label, color }]) => {
+      const value = data.paymentStatus[key as keyof typeof data.paymentStatus];
+      return {
+        key,
+        label,
+        color,
+        value,
+        percentage: totalPayment > 0 ? (value / totalPayment) * 100 : 0,
+      };
+    });
+
+    return { pieData: pie, paymentBars: bars };
+  }, [data]);
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <PieChartIcon className="h-5 w-5" />
+            Phân tích Chi phí
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[300px] w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!data) return null;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <PieChartIcon className="h-5 w-5" />
+          Phân tích Chi phí
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Pie Chart - By Service Type */}
+          <div>
+            <p className="text-sm font-medium mb-2 text-muted-foreground">
+              Theo loại dịch vụ
+            </p>
+            {pieData.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">Không có dữ liệu</p>
+            ) : (
+              <div className="h-[250px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      label={({ name, percent }) =>
+                        `${name}: ${((percent ?? 0) * 100).toFixed(0)}%`
+                      }
+                      labelLine={{ strokeWidth: 1 }}
+                    >
+                      {pieData.map((_, idx) => (
+                        <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </div>
+
+          {/* Horizontal Bars - Payment Status */}
+          <div>
+            <p className="text-sm font-medium mb-4 text-muted-foreground">
+              Theo trạng thái thanh toán
+            </p>
+            <div className="space-y-4">
+              {paymentBars.map(({ key, label, color, value, percentage }) => (
+                <div key={key}>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>{label}</span>
+                    <span className="font-medium">{formatCurrency(value)} ₫</span>
+                  </div>
+                  <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{ width: `${percentage}%`, backgroundColor: color }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+});
+</file>
+
+<file path="src/components/reports/date-range-selector.tsx">
+'use client';
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import type { DateRangeOption } from '@/hooks/use-reports';
+
+const DATE_RANGES: Array<{ value: DateRangeOption; label: string }> = [
+  { value: 'thisMonth', label: 'Tháng này' },
+  { value: 'lastMonth', label: 'Tháng trước' },
+  { value: 'last3Months', label: '3 tháng gần đây' },
+  { value: 'last6Months', label: '6 tháng gần đây' },
+  { value: 'thisYear', label: 'Năm nay' },
+];
+
+interface Props {
+  value: DateRangeOption;
+  onChange: (value: DateRangeOption) => void;
+}
+
+export function DateRangeSelector({ value, onChange }: Props) {
+  return (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className="w-48">
+        <SelectValue placeholder="Chọn khoảng thời gian" />
+      </SelectTrigger>
+      <SelectContent>
+        {DATE_RANGES.map((range) => (
+          <SelectItem key={range.value} value={range.value}>
+            {range.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+</file>
+
+<file path="src/components/reports/funnel-chart.tsx">
+'use client';
+
+import { memo, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+  LabelList
+} from 'recharts';
+import { Filter } from 'lucide-react';
+import type { FunnelResponse, FunnelStage } from '@/lib/report-utils';
+
+interface Props {
+  data: FunnelResponse | null;
+  loading?: boolean;
+}
+
+// Stage labels in Vietnamese
+const STAGE_LABELS: Record<string, string> = {
+  LEAD: 'Tiềm năng',
+  QUOTE: 'Báo giá',
+  FOLLOWUP: 'Theo dõi',
+  OUTCOME: 'Kết quả',
+};
+
+// Gradient colors from blue to green for funnel stages
+const STAGE_COLORS = ['#3b82f6', '#6366f1', '#8b5cf6', '#22c55e'];
+
+function CustomTooltip({
+  active,
+  payload
+}: {
+  active?: boolean;
+  payload?: Array<{ payload: FunnelStage }>;
+}) {
+  if (!active || !payload?.length) return null;
+  const item = payload[0].payload;
+  return (
+    <div className="bg-white p-3 border rounded-lg shadow-lg text-sm">
+      <p className="font-medium">{STAGE_LABELS[item.stage] || item.stage}</p>
+      <p className="text-muted-foreground">Số lượng: {item.count}</p>
+      <p className="text-muted-foreground">Tỷ lệ: {item.percentage.toFixed(1)}%</p>
+    </div>
+  );
+}
+
+export const FunnelChart = memo(function FunnelChart({ data, loading }: Props) {
+  const chartData = useMemo(() => {
+    if (!data) return [];
+    return data.stages.map((stage) => ({
+      ...stage,
+      label: STAGE_LABELS[stage.stage] || stage.stage,
+    }));
+  }, [data]);
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Phễu Chuyển đổi
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[300px] w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!data) return null;
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="flex items-center gap-2">
+          <Filter className="h-5 w-5" />
+          Phễu Chuyển đổi
+        </CardTitle>
+        <span className="text-sm font-medium text-green-600">
+          Tỷ lệ chuyển đổi: {data.conversionRate.toFixed(1)}%
+        </span>
+      </CardHeader>
+      <CardContent>
+        {chartData.length === 0 ? (
+          <p className="text-muted-foreground text-center py-8">Không có dữ liệu</p>
+        ) : (
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={chartData}
+                layout="vertical"
+                margin={{ top: 10, right: 30, left: 100, bottom: 10 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  horizontal={true}
+                  vertical={false}
+                />
+                <XAxis type="number" axisLine={false} tickLine={false} />
+                <YAxis
+                  type="category"
+                  dataKey="label"
+                  width={90}
+                  tick={{ fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={30}>
+                  <LabelList
+                    dataKey="count"
+                    position="right"
+                    formatter={(v) => typeof v === 'number' ? v.toLocaleString('vi-VN') : String(v)}
+                    style={{ fontSize: 11, fill: '#666' }}
+                  />
+                  {chartData.map((_, idx) => (
+                    <Cell key={idx} fill={STAGE_COLORS[idx % STAGE_COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+});
+</file>
+
+<file path="src/components/reports/kpi-cards.tsx">
+'use client';
+
+import { memo } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Wallet,
+  FileText,
+  Users,
+  Target
+} from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
+import type { DashboardResponse } from '@/lib/report-utils';
+
+interface Props {
+  data: DashboardResponse | null;
+  loading?: boolean;
+}
+
+type KpiKey = 'totalBookings' | 'totalRevenue' | 'totalProfit' | 'activeRequests' | 'conversionRate';
+type ComparisonKey = 'bookings' | 'revenue';
+
+const KPI_CONFIG: Array<{
+  key: KpiKey;
+  compKey: ComparisonKey | null;
+  label: string;
+  icon: typeof FileText;
+  format: 'number' | 'currency' | 'percent';
+}> = [
+  { key: 'totalBookings', compKey: 'bookings', label: 'Tổng Booking', icon: FileText, format: 'number' },
+  { key: 'totalRevenue', compKey: 'revenue', label: 'Tổng Doanh thu', icon: DollarSign, format: 'currency' },
+  { key: 'totalProfit', compKey: null, label: 'Tổng Lợi nhuận', icon: Wallet, format: 'currency' },
+  { key: 'activeRequests', compKey: null, label: 'Yêu cầu đang xử lý', icon: Users, format: 'number' },
+  { key: 'conversionRate', compKey: null, label: 'Tỷ lệ chuyển đổi', icon: Target, format: 'percent' },
+];
+
+function formatValue(value: number, format: 'number' | 'currency' | 'percent'): string {
+  if (format === 'currency') return `${formatCurrency(value)} ₫`;
+  if (format === 'percent') return `${value.toFixed(1)}%`;
+  return value.toLocaleString('vi-VN');
+}
+
+export const KPICards = memo(function KPICards({ data, loading }: Props) {
+  if (loading) {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        {[...Array(5)].map((_, i) => (
+          <Card key={i}>
+            <CardContent className="p-4">
+              <Skeleton className="h-4 w-20 mb-2" />
+              <Skeleton className="h-8 w-24 mb-2" />
+              <Skeleton className="h-5 w-16" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      {KPI_CONFIG.map(({ key, compKey, label, icon: Icon, format }) => {
+        const value = data.kpiCards[key];
+        const change = compKey ? data.comparison[compKey]?.changePercent : null;
+        const isPositive = change !== null && change >= 0;
+
+        return (
+          <Card key={key}>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-1">
+                <Icon className="h-4 w-4" />
+                {label}
+              </div>
+              <p className="text-2xl font-bold">{formatValue(value, format)}</p>
+              {change !== null && (
+                <Badge variant={isPositive ? 'default' : 'destructive'} className="mt-2">
+                  {isPositive ? (
+                    <TrendingUp className="h-3 w-3 mr-1" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3 mr-1" />
+                  )}
+                  {isPositive ? '+' : ''}{change.toFixed(1)}%
+                </Badge>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
+});
+</file>
+
+<file path="src/components/reports/revenue-trend-chart.tsx">
+'use client';
+
+import { memo, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  ComposedChart,
+  Line,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend
+} from 'recharts';
+import { TrendingUp } from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
+import type { RevenueTrendResponse } from '@/lib/report-utils';
+
+interface Props {
+  data: RevenueTrendResponse | null;
+  loading?: boolean;
+}
+
+// Format period YYYY-MM to "Th.M/YY"
+function formatPeriod(period: string): string {
+  const [year, month] = period.split('-');
+  return `Th.${parseInt(month)}/${year.slice(2)}`;
+}
+
+// Format axis values
+function formatYAxis(value: number): string {
+  if (Math.abs(value) >= 1000000) return `${(value / 1000000).toFixed(0)}M`;
+  if (Math.abs(value) >= 1000) return `${(value / 1000).toFixed(0)}K`;
+  return value.toString();
+}
+
+interface TooltipPayload {
+  dataKey: string;
+  value: number;
+  color: string;
+}
+
+// Custom tooltip
+function CustomTooltip({
+  active,
+  payload,
+  label
+}: {
+  active?: boolean;
+  payload?: TooltipPayload[];
+  label?: string;
+}) {
+  if (!active || !payload) return null;
+
+  return (
+    <div className="bg-white p-3 border rounded-lg shadow-lg text-sm">
+      <p className="font-medium mb-2">{label}</p>
+      {payload.map((entry) => (
+        <p key={entry.dataKey} style={{ color: entry.color }}>
+          {entry.dataKey === 'revenue' && 'Doanh thu: '}
+          {entry.dataKey === 'cost' && 'Chi phí: '}
+          {entry.dataKey === 'profit' && 'Lợi nhuận: '}
+          {formatCurrency(entry.value)} ₫
+        </p>
+      ))}
+    </div>
+  );
+}
+
+export const RevenueTrendChart = memo(function RevenueTrendChart({ data, loading }: Props) {
+  const chartData = useMemo(() => {
+    if (!data) return [];
+    return data.data.map((item) => ({
+      ...item,
+      displayPeriod: formatPeriod(item.period),
+    }));
+  }, [data]);
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5" />
+            Xu hướng Doanh thu
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-[400px] w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!data) return null;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <TrendingUp className="h-5 w-5" />
+          Xu hướng Doanh thu
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {chartData.length === 0 ? (
+          <p className="text-muted-foreground text-center py-8">Không có dữ liệu</p>
+        ) : (
+          <div className="h-[400px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart
+                data={chartData}
+                margin={{ top: 10, right: 30, left: 0, bottom: 10 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis
+                  dataKey="displayPeriod"
+                  tick={{ fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tickFormatter={formatYAxis}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend wrapperStyle={{ paddingTop: 20 }} />
+                <Bar
+                  dataKey="profit"
+                  name="Lợi nhuận"
+                  fill="#22c55e"
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={40}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="revenue"
+                  name="Doanh thu"
+                  stroke="#3b82f6"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="cost"
+                  name="Chi phí"
+                  stroke="#ef4444"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+});
+</file>
+
+<file path="src/hooks/use-reports.ts">
+'use client';
+
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { safeFetch } from '@/lib/api/fetch-utils';
+import type {
+  DashboardResponse,
+  RevenueTrendResponse,
+  CostBreakdownResponse,
+  FunnelResponse
+} from '@/lib/report-utils';
+
+export type DateRangeOption = 'thisMonth' | 'lastMonth' | 'last3Months' | 'last6Months' | 'thisYear';
+
+interface ReportsState {
+  dashboard: DashboardResponse | null;
+  trend: RevenueTrendResponse | null;
+  costBreakdown: CostBreakdownResponse | null;
+  funnel: FunnelResponse | null;
+  loading: boolean;
+  error: string | null;
+}
+
+export function useReports(dateRange: DateRangeOption) {
+  const [state, setState] = useState<ReportsState>({
+    dashboard: null,
+    trend: null,
+    costBreakdown: null,
+    funnel: null,
+    loading: true,
+    error: null,
+  });
+
+  const abortRef = useRef<AbortController | null>(null);
+
+  const fetchAll = useCallback(async (signal: AbortSignal) => {
+    setState((prev) => ({ ...prev, loading: true, error: null }));
+
+    const params = `?range=${dateRange}`;
+
+    try {
+      // Parallel fetch all 4 endpoints
+      const [dashRes, trendRes, costRes, funnelRes] = await Promise.all([
+        safeFetch<DashboardResponse>(`/api/reports/dashboard${params}`, { signal }),
+        safeFetch<RevenueTrendResponse>(`/api/reports/revenue-trend${params}`, { signal }),
+        safeFetch<CostBreakdownResponse>(`/api/reports/cost-breakdown${params}`, { signal }),
+        safeFetch<FunnelResponse>(`/api/reports/funnel${params}`, { signal }),
+      ]);
+
+      if (signal.aborted) return;
+
+      // Check for errors
+      const firstError = [dashRes, trendRes, costRes, funnelRes].find((r) => r.error);
+      if (firstError?.error) {
+        setState((prev) => ({ ...prev, loading: false, error: firstError.error }));
+        return;
+      }
+
+      setState({
+        dashboard: dashRes.data,
+        trend: trendRes.data,
+        costBreakdown: costRes.data,
+        funnel: funnelRes.data,
+        loading: false,
+        error: null,
+      });
+    } catch {
+      if (!signal.aborted) {
+        setState((prev) => ({
+          ...prev,
+          loading: false,
+          error: 'Không thể tải dữ liệu báo cáo',
+        }));
+      }
+    }
+  }, [dateRange]);
+
+  useEffect(() => {
+    abortRef.current?.abort();
+    abortRef.current = new AbortController();
+    fetchAll(abortRef.current.signal);
+
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, [fetchAll]);
+
+  const refetch = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = new AbortController();
+    fetchAll(abortRef.current.signal);
+  }, [fetchAll]);
+
+  return { ...state, refetch };
+}
+</file>
+
+</files>
