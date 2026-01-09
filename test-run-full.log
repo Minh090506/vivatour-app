@@ -1,0 +1,529 @@
+
+> vivatour-app@0.1.0 test
+> jest --coverage
+
+  console.error
+    Error fetching transactions: Error: Database connection failed
+        at Object.<anonymous> (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\src\__tests__\api\supplier-transactions.test.ts:229:7)
+        at Promise.finally.completed (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:275:16)
+        at runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:343:7)
+        at Object.worker (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:497:12)
+
+    [0m [90m 48 |[39m     })[33m;[39m
+     [90m 49 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 50 |[39m     console[33m.[39merror([32m'Error fetching transactions:'[39m[33m,[39m error)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 51 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson(
+     [90m 52 |[39m       { success[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m [32m'Failed to fetch transactions'[39m }[33m,[39m
+     [90m 53 |[39m       { status[33m:[39m [35m500[39m }[0m
+
+      at error (src/app/api/supplier-transactions/route.ts:50:13)
+      at Object.<anonymous> (src/__tests__/api/supplier-transactions.test.ts:233:22)
+
+  console.error
+    Error fetching suppliers: Error: Database connection failed
+        at Object.<anonymous> (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\src\__tests__\api\suppliers.test.ts:203:52)
+        at Promise.finally.completed (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:275:16)
+        at runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:343:7)
+        at Object.worker (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:497:12)
+
+    [0m [90m 55 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson({ success[33m:[39m [36mtrue[39m[33m,[39m data[33m:[39m result })[33m;[39m
+     [90m 56 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 57 |[39m     console[33m.[39merror([32m'Error fetching suppliers:'[39m[33m,[39m error)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 58 |[39m     [36mconst[39m message [33m=[39m error [36minstanceof[39m [33mError[39m [33m?[39m error[33m.[39mmessage [33m:[39m [32m'Unknown error'[39m[33m;[39m
+     [90m 59 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson(
+     [90m 60 |[39m       { success[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m [32m`Failed to fetch suppliers: ${message}`[39m }[33m,[39m[0m
+
+      at error (src/app/api/suppliers/route.ts:57:13)
+      at Object.<anonymous> (src/__tests__/api/suppliers.test.ts:206:22)
+
+  console.error
+    Error generating cost report: Error: Database error
+        at Object.<anonymous> (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\src\__tests__\api\operator-reports.test.ts:149:52)
+        at Promise.finally.completed (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:275:16)
+        at runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:343:7)
+        at Object.worker (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:497:12)
+
+    [0m [90m 145 |[39m     })[33m;[39m
+     [90m 146 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 147 |[39m     console[33m.[39merror([32m'Error generating cost report:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 148 |[39m     [36mconst[39m message [33m=[39m error [36minstanceof[39m [33mError[39m [33m?[39m error[33m.[39mmessage [33m:[39m [32m'Unknown error'[39m[33m;[39m
+     [90m 149 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson(
+     [90m 150 |[39m       { success[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m [32m`Lỗi tạo báo cáo: ${message}`[39m }[33m,[39m[0m
+
+      at error (src/app/api/reports/operator-costs/route.ts:147:13)
+      at Object.<anonymous> (src/__tests__/api/operator-reports.test.ts:152:22)
+
+  console.error
+    Error generating payment report: Error: Database error
+        at Object.<anonymous> (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\src\__tests__\api\operator-reports.test.ts:232:53)
+        at Promise.finally.completed (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:275:16)
+        at runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:343:7)
+        at Object.worker (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:497:12)
+
+    [0m [90m 104 |[39m     })[33m;[39m
+     [90m 105 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 106 |[39m     console[33m.[39merror([32m'Error generating payment report:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 107 |[39m     [36mconst[39m message [33m=[39m error [36minstanceof[39m [33mError[39m [33m?[39m error[33m.[39mmessage [33m:[39m [32m'Unknown error'[39m[33m;[39m
+     [90m 108 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson(
+     [90m 109 |[39m       { success[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m [32m`Lỗi tạo báo cáo: ${message}`[39m }[33m,[39m[0m
+
+      at error (src/app/api/reports/operator-payments/route.ts:106:13)
+      at Object.<anonymous> (src/__tests__/api/operator-reports.test.ts:235:22)
+
+  console.error
+    Error fetching pending payments: Error: Database error
+        at Object.<anonymous> (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\src\__tests__\api\operator-approvals.test.ts:183:52)
+        at Promise.finally.completed (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:275:16)
+        at runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:343:7)
+        at Object.worker (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:497:12)
+
+    [0m [90m 82 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson({ success[33m:[39m [36mtrue[39m[33m,[39m data[33m,[39m summary })[33m;[39m
+     [90m 83 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 84 |[39m     console[33m.[39merror([32m'Error fetching pending payments:'[39m[33m,[39m error)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 85 |[39m     [36mconst[39m message [33m=[39m error [36minstanceof[39m [33mError[39m [33m?[39m error[33m.[39mmessage [33m:[39m [32m'Unknown error'[39m[33m;[39m
+     [90m 86 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson(
+     [90m 87 |[39m       { success[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m [32m`Lỗi tải danh sách: ${message}`[39m }[33m,[39m[0m
+
+      at error (src/app/api/operators/pending-payments/route.ts:84:13)
+      at Object.<anonymous> (src/__tests__/api/operator-approvals.test.ts:186:22)
+
+  console.error
+    Error creating supplier: Error: Database write failed
+        at Object.<anonymous> (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\src\__tests__\api\suppliers.test.ts:531:50)
+        at Promise.finally.completed (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:275:16)
+        at runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:343:7)
+        at Object.worker (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:497:12)
+
+    [0m [90m 148 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson({ success[33m:[39m [36mtrue[39m[33m,[39m data[33m:[39m supplier }[33m,[39m { status[33m:[39m [35m201[39m })[33m;[39m
+     [90m 149 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 150 |[39m     console[33m.[39merror([32m'Error creating supplier:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 151 |[39m     [36mconst[39m message [33m=[39m error [36minstanceof[39m [33mError[39m [33m?[39m error[33m.[39mmessage [33m:[39m [32m'Unknown error'[39m[33m;[39m
+     [90m 152 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson(
+     [90m 153 |[39m       { success[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m [32m`Lỗi tạo NCC: ${message}`[39m }[33m,[39m[0m
+
+      at error (src/app/api/suppliers/route.ts:150:13)
+      at Object.<anonymous> (src/__tests__/api/suppliers.test.ts:541:22)
+
+  console.error
+    Error creating transaction: Error: Database write failed
+        at Object.<anonymous> (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\src\__tests__\api\supplier-transactions.test.ts:597:61)
+        at Promise.finally.completed (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:275:16)
+        at runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:343:7)
+        at Object.worker (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:497:12)
+
+    [0m [90m 125 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson({ success[33m:[39m [36mtrue[39m[33m,[39m data[33m:[39m transaction }[33m,[39m { status[33m:[39m [35m201[39m })[33m;[39m
+     [90m 126 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 127 |[39m     console[33m.[39merror([32m'Error creating transaction:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 128 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson(
+     [90m 129 |[39m       { success[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m [32m'Failed to create transaction'[39m }[33m,[39m
+     [90m 130 |[39m       { status[33m:[39m [35m500[39m }[0m
+
+      at error (src/app/api/supplier-transactions/route.ts:127:13)
+      at Object.<anonymous> (src/__tests__/api/supplier-transactions.test.ts:604:22)
+
+  console.error
+    An update to LoginFormContent inside a test was not wrapped in act(...).
+    
+    When testing, code that causes React state updates should be wrapped into act(...):
+    
+    act(() => {
+      /* fire events that update state */
+    });
+    /* assert on the output */
+    
+    This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+      at node_modules/react-dom/cjs/react-dom-client.development.js:18758:19
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at warnIfUpdatesNotWrappedWithActDEV (node_modules/react-dom/cjs/react-dom-client.development.js:18757:9)
+      at scheduleUpdateOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:16409:11)
+      at dispatchSetStateInternal (node_modules/react-dom/cjs/react-dom-client.development.js:9170:13)
+      at dispatchSetState (node_modules/react-dom/cjs/react-dom-client.development.js:9127:7)
+      at Object.callback (node_modules/react-hook-form/src/useForm.ts:99:5)
+      at Object.find (node_modules/react-hook-form/src/logic/shouldRenderFormState.ts:25:28)
+      at Object.next (node_modules/react-hook-form/src/utils/createSubject.ts:40:5)
+      at name (node_modules/react-hook-form/src/logic/createFormControl.ts:1276:20)
+
+  console.error
+    An update to LoginFormContent inside a test was not wrapped in act(...).
+    
+    When testing, code that causes React state updates should be wrapped into act(...):
+    
+    act(() => {
+      /* fire events that update state */
+    });
+    /* assert on the output */
+    
+    This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+    [0m [90m 49 |[39m
+     [90m 50 |[39m   [36masync[39m [36mfunction[39m onSubmit(data[33m:[39m [33mLoginFormData[39m) {
+    [31m[1m>[22m[39m[90m 51 |[39m     setIsLoading([36mtrue[39m)[33m;[39m
+     [90m    |[39m     [31m[1m^[22m[39m
+     [90m 52 |[39m
+     [90m 53 |[39m     [36mtry[39m {
+     [90m 54 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m signIn([32m"credentials"[39m[33m,[39m {[0m
+
+      at node_modules/react-dom/cjs/react-dom-client.development.js:18758:19
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at warnIfUpdatesNotWrappedWithActDEV (node_modules/react-dom/cjs/react-dom-client.development.js:18757:9)
+      at scheduleUpdateOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:16409:11)
+      at dispatchSetStateInternal (node_modules/react-dom/cjs/react-dom-client.development.js:9170:13)
+      at dispatchSetState (node_modules/react-dom/cjs/react-dom-client.development.js:9127:7)
+      at setIsLoading (src/app/login/login-form.tsx:51:5)
+      at errors (node_modules/react-hook-form/src/logic/createFormControl.ts:1281:24)
+
+  console.error
+    An update to LoginFormContent inside a test was not wrapped in act(...).
+    
+    When testing, code that causes React state updates should be wrapped into act(...):
+    
+    act(() => {
+      /* fire events that update state */
+    });
+    /* assert on the output */
+    
+    This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+    [0m [90m 74 |[39m       })[33m;[39m
+     [90m 75 |[39m     } [36mfinally[39m {
+    [31m[1m>[22m[39m[90m 76 |[39m       setIsLoading([36mfalse[39m)[33m;[39m
+     [90m    |[39m       [31m[1m^[22m[39m
+     [90m 77 |[39m     }
+     [90m 78 |[39m   }
+     [90m 79 |[39m[0m
+
+      at node_modules/react-dom/cjs/react-dom-client.development.js:18758:19
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at warnIfUpdatesNotWrappedWithActDEV (node_modules/react-dom/cjs/react-dom-client.development.js:18757:9)
+      at scheduleUpdateOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:16409:11)
+      at dispatchSetStateInternal (node_modules/react-dom/cjs/react-dom-client.development.js:9170:13)
+      at dispatchSetState (node_modules/react-dom/cjs/react-dom-client.development.js:9127:7)
+      at setIsLoading (src/app/login/login-form.tsx:76:7)
+      at unset (node_modules/react-hook-form/src/logic/createFormControl.ts:1281:7)
+
+  console.error
+    An update to LoginFormContent inside a test was not wrapped in act(...).
+    
+    When testing, code that causes React state updates should be wrapped into act(...):
+    
+    act(() => {
+      /* fire events that update state */
+    });
+    /* assert on the output */
+    
+    This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+      at node_modules/react-dom/cjs/react-dom-client.development.js:18758:19
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at warnIfUpdatesNotWrappedWithActDEV (node_modules/react-dom/cjs/react-dom-client.development.js:18757:9)
+      at scheduleUpdateOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:16409:11)
+      at dispatchSetStateInternal (node_modules/react-dom/cjs/react-dom-client.development.js:9170:13)
+      at dispatchSetState (node_modules/react-dom/cjs/react-dom-client.development.js:9127:7)
+      at Object.callback (node_modules/react-hook-form/src/useForm.ts:99:5)
+      at Object.find (node_modules/react-hook-form/src/logic/shouldRenderFormState.ts:25:28)
+      at Object.next (node_modules/react-hook-form/src/utils/createSubject.ts:40:5)
+      at node_modules/react-hook-form/src/logic/createFormControl.ts:1292:7
+
+-----------------------------------------------|---------|----------|---------|---------|-----------------------------------------
+File                                           | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s                       
+-----------------------------------------------|---------|----------|---------|---------|-----------------------------------------
+All files                                      |   14.85 |    12.21 |   12.08 |   14.69 |                                         
+ src                                           |       0 |        0 |       0 |       0 |                                         
+  auth.config.ts                               |       0 |        0 |       0 |       0 | 11-115                                  
+  auth.ts                                      |       0 |        0 |       0 |       0 | 11-63                                   
+  proxy.ts                                     |       0 |      100 |     100 |       0 | 10-16                                   
+ src/app/(dashboard)                           |       0 |        0 |       0 |       0 |                                         
+  layout.tsx                                   |       0 |      100 |       0 |       0 | 1-5                                     
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-381                                   
+ src/app/(dashboard)/operators                 |       0 |        0 |       0 |       0 |                                         
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-148                                   
+ src/app/(dashboard)/operators/[id]            |       0 |        0 |       0 |       0 |                                         
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-422                                   
+ src/app/(dashboard)/operators/approvals       |       0 |        0 |       0 |       0 |                                         
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-78                                    
+ src/app/(dashboard)/operators/create          |       0 |        0 |       0 |       0 |                                         
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-40                                    
+ src/app/(dashboard)/operators/reports         |       0 |        0 |       0 |       0 |                                         
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-99                                    
+ src/app/(dashboard)/requests                  |       0 |        0 |       0 |       0 |                                         
+  error.tsx                                    |       0 |      100 |       0 |       0 | 3-18                                    
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-289                                   
+ src/app/(dashboard)/requests/[id]             |       0 |        0 |       0 |       0 |                                         
+  error.tsx                                    |       0 |        0 |       0 |       0 | 3-30                                    
+  page.tsx                                     |       0 |        0 |       0 |       0 | 1-19                                    
+ src/app/(dashboard)/requests/[id]/edit        |       0 |        0 |       0 |       0 |                                         
+  error.tsx                                    |       0 |        0 |       0 |       0 | 3-36                                    
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-99                                    
+ src/app/(dashboard)/requests/create           |       0 |        0 |       0 |       0 |                                         
+  error.tsx                                    |       0 |      100 |       0 |       0 | 3-25                                    
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-90                                    
+ src/app/(dashboard)/revenues                  |       0 |        0 |       0 |       0 |                                         
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-329                                   
+ src/app/(dashboard)/settings                  |       0 |        0 |       0 |       0 |                                         
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-82                                    
+ src/app/(dashboard)/suppliers                 |       0 |        0 |       0 |       0 |                                         
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-152                                   
+ src/app/(dashboard)/suppliers/[id]            |       0 |        0 |       0 |       0 |                                         
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-214                                   
+ src/app/(dashboard)/suppliers/create          |       0 |      100 |       0 |       0 |                                         
+  page.tsx                                     |       0 |      100 |       0 |       0 | 1-4                                     
+ src/app/(dashboard)/suppliers/reports         |       0 |        0 |       0 |       0 |                                         
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-183                                   
+ src/app/api/auth/[...nextauth]                |       0 |      100 |     100 |       0 |                                         
+  route.ts                                     |       0 |      100 |     100 |       0 | 1-3                                     
+ src/app/api/config/follow-up                  |       0 |        0 |       0 |       0 |                                         
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-61                                    
+ src/app/api/config/follow-up-statuses         |       0 |        0 |       0 |       0 |                                         
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-91                                    
+ src/app/api/config/follow-up-statuses/[id]    |       0 |        0 |       0 |       0 |                                         
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-130                                   
+ src/app/api/config/follow-up-statuses/reorder |       0 |        0 |       0 |       0 |                                         
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-50                                    
+ src/app/api/config/sellers                    |       0 |        0 |       0 |       0 |                                         
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-121                                   
+ src/app/api/config/sellers/[id]               |       0 |        0 |       0 |       0 |                                         
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-137                                   
+ src/app/api/config/user                       |       0 |        0 |       0 |       0 |                                         
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-144                                   
+ src/app/api/config/user/me                    |       0 |        0 |       0 |       0 |                                         
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-38                                    
+ src/app/api/operators                         |       0 |        0 |       0 |       0 |                                         
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-196                                   
+ src/app/api/operators/[id]                    |       0 |        0 |       0 |       0 |                                         
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-167                                   
+ src/app/api/operators/[id]/approve            |   86.36 |    83.33 |     100 |   86.36 |                                         
+  route.ts                                     |   86.36 |    83.33 |     100 |   86.36 | 60-62                                   
+ src/app/api/operators/[id]/lock               |      80 |    57.14 |     100 |      80 |                                         
+  route.ts                                     |      80 |    57.14 |     100 |      80 | 22,31,39,104-106                        
+ src/app/api/operators/[id]/unlock             |   81.25 |    54.16 |     100 |   81.25 |                                         
+  route.ts                                     |   81.25 |    54.16 |     100 |   81.25 | 23,32,40,116-118                        
+ src/app/api/operators/approve                 |   88.23 |    76.47 |     100 |   90.32 |                                         
+  route.ts                                     |   88.23 |    76.47 |     100 |   90.32 | 94-96                                   
+ src/app/api/operators/lock-period             |   75.67 |    64.28 |     100 |   75.67 |                                         
+  route.ts                                     |   75.67 |    64.28 |     100 |   75.67 | 17,41,63-65,118-120,132,159-164,211-213 
+ src/app/api/operators/pending-payments        |   97.61 |    83.33 |     100 |     100 |                                         
+  route.ts                                     |   97.61 |    83.33 |     100 |     100 | 39-66,85                                
+ src/app/api/reports/operator-costs            |   97.14 |    78.04 |     100 |   98.41 |                                         
+  route.ts                                     |   97.14 |    78.04 |     100 |   98.41 | 32                                      
+ src/app/api/reports/operator-payments         |   86.66 |       80 |     100 |   86.66 |                                         
+  route.ts                                     |   86.66 |       80 |     100 |   86.66 | 31-33,45                                
+ src/app/api/reports/supplier-balance          |       0 |        0 |       0 |       0 |                                         
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-18                                    
+ src/app/api/requests                          |       0 |        0 |       0 |       0 |                                         
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-192                                   
+ src/app/api/requests/[id]                     |       0 |        0 |       0 |       0 |                                         
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-274                                   
+ src/app/api/revenues                          |       0 |        0 |       0 |       0 |                                         
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-220                                   
+ src/app/api/revenues/[id]                     |       0 |        0 |       0 |       0 |                                         
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-224                                   
+ src/app/api/revenues/[id]/history             |       0 |        0 |       0 |       0 |                                         
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-56                                    
+ src/app/api/revenues/[id]/lock                |       0 |        0 |       0 |       0 |                                         
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-108                                   
+ src/app/api/revenues/[id]/unlock              |       0 |        0 |       0 |       0 |                                         
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-108                                   
+ src/app/api/supplier-transactions             |   97.87 |    95.45 |     100 |   97.67 |                                         
+  route.ts                                     |   97.87 |    95.45 |     100 |   97.67 | 64                                      
+ src/app/api/supplier-transactions/[id]        |       0 |        0 |       0 |       0 |                                         
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-129                                   
+ src/app/api/suppliers                         |   86.11 |     87.5 |      75 |    85.5 |                                         
+  route.ts                                     |   86.11 |     87.5 |      75 |    85.5 | 160-183                                 
+ src/app/api/suppliers/[id]                    |       0 |        0 |       0 |       0 |                                         
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-156                                   
+ src/app/api/suppliers/generate-code           |       0 |        0 |       0 |       0 |                                         
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-67                                    
+ src/app/api/sync/sheets                       |       0 |        0 |       0 |       0 |                                         
+  route.ts                                     |       0 |        0 |       0 |       0 | 10-403                                  
+ src/app/api/users                             |       0 |        0 |       0 |       0 |                                         
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-35                                    
+ src/app/forbidden                             |       0 |      100 |       0 |       0 |                                         
+  page.tsx                                     |       0 |      100 |       0 |       0 | 1-5                                     
+ src/app/login                                 |   81.57 |    41.66 |     100 |   83.33 |                                         
+  login-form.tsx                               |   80.55 |    41.66 |     100 |   82.35 | 28-29,61-64,71-72                       
+  page.tsx                                     |     100 |      100 |     100 |     100 |                                         
+ src/components/dashboard                      |       0 |        0 |       0 |       0 |                                         
+  follow-up-widget.tsx                         |       0 |        0 |       0 |       0 | 3-159                                   
+ src/components/layout                         |       0 |        0 |       0 |       0 |                                         
+  AIAssistant.tsx                              |       0 |        0 |       0 |       0 | 3-190                                   
+  Header.tsx                                   |       0 |        0 |       0 |       0 | 3-69                                    
+ src/components/layouts                        |       0 |        0 |       0 |       0 |                                         
+  index.ts                                     |       0 |      100 |     100 |       0 | 7-8                                     
+  master-detail-layout.tsx                     |       0 |        0 |       0 |       0 | 23-59                                   
+  slide-in-panel.tsx                           |       0 |        0 |       0 |       0 | 25-48                                   
+ src/components/operators                      |       0 |        0 |       0 |       0 |                                         
+  approval-summary-cards.tsx                   |       0 |        0 |       0 |       0 | 3-60                                    
+  index.ts                                     |       0 |      100 |     100 |       0 | 2-9                                     
+  lock-indicator.tsx                           |       0 |        0 |       0 |       0 | 1-25                                    
+  operator-approval-table.tsx                  |       0 |        0 |       0 |       0 | 3-164                                   
+  operator-form.tsx                            |       0 |        0 |       0 |       0 | 3-454                                   
+  operator-history-panel.tsx                   |       0 |        0 |       0 |       0 | 3-219                                   
+  operator-list-filters.tsx                    |       0 |        0 |       0 |       0 | 3-111                                   
+  operator-lock-dialog.tsx                     |       0 |        0 |       0 |       0 | 3-236                                   
+  operator-lock-tier-badge.tsx                 |       0 |        0 |       0 |       0 | 3-159                                   
+ src/components/operators/reports              |       0 |        0 |       0 |       0 |                                         
+  cost-by-service-chart.tsx                    |       0 |        0 |       0 |       0 | 3-24                                    
+  cost-by-supplier-table.tsx                   |       0 |        0 |       0 |       0 | 10-40                                   
+  monthly-trend.tsx                            |       0 |        0 |       0 |       0 | 10-50                                   
+  payment-status-cards.tsx                     |       0 |      100 |       0 |       0 | 3-51                                    
+ src/components/providers                      |       0 |      100 |       0 |       0 |                                         
+  index.ts                                     |       0 |      100 |     100 |       0 | 5                                       
+  session-provider-wrapper.tsx                 |       0 |      100 |       0 |       0 | 11-17                                   
+ src/components/requests                       |       0 |        0 |       0 |       0 |                                         
+  index.ts                                     |       0 |      100 |     100 |       0 | 4-15                                    
+  request-detail-panel.tsx                     |       0 |        0 |       0 |       0 | 3-313                                   
+  request-filters.tsx                          |       0 |        0 |       0 |       0 | 3-132                                   
+  request-form.tsx                             |       0 |        0 |       0 |       0 | 3-369                                   
+  request-list-item.tsx                        |       0 |        0 |       0 |       0 | 3-23                                    
+  request-list-panel.tsx                       |       0 |        0 |       0 |       0 | 3-119                                   
+  request-services-table.tsx                   |       0 |        0 |       0 |       0 | 3-303                                   
+  request-status-badge.tsx                     |       0 |        0 |       0 |       0 | 3-58                                    
+  request-table.tsx                            |       0 |        0 |       0 |       0 | 10-94                                   
+ src/components/revenues                       |       0 |        0 |       0 |       0 |                                         
+  index.ts                                     |       0 |      100 |     100 |       0 | 1-5                                     
+  revenue-form.tsx                             |       0 |        0 |       0 |       0 | 3-319                                   
+  revenue-history-panel.tsx                    |       0 |        0 |       0 |       0 | 3-155                                   
+  revenue-lock-dialog.tsx                      |       0 |        0 |       0 |       0 | 3-133                                   
+  revenue-summary-card.tsx                     |       0 |        0 |       0 |       0 | 3-104                                   
+  revenue-table.tsx                            |       0 |        0 |       0 |       0 | 3-362                                   
+ src/components/settings                       |       0 |        0 |       0 |       0 |                                         
+  followup-status-form-modal.tsx               |       0 |        0 |       0 |       0 | 3-227                                   
+  followup-status-table.tsx                    |       0 |        0 |       0 |       0 | 3-298                                   
+  google-sheets-sync.tsx                       |       0 |        0 |       0 |       0 | 3-169                                   
+  index.ts                                     |       0 |      100 |     100 |       0 | 1-5                                     
+  seller-form-modal.tsx                        |       0 |        0 |       0 |       0 | 3-276                                   
+  seller-table.tsx                             |       0 |        0 |       0 |       0 | 3-270                                   
+ src/components/shared                         |       0 |        0 |       0 |       0 |                                         
+  lock-tier-badge.tsx                          |       0 |        0 |       0 |       0 | 3-94                                    
+ src/components/suppliers                      |       0 |        0 |       0 |       0 |                                         
+  edit-supplier-modal.tsx                      |       0 |        0 |       0 |       0 | 3-314                                   
+  supplier-form.tsx                            |       0 |        0 |       0 |       0 | 3-411                                   
+  supplier-selector.tsx                        |       0 |        0 |       0 |       0 | 3-72                                    
+  transaction-form.tsx                         |       0 |        0 |       0 |       0 | 3-178                                   
+ src/config                                    |   38.61 |    44.44 |   23.52 |   37.31 |                                         
+  lock-config.ts                               |       0 |        0 |       0 |       0 | 7-89                                    
+  operator-config.ts                           |     100 |      100 |     100 |     100 |                                         
+  request-config.ts                            |       0 |        0 |       0 |       0 | 7-88                                    
+  revenue-config.ts                            |       0 |      100 |     100 |       0 | 4-43                                    
+  supplier-config.ts                           |   96.42 |     92.3 |     100 |     100 | 71                                      
+ src/hooks                                     |       0 |        0 |       0 |       0 |                                         
+  index.ts                                     |       0 |      100 |     100 |       0 | 7                                       
+  use-permission.ts                            |       0 |        0 |       0 |       0 | 15-48                                   
+ src/lib                                       |   49.49 |    46.92 |   52.74 |   48.79 |                                         
+  auth-utils.ts                                |       0 |        0 |       0 |       0 | 20-109                                  
+  db.ts                                        |       0 |        0 |     100 |       0 | 1-21                                    
+  google-sheets.ts                             |       0 |        0 |       0 |       0 | 18-239                                  
+  id-utils.ts                                  |     100 |       75 |     100 |     100 | 87,115,141                              
+  lock-utils.ts                                |   96.49 |    95.23 |     100 |   95.91 | 92,116                                  
+  logger.ts                                    |       0 |        0 |       0 |       0 | 32-162                                  
+  operator-history.ts                          |       0 |        0 |       0 |       0 | 2-79                                    
+  operator-validation.ts                       |       0 |        0 |       0 |       0 | 2-38                                    
+  permissions.ts                               |       0 |        0 |       0 |       0 | 53-110                                  
+  request-utils.ts                             |     100 |      100 |     100 |     100 |                                         
+  revenue-history.ts                           |       0 |        0 |       0 |       0 | 6-66                                    
+  sheet-mappers.ts                             |   49.16 |    53.54 |   71.42 |   47.86 | 75-98,219,305-434                       
+  supplier-balance.ts                          |     100 |      100 |     100 |     100 |                                         
+  utils.ts                                     |      50 |      100 |   33.33 |      50 | 9-15                                    
+ src/lib/api                                   |       0 |        0 |       0 |       0 |                                         
+  fetch-utils.ts                               |       0 |        0 |       0 |       0 | 15-188                                  
+ src/lib/utils                                 |       0 |        0 |       0 |       0 |                                         
+  parse-utils.ts                               |       0 |        0 |       0 |       0 | 12-94                                   
+ src/lib/validations                           |       0 |        0 |       0 |       0 |                                         
+  config-validation.ts                         |       0 |        0 |       0 |       0 | 1-47                                    
+  request-validation.ts                        |       0 |        0 |       0 |       0 | 1-432                                   
+  seller-validation.ts                         |       0 |        0 |       0 |       0 | 1-23                                    
+ src/types                                     |       0 |      100 |     100 |       0 |                                         
+  index.ts                                     |       0 |      100 |     100 |       0 | 47-472                                  
+-----------------------------------------------|---------|----------|---------|---------|-----------------------------------------
