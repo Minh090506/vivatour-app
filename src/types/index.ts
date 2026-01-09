@@ -615,3 +615,33 @@ export interface ProfitReport {
   bookings: ProfitByBooking[];
   summary: ProfitReportSummary;
 }
+
+// ============================================
+// SALES AGGREGATION TYPES (Revenue by Booking)
+// ============================================
+
+// Sale item - aggregated revenue per booking
+export interface SaleItem {
+  bookingCode: string;
+  customerName: string;
+  totalRevenue: number;  // SUM(amountVND) from Revenue
+  totalCost: number;     // SUM(totalCost) from Operator
+  profit: number;        // totalRevenue - totalCost
+  revenueCount: number;  // Number of revenue records
+  startDate: Date | null;
+  endDate: Date | null;
+}
+
+// Sales summary statistics
+export interface SalesSummary {
+  totalRevenue: number;
+  totalCost: number;
+  totalProfit: number;
+  bookingCount: number;
+}
+
+// Sales API response
+export interface SalesResponse {
+  sales: SaleItem[];
+  summary: SalesSummary;
+}

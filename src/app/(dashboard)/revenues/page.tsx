@@ -18,9 +18,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { RevenueTable, RevenueForm, RevenueSummaryCard } from '@/components/revenues';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RevenueTable, RevenueForm, RevenueSummaryCard, SalesSummaryTable } from '@/components/revenues';
 import { usePermission } from '@/hooks/use-permission';
-import { DollarSign, Plus, Search, Filter, FileBarChart } from 'lucide-react';
+import { DollarSign, Plus, Search, Filter, FileBarChart, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
 import {
   PAYMENT_TYPES,
@@ -28,6 +29,7 @@ import {
   type PaymentTypeKey,
   type PaymentSourceKey,
 } from '@/config/revenue-config';
+import type { SaleItem, SalesSummary } from '@/types';
 
 // Revenue type from API
 interface Revenue {
@@ -86,10 +88,24 @@ const LOCK_STATUS_OPTIONS = [
 export default function RevenuesPage() {
   const { can, isAdmin } = usePermission();
 
+  // Tab state
+  const [activeTab, setActiveTab] = useState<'list' | 'sales'>('list');
+
   // Data state
   const [revenues, setRevenues] = useState<Revenue[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
+
+  // Sales aggregation state
+  const [sales, setSales] = useState<SaleItem[]>([]);
+  const [salesSummary, setSalesSummary] = useState<SalesSummary>({
+    totalRevenue: 0,
+    totalCost: 0,
+    totalProfit: 0,
+    bookingCount: 0,
+  });
+  const [salesLoading, setSalesLoading] = useState(false);
+  const [salesMonth, setSalesMonth] = useState(''); // YYYY-MM
 
   // Filter state
   const [filters, setFilters] = useState<Filters>(initialFilters);
@@ -139,6 +155,39 @@ export default function RevenuesPage() {
     fetchRevenues();
   }, [fetchRevenues]);
 
+  // Fetch sales aggregation
+  const fetchSales = useCallback(async () => {
+    setSalesLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (salesMonth) params.set('month', salesMonth);
+
+      const res = await fetch(`/api/revenues/sales?${params}`);
+      const data = await res.json();
+
+      if (data.success) {
+        setSales(data.data?.sales || []);
+        setSalesSummary(data.data?.summary || {
+          totalRevenue: 0,
+          totalCost: 0,
+          totalProfit: 0,
+          bookingCount: 0,
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching sales:', err);
+    } finally {
+      setSalesLoading(false);
+    }
+  }, [salesMonth]);
+
+  // Fetch sales when tab changes or month filter changes
+  useEffect(() => {
+    if (activeTab === 'sales') {
+      fetchSales();
+    }
+  }, [activeTab, fetchSales]);
+
   // Handlers
   const handleAdd = useCallback(() => {
     setEditingRevenue(null);
@@ -183,9 +232,9 @@ export default function RevenuesPage() {
         <div className="flex items-center gap-3">
           <DollarSign className="h-6 w-6" />
           <div>
-            <h1 className="text-2xl font-bold">Quản lý Doanh thu</h1>
+            <h1 className="text-2xl font-bold">Quan ly Doanh thu</h1>
             <p className="text-muted-foreground">
-              {total} giao dịch
+              {activeTab === 'list' ? `${total} giao dich` : `${salesSummary.bookingCount} booking`}
             </p>
           </div>
         </div>
@@ -196,7 +245,7 @@ export default function RevenuesPage() {
               Bao cao loi nhuan
             </Link>
           </Button>
-          {can('revenue:manage') && (
+          {can('revenue:manage') && activeTab === 'list' && (
             <Button onClick={handleAdd}>
               <Plus className="w-4 h-4 mr-2" />
               Them thu nhap
@@ -205,151 +254,223 @@ export default function RevenuesPage() {
         </div>
       </div>
 
-      {/* Filters Card */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Filter className="h-4 w-4" />
-              Bộ lọc
-            </CardTitle>
-            {hasActiveFilters && (
-              <Button variant="ghost" size="sm" onClick={handleClearFilters}>
-                Xóa bộ lọc
-              </Button>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
-            {/* Search */}
-            <div className="space-y-2 lg:col-span-2">
-              <Label>Tìm kiếm</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="Mã booking, khách hàng..."
-                  className="pl-9"
-                />
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'list' | 'sales')}>
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="list" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Danh sach thu nhap
+          </TabsTrigger>
+          <TabsTrigger value="sales" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Tong hop doanh thu
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Revenue List Tab */}
+        <TabsContent value="list" className="space-y-6">
+          {/* Filters Card */}
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Filter className="h-4 w-4" />
+                  Bo loc
+                </CardTitle>
+                {hasActiveFilters && (
+                  <Button variant="ghost" size="sm" onClick={handleClearFilters}>
+                    Xoa bo loc
+                  </Button>
+                )}
               </div>
-            </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
+                {/* Search */}
+                <div className="space-y-2 lg:col-span-2">
+                  <Label>Tim kiem</Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
+                      placeholder="Ma booking, khach hang..."
+                      className="pl-9"
+                    />
+                  </div>
+                </div>
 
-            {/* Date From */}
-            <div className="space-y-2">
-              <Label>Từ ngày</Label>
-              <Input
-                type="date"
-                value={filters.fromDate}
-                onChange={(e) => handleFilterChange('fromDate', e.target.value)}
-              />
-            </div>
+                {/* Date From */}
+                <div className="space-y-2">
+                  <Label>Tu ngay</Label>
+                  <Input
+                    type="date"
+                    value={filters.fromDate}
+                    onChange={(e) => handleFilterChange('fromDate', e.target.value)}
+                  />
+                </div>
 
-            {/* Date To */}
-            <div className="space-y-2">
-              <Label>Đến ngày</Label>
-              <Input
-                type="date"
-                value={filters.toDate}
-                onChange={(e) => handleFilterChange('toDate', e.target.value)}
-              />
-            </div>
+                {/* Date To */}
+                <div className="space-y-2">
+                  <Label>Den ngay</Label>
+                  <Input
+                    type="date"
+                    value={filters.toDate}
+                    onChange={(e) => handleFilterChange('toDate', e.target.value)}
+                  />
+                </div>
 
-            {/* Payment Type */}
-            <div className="space-y-2">
-              <Label>Loại thanh toán</Label>
-              <Select
-                value={filters.paymentType}
-                onValueChange={(v) => handleFilterChange('paymentType', v === 'all' ? '' : v)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Tất cả" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả</SelectItem>
-                  {(Object.keys(PAYMENT_TYPES) as PaymentTypeKey[]).map((key) => (
-                    <SelectItem key={key} value={key}>
-                      {PAYMENT_TYPES[key].label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                {/* Payment Type */}
+                <div className="space-y-2">
+                  <Label>Loai thanh toan</Label>
+                  <Select
+                    value={filters.paymentType}
+                    onValueChange={(v) => handleFilterChange('paymentType', v === 'all' ? '' : v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Tat ca" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tat ca</SelectItem>
+                      {(Object.keys(PAYMENT_TYPES) as PaymentTypeKey[]).map((key) => (
+                        <SelectItem key={key} value={key}>
+                          {PAYMENT_TYPES[key].label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            {/* Payment Source */}
-            <div className="space-y-2">
-              <Label>Nguon thanh toan</Label>
-              <Select
-                value={filters.paymentSource}
-                onValueChange={(v) => handleFilterChange('paymentSource', v === 'all' ? '' : v)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Tat ca" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tat ca</SelectItem>
-                  {(Object.keys(PAYMENT_SOURCES) as PaymentSourceKey[]).map((key) => (
-                    <SelectItem key={key} value={key}>
-                      {PAYMENT_SOURCES[key].label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                {/* Payment Source */}
+                <div className="space-y-2">
+                  <Label>Nguon thanh toan</Label>
+                  <Select
+                    value={filters.paymentSource}
+                    onValueChange={(v) => handleFilterChange('paymentSource', v === 'all' ? '' : v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Tat ca" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tat ca</SelectItem>
+                      {(Object.keys(PAYMENT_SOURCES) as PaymentSourceKey[]).map((key) => (
+                        <SelectItem key={key} value={key}>
+                          {PAYMENT_SOURCES[key].label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            {/* Lock Status */}
-            <div className="space-y-2">
-              <Label>Trang thai khoa</Label>
-              <Select
-                value={filters.lockStatus}
-                onValueChange={(v) => handleFilterChange('lockStatus', v === 'all' ? '' : v)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Tat ca" />
-                </SelectTrigger>
-                <SelectContent>
-                  {LOCK_STATUS_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+                {/* Lock Status */}
+                <div className="space-y-2">
+                  <Label>Trang thai khoa</Label>
+                  <Select
+                    value={filters.lockStatus}
+                    onValueChange={(v) => handleFilterChange('lockStatus', v === 'all' ? '' : v)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Tat ca" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LOCK_STATUS_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Summary Card */}
-      {revenues.length > 0 && <RevenueSummaryCard revenues={revenues} />}
+          {/* Summary Card */}
+          {revenues.length > 0 && <RevenueSummaryCard revenues={revenues} />}
 
-      {/* Revenue Table */}
-      <Card>
-        <CardContent className="pt-6">
-          {loading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Đang tải dữ liệu...
-            </div>
-          ) : (
-            <RevenueTable
-              revenues={revenues}
-              showRequest={true}
-              onEdit={(rev) => handleEdit(rev as Revenue)}
-              onRefresh={fetchRevenues}
-              canManage={can('revenue:manage')}
-              canUnlock={isAdmin}
-            />
-          )}
-        </CardContent>
-      </Card>
+          {/* Revenue Table */}
+          <Card>
+            <CardContent className="pt-6">
+              {loading ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Dang tai du lieu...
+                </div>
+              ) : (
+                <RevenueTable
+                  revenues={revenues}
+                  showRequest={true}
+                  onEdit={(rev) => handleEdit(rev as Revenue)}
+                  onRefresh={fetchRevenues}
+                  canManage={can('revenue:manage')}
+                  canUnlock={isAdmin}
+                />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Sales Summary Tab */}
+        <TabsContent value="sales" className="space-y-6">
+          {/* Month Filter */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Filter className="h-4 w-4" />
+                Loc theo thang
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4">
+                <div className="space-y-2">
+                  <Label>Thang (YYYY-MM)</Label>
+                  <Input
+                    type="month"
+                    value={salesMonth}
+                    onChange={(e) => setSalesMonth(e.target.value)}
+                    className="w-48"
+                  />
+                </div>
+                {salesMonth && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSalesMonth('')}
+                    className="mt-6"
+                  >
+                    Xoa bo loc
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Sales Summary Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Tong hop doanh thu theo Booking
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {salesLoading ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Dang tai du lieu...
+                </div>
+              ) : (
+                <SalesSummaryTable sales={sales} summary={salesSummary} />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingRevenue ? 'Chỉnh sửa thu nhập' : 'Thêm thu nhập mới'}
+              {editingRevenue ? 'Chinh sua thu nhap' : 'Them thu nhap moi'}
             </DialogTitle>
           </DialogHeader>
           <RevenueForm
