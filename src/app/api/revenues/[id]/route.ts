@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { PAYMENT_TYPE_KEYS, CURRENCY_KEYS } from '@/config/revenue-config';
+import { CURRENCY_KEYS } from '@/config/revenue-config';
 import { auth } from '@/auth';
 import { hasPermission, type Role } from '@/lib/permissions';
+import { updateRevenueApiSchema, extractRevenueZodErrors } from '@/lib/validations/revenue-validation';
 
 // GET /api/revenues/[id] - Get single revenue
 export async function GET(
@@ -93,49 +94,49 @@ export async function PUT(
       );
     }
 
-    // Check if locked
-    if (existing.isLocked) {
+    // Check if any lock tier is active (3-tier lock system)
+    if (existing.lockKT || existing.lockAdmin || existing.lockFinal) {
       return NextResponse.json(
-        { success: false, error: 'Thu nhập đã khóa, không thể sửa' },
-        { status: 400 }
+        { success: false, error: 'Thu nhap da khoa, khong the sua' },
+        { status: 403 }
       );
     }
 
-    // Validate payment type if provided
-    if (body.paymentType && !PAYMENT_TYPE_KEYS.includes(body.paymentType)) {
+    // Validate with Zod schema
+    const validationResult = updateRevenueApiSchema.safeParse(body);
+    if (!validationResult.success) {
       return NextResponse.json(
-        { success: false, error: `Loại thanh toán không hợp lệ: ${body.paymentType}` },
+        {
+          success: false,
+          error: 'Du lieu khong hop le',
+          errors: extractRevenueZodErrors(validationResult.error)
+        },
         { status: 400 }
       );
     }
+    const validatedData = validationResult.data;
 
     // Calculate amountVND if currency changed
-    const currency = body.currency || existing.currency || 'VND';
+    const currency = validatedData.currency || existing.currency || 'VND';
     let amountVND = Number(existing.amountVND);
     let foreignAmount = existing.foreignAmount ? Number(existing.foreignAmount) : null;
     let exchangeRate = existing.exchangeRate ? Number(existing.exchangeRate) : null;
 
-    if (body.currency !== undefined || body.foreignAmount !== undefined || body.exchangeRate !== undefined || body.amountVND !== undefined) {
+    if (validatedData.currency !== undefined || validatedData.foreignAmount !== undefined || validatedData.exchangeRate !== undefined || validatedData.amountVND !== undefined) {
       if (currency === 'VND') {
-        amountVND = Number(body.amountVND ?? existing.amountVND) || 0;
+        amountVND = (validatedData.amountVND ?? Number(existing.amountVND)) || 0;
         foreignAmount = null;
         exchangeRate = null;
       } else {
-        if (!CURRENCY_KEYS.includes(currency)) {
-          return NextResponse.json(
-            { success: false, error: `Loại tiền tệ không hợp lệ: ${currency}` },
-            { status: 400 }
-          );
-        }
-
-        foreignAmount = Number(body.foreignAmount ?? existing.foreignAmount) || 0;
-        exchangeRate = Number(body.exchangeRate ?? existing.exchangeRate) || 0;
-        amountVND = Math.round(foreignAmount * exchangeRate);
+        // Currency already validated by Zod
+        foreignAmount = validatedData.foreignAmount ?? (existing.foreignAmount ? Number(existing.foreignAmount) : 0);
+        exchangeRate = validatedData.exchangeRate ?? (existing.exchangeRate ? Number(existing.exchangeRate) : 0);
+        amountVND = Math.round((foreignAmount ?? 0) * (exchangeRate ?? 0));
       }
 
       if (amountVND <= 0) {
         return NextResponse.json(
-          { success: false, error: 'Số tiền VND phải > 0' },
+          { success: false, error: 'So tien VND phai > 0' },
           { status: 400 }
         );
       }
@@ -145,14 +146,14 @@ export async function PUT(
     const revenue = await prisma.revenue.update({
       where: { id },
       data: {
-        paymentDate: body.paymentDate ? new Date(body.paymentDate) : undefined,
-        paymentType: body.paymentType,
+        paymentDate: validatedData.paymentDate ? new Date(validatedData.paymentDate) : undefined,
+        paymentType: validatedData.paymentType,
         foreignAmount,
         currency,
         exchangeRate,
         amountVND,
-        paymentSource: body.paymentSource,
-        notes: body.notes?.trim(),
+        paymentSource: validatedData.paymentSource,
+        notes: validatedData.notes?.trim(),
       },
       include: {
         request: { select: { code: true, customerName: true, bookingCode: true } },
@@ -207,11 +208,11 @@ export async function DELETE(
       );
     }
 
-    // Check if locked
-    if (existing.isLocked) {
+    // Check if any lock tier is active (3-tier lock system)
+    if (existing.lockKT || existing.lockAdmin || existing.lockFinal) {
       return NextResponse.json(
         { success: false, error: 'Thu nhập đã khóa, không thể xóa' },
-        { status: 400 }
+        { status: 403 }
       );
     }
 

@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CurrencyInput } from '@/components/ui/currency-input';
 import { usePermission } from '@/hooks/use-permission';
+import { safeFetch, safePost, safePut } from '@/lib/api/fetch-utils';
 
 // Payment types (inline to avoid build-time dependency)
 const PAYMENT_TYPES = {
@@ -94,17 +95,13 @@ export function RevenueForm({ revenue, requestId, onSuccess, onCancel }: Revenue
   useEffect(() => {
     const fetchRequests = async () => {
       setLoadingRequests(true);
-      try {
-        const res = await fetch('/api/requests?stage=OUTCOME&limit=100');
-        const data = await res.json();
-        if (data.success) {
-          setRequests(data.data || []);
-        }
-      } catch (err) {
-        console.error('Error fetching requests:', err);
-      } finally {
-        setLoadingRequests(false);
+      const { data, error } = await safeFetch<Request[]>('/api/requests?stage=OUTCOME&limit=100');
+      if (error) {
+        console.error('Error fetching requests:', error);
+      } else {
+        setRequests(data || []);
       }
+      setLoadingRequests(false);
     };
     fetchRequests();
   }, []);
@@ -114,65 +111,54 @@ export function RevenueForm({ revenue, requestId, onSuccess, onCancel }: Revenue
     setLoading(true);
     setError('');
 
-    try {
-      // Validation
-      if (!formData.requestId) {
-        setError('Vui lòng chọn Booking');
-        setLoading(false);
-        return;
-      }
-      if (!formData.paymentType) {
-        setError('Vui lòng chọn loại thanh toán');
-        setLoading(false);
-        return;
-      }
-      if (!formData.paymentSource) {
-        setError('Vui lòng chọn nguồn thanh toán');
-        setLoading(false);
-        return;
-      }
-      if (currencyData.amountVND <= 0) {
-        setError('Số tiền VND phải > 0');
-        setLoading(false);
-        return;
-      }
-
-      const url = isEditing ? `/api/revenues/${revenue.id}` : '/api/revenues';
-      const method = isEditing ? 'PUT' : 'POST';
-
-      const body = {
-        requestId: formData.requestId,
-        paymentDate: formData.paymentDate,
-        paymentType: formData.paymentType,
-        paymentSource: formData.paymentSource,
-        currency: currencyData.currency,
-        foreignAmount: currencyData.foreignAmount,
-        exchangeRate: currencyData.exchangeRate,
-        amountVND: currencyData.amountVND,
-        notes: formData.notes?.trim() || null,
-        userId: userId || 'unknown',
-      };
-
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-
-      const data = await res.json();
-
-      if (!data.success) {
-        setError(data.error || 'Có lỗi xảy ra');
-        return;
-      }
-
-      if (onSuccess) {
-        onSuccess();
-      }
-    } catch {
-      setError('Có lỗi xảy ra khi lưu dữ liệu');
-    } finally {
+    // Validation
+    if (!formData.requestId) {
+      setError('Vui long chon Booking');
       setLoading(false);
+      return;
+    }
+    if (!formData.paymentType) {
+      setError('Vui long chon loai thanh toan');
+      setLoading(false);
+      return;
+    }
+    if (!formData.paymentSource) {
+      setError('Vui long chon nguon thanh toan');
+      setLoading(false);
+      return;
+    }
+    if (currencyData.amountVND <= 0) {
+      setError('So tien VND phai > 0');
+      setLoading(false);
+      return;
+    }
+
+    const body = {
+      requestId: formData.requestId,
+      paymentDate: formData.paymentDate,
+      paymentType: formData.paymentType,
+      paymentSource: formData.paymentSource,
+      currency: currencyData.currency,
+      foreignAmount: currencyData.foreignAmount,
+      exchangeRate: currencyData.exchangeRate,
+      amountVND: currencyData.amountVND,
+      notes: formData.notes?.trim() || null,
+      userId: userId || 'unknown',
+    };
+
+    const { error: apiError } = isEditing
+      ? await safePut(`/api/revenues/${revenue.id}`, body)
+      : await safePost('/api/revenues', body);
+
+    if (apiError) {
+      setError(apiError);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(false);
+    if (onSuccess) {
+      onSuccess();
     }
   };
 

@@ -20,7 +20,8 @@ import {
 } from '@/components/ui/dialog';
 import { RevenueTable, RevenueForm, RevenueSummaryCard } from '@/components/revenues';
 import { usePermission } from '@/hooks/use-permission';
-import { DollarSign, Plus, Search, Filter } from 'lucide-react';
+import { DollarSign, Plus, Search, Filter, FileBarChart } from 'lucide-react';
+import Link from 'next/link';
 import {
   PAYMENT_TYPES,
   PAYMENT_SOURCES,
@@ -188,12 +189,20 @@ export default function RevenuesPage() {
             </p>
           </div>
         </div>
-        {can('revenue:manage') && (
-          <Button onClick={handleAdd}>
-            <Plus className="w-4 h-4 mr-2" />
-            Thêm thu nhập
+        <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/operators/reports">
+              <FileBarChart className="w-4 h-4 mr-2" />
+              Bao cao loi nhuan
+            </Link>
           </Button>
-        )}
+          {can('revenue:manage') && (
+            <Button onClick={handleAdd}>
+              <Plus className="w-4 h-4 mr-2" />
+              Them thu nhap
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Filters Card */}
