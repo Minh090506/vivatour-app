@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { createOperatorHistory } from '@/lib/operator-history';
-import { SERVICE_TYPE_KEYS } from '@/config/operator-config';
 import { getSessionUser, unauthorizedResponse } from '@/lib/auth-utils';
 import { generateServiceId } from '@/lib/id-utils';
+import {
+  createOperatorApiSchema,
+  extractOperatorZodErrors,
+} from '@/lib/validations/operator-validation';
 
 // GET /api/operators - List with filters
 export async function GET(request: NextRequest) {
@@ -96,25 +99,21 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
-    // Validate required fields
-    if (!body.requestId || !body.serviceDate || !body.serviceType || !body.serviceName) {
+    // Validate with Zod schema
+    const validation = createOperatorApiSchema.safeParse(body);
+    if (!validation.success) {
+      const errors = extractOperatorZodErrors(validation.error);
       return NextResponse.json(
-        { success: false, error: 'Thiếu thông tin bắt buộc: requestId, serviceDate, serviceType, serviceName' },
+        { success: false, error: 'Dữ liệu không hợp lệ', errors },
         { status: 400 }
       );
     }
 
-    // Validate service type
-    if (!SERVICE_TYPE_KEYS.includes(body.serviceType)) {
-      return NextResponse.json(
-        { success: false, error: `Loại dịch vụ không hợp lệ: ${body.serviceType}` },
-        { status: 400 }
-      );
-    }
+    const validatedData = validation.data;
 
     // Validate request exists and is F5
     const req = await prisma.request.findUnique({
-      where: { id: body.requestId },
+      where: { id: validatedData.requestId },
       select: { id: true, status: true, bookingCode: true, code: true },
     });
 
@@ -132,6 +131,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check duplicate service (same booking + serviceType + serviceDate)
+    const serviceDate = new Date(validatedData.serviceDate);
+    const startOfDay = new Date(serviceDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(serviceDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const existingService = await prisma.operator.findFirst({
+      where: {
+        requestId: validatedData.requestId,
+        serviceType: validatedData.serviceType,
+        serviceDate: { gte: startOfDay, lte: endOfDay },
+      },
+      select: { id: true, serviceName: true },
+    });
+
+    if (existingService) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Đã có dịch vụ ${validatedData.serviceType} vào ngày này: "${existingService.serviceName}"`,
+          errors: { serviceType: 'Dịch vụ trùng lặp' },
+        },
+        { status: 400 }
+      );
+    }
+
     // Generate serviceId from bookingCode (or fallback to request code)
     let serviceId: string | null = null;
     const bookingCode = req.bookingCode || req.code;
@@ -140,10 +166,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate supplier if linked
-    let supplierName = body.supplier?.trim() || null;
-    if (body.supplierId) {
+    let supplierName = validatedData.supplier?.trim() || null;
+    if (validatedData.supplierId) {
       const supplier = await prisma.supplier.findUnique({
-        where: { id: body.supplierId },
+        where: { id: validatedData.supplierId },
       });
       if (!supplier) {
         return NextResponse.json(
@@ -157,25 +183,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Validate costs
-    const costBeforeTax = Number(body.costBeforeTax) || 0;
-    const vat = body.vat !== undefined && body.vat !== null ? Number(body.vat) : null;
-    const totalCost = Number(body.totalCost) || costBeforeTax + (vat || 0);
-
-    // Validate paidAmount
-    const paidAmount = Number(body.paidAmount) || 0;
-    if (paidAmount < 0) {
-      return NextResponse.json(
-        { success: false, error: 'Số tiền thanh toán không được âm' },
-        { status: 400 }
-      );
-    }
-    if (paidAmount > totalCost) {
-      return NextResponse.json(
-        { success: false, error: 'Số tiền thanh toán không được lớn hơn tổng chi phí' },
-        { status: 400 }
-      );
-    }
+    // Extract validated costs (already validated by Zod)
+    const costBeforeTax = validatedData.costBeforeTax;
+    const vat = validatedData.vat ?? null;
+    const totalCost = validatedData.totalCost;
+    const paidAmount = validatedData.paidAmount;
 
     // Determine payment status based on paidAmount
     let paymentStatus = 'PENDING';
@@ -188,21 +200,21 @@ export async function POST(request: NextRequest) {
     // Create operator with serviceId and lock fields initialized
     const operator = await prisma.operator.create({
       data: {
-        requestId: body.requestId,
-        supplierId: body.supplierId || null,
+        requestId: validatedData.requestId,
+        supplierId: validatedData.supplierId || null,
         serviceId, // Auto-generated from bookingCode
-        serviceDate: new Date(body.serviceDate),
-        serviceType: body.serviceType,
-        serviceName: body.serviceName.trim(),
+        serviceDate,
+        serviceType: validatedData.serviceType,
+        serviceName: validatedData.serviceName.trim(),
         supplier: supplierName,
         costBeforeTax,
         vat,
         totalCost,
         paidAmount,
         paymentStatus,
-        paymentDeadline: body.paymentDeadline ? new Date(body.paymentDeadline) : null,
-        bankAccount: body.bankAccount?.trim() || null,
-        notes: body.notes?.trim() || null,
+        paymentDeadline: validatedData.paymentDeadline ? new Date(validatedData.paymentDeadline) : null,
+        bankAccount: validatedData.bankAccount?.trim() || null,
+        notes: validatedData.notes?.trim() || null,
         userId: user.id,
         // Lock tiers default to false (from schema)
       },
