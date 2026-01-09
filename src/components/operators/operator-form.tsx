@@ -10,6 +10,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SERVICE_TYPES, SERVICE_TYPE_KEYS, DEFAULT_VAT_RATE } from '@/config/operator-config';
 import type { Supplier } from '@/types';
+import {
+  validateOperatorForm,
+  type OperatorFormErrors,
+  parseOperatorNumericInput,
+} from '@/lib/validations/operator-validation';
 
 interface Request {
   id: string;
@@ -69,6 +74,7 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<OperatorFormErrors>({});
 
   // Data for dropdowns
   const [requests, setRequests] = useState<Request[]>([]);
@@ -146,26 +152,31 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
     e.preventDefault();
     setLoading(true);
     setError('');
+    setFieldErrors({});
 
     try {
-      // Validation
-      if (!formData.requestId) {
-        setError('Vui lòng chọn Booking');
-        setLoading(false);
-        return;
-      }
-      if (!formData.serviceType) {
-        setError('Vui lòng chọn loại dịch vụ');
-        setLoading(false);
-        return;
-      }
-      if (!formData.serviceName) {
-        setError('Vui lòng nhập tên dịch vụ');
-        setLoading(false);
-        return;
-      }
-      if (!formData.supplierId && !formData.supplier) {
-        setError('Vui lòng chọn NCC hoặc nhập tên NCC');
+      // Build data for validation
+      const dataToValidate = {
+        requestId: formData.requestId,
+        serviceDate: formData.serviceDate,
+        serviceType: formData.serviceType,
+        serviceName: formData.serviceName,
+        supplierId: formData.supplierId || null,
+        supplier: formData.supplier || null,
+        costBeforeTax: parseOperatorNumericInput(formData.costBeforeTax, 0),
+        vat: formData.vat ? parseOperatorNumericInput(formData.vat, 0) : null,
+        totalCost: parseOperatorNumericInput(formData.totalCost, 0),
+        paidAmount: parseOperatorNumericInput(formData.paidAmount, 0),
+        paymentDeadline: formData.paymentDeadline || null,
+        bankAccount: formData.bankAccount || null,
+        notes: formData.notes || null,
+      };
+
+      // Client-side validation with Zod
+      const validation = validateOperatorForm(dataToValidate);
+      if (!validation.success) {
+        setFieldErrors(validation.errors || {});
+        setError('Vui lòng kiểm tra lại thông tin');
         setLoading(false);
         return;
       }
@@ -173,32 +184,19 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
       const url = isEditing ? `/api/operators/${operator.id}` : '/api/operators';
       const method = isEditing ? 'PUT' : 'POST';
 
-      const body = {
-        requestId: formData.requestId,
-        supplierId: formData.supplierId || null,
-        supplier: formData.supplier || null,
-        serviceDate: formData.serviceDate,
-        serviceType: formData.serviceType,
-        serviceName: formData.serviceName.trim(),
-        costBeforeTax: parseFloat(formData.costBeforeTax) || 0,
-        vat: formData.vat ? parseFloat(formData.vat) : null,
-        totalCost: parseFloat(formData.totalCost) || 0,
-        paidAmount: parseFloat(formData.paidAmount) || 0,
-        paymentDeadline: formData.paymentDeadline || null,
-        bankAccount: formData.bankAccount?.trim() || null,
-        notes: formData.notes?.trim() || null,
-        // Note: userId is now extracted from session on server side
-      };
-
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify(dataToValidate),
       });
 
       const data = await res.json();
 
       if (!data.success) {
+        // Handle field-level errors from API
+        if (data.errors) {
+          setFieldErrors(data.errors);
+        }
         setError(data.error || 'Có lỗi xảy ra');
         return;
       }
@@ -215,8 +213,12 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
     }
   };
 
+  // Clear field error when user starts typing
   const updateField = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    if (fieldErrors[field as keyof OperatorFormErrors]) {
+      setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
   };
 
   const formatCurrency = (value: number) => {
@@ -248,7 +250,7 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
               onValueChange={(v) => updateField('requestId', v)}
               disabled={isEditing || !!requestId}
             >
-              <SelectTrigger>
+              <SelectTrigger className={fieldErrors.requestId ? 'border-red-500' : ''}>
                 <SelectValue placeholder="Chọn Booking (F5)" />
               </SelectTrigger>
               <SelectContent>
@@ -263,6 +265,9 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
                 )}
               </SelectContent>
             </Select>
+            {fieldErrors.requestId && (
+              <p className="text-sm text-red-500">{fieldErrors.requestId}</p>
+            )}
             <p className="text-sm text-muted-foreground">
               Chỉ hiển thị Booking đã xác nhận (F5)
             </p>
@@ -284,8 +289,12 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
                 type="date"
                 value={formData.serviceDate}
                 onChange={(e) => updateField('serviceDate', e.target.value)}
+                className={fieldErrors.serviceDate ? 'border-red-500' : ''}
                 required
               />
+              {fieldErrors.serviceDate && (
+                <p className="text-sm text-red-500">{fieldErrors.serviceDate}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="serviceType">Loại dịch vụ *</Label>
@@ -293,7 +302,7 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
                 value={formData.serviceType}
                 onValueChange={(v) => updateField('serviceType', v)}
               >
-                <SelectTrigger>
+                <SelectTrigger className={fieldErrors.serviceType ? 'border-red-500' : ''}>
                   <SelectValue placeholder="Chọn loại dịch vụ" />
                 </SelectTrigger>
                 <SelectContent>
@@ -304,6 +313,9 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
                   ))}
                 </SelectContent>
               </Select>
+              {fieldErrors.serviceType && (
+                <p className="text-sm text-red-500">{fieldErrors.serviceType}</p>
+              )}
             </div>
           </div>
 
@@ -314,8 +326,12 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
               value={formData.serviceName}
               onChange={(e) => updateField('serviceName', e.target.value)}
               placeholder="VD: Khách sạn Mường Thanh - 2 đêm"
+              className={fieldErrors.serviceName ? 'border-red-500' : ''}
               required
             />
+            {fieldErrors.serviceName && (
+              <p className="text-sm text-red-500">{fieldErrors.serviceName}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -346,7 +362,11 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
                 onChange={(e) => updateField('supplier', e.target.value)}
                 placeholder="Nhập tên NCC nếu không chọn"
                 disabled={!!formData.supplierId}
+                className={fieldErrors.supplier ? 'border-red-500' : ''}
               />
+              {fieldErrors.supplier && (
+                <p className="text-sm text-red-500">{fieldErrors.supplier}</p>
+              )}
             </div>
           </div>
         </CardContent>
@@ -367,9 +387,13 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
                 value={formData.costBeforeTax}
                 onChange={(e) => handleCostChange(e.target.value)}
                 placeholder="1000000"
+                className={fieldErrors.costBeforeTax ? 'border-red-500' : ''}
                 required
               />
-              {formData.costBeforeTax && (
+              {fieldErrors.costBeforeTax && (
+                <p className="text-sm text-red-500">{fieldErrors.costBeforeTax}</p>
+              )}
+              {formData.costBeforeTax && !fieldErrors.costBeforeTax && (
                 <p className="text-sm text-muted-foreground">
                   {formatCurrency(parseFloat(formData.costBeforeTax) || 0)} ₫
                 </p>
@@ -397,9 +421,12 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
                 type="number"
                 value={formData.totalCost}
                 onChange={(e) => updateField('totalCost', e.target.value)}
-                className="bg-gray-100 font-bold"
+                className={`bg-gray-100 font-bold ${fieldErrors.totalCost ? 'border-red-500' : ''}`}
               />
-              {formData.totalCost && (
+              {fieldErrors.totalCost && (
+                <p className="text-sm text-red-500">{fieldErrors.totalCost}</p>
+              )}
+              {formData.totalCost && !fieldErrors.totalCost && (
                 <p className="text-sm font-medium text-primary">
                   {formatCurrency(parseFloat(formData.totalCost) || 0)} ₫
                 </p>
@@ -423,7 +450,11 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
                 type="date"
                 value={formData.paymentDeadline}
                 onChange={(e) => updateField('paymentDeadline', e.target.value)}
+                className={fieldErrors.paymentDeadline ? 'border-red-500' : ''}
               />
+              {fieldErrors.paymentDeadline && (
+                <p className="text-sm text-red-500">{fieldErrors.paymentDeadline}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="paidAmount">Đã thanh toán</Label>
@@ -435,8 +466,12 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
                 value={formData.paidAmount}
                 onChange={(e) => updateField('paidAmount', e.target.value)}
                 placeholder="0"
+                className={fieldErrors.paidAmount ? 'border-red-500' : ''}
               />
-              {formData.paidAmount && parseFloat(formData.paidAmount) > 0 && (
+              {fieldErrors.paidAmount && (
+                <p className="text-sm text-red-500">{fieldErrors.paidAmount}</p>
+              )}
+              {formData.paidAmount && parseFloat(formData.paidAmount) > 0 && !fieldErrors.paidAmount && (
                 <p className="text-sm text-green-600">
                   {formatCurrency(parseFloat(formData.paidAmount))} ₫
                 </p>
