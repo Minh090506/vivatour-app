@@ -2,8 +2,8 @@
 
 MyVivaTour Platform - Comprehensive directory structure and implementation details.
 
-**Last Updated**: 2026-01-09 (Phase 07.1 - Dashboard Report APIs Complete)
-**Total Files**: 100+ source files | **Pages**: 18 | **Components**: 65+ | **API Routes**: 37+ | **Database Models**: 18
+**Last Updated**: 2026-01-09 (Phase 07.2 - Dashboard UI Complete)
+**Total Files**: 107+ source files | **Pages**: 19 | **Components**: 71+ | **API Routes**: 37+ | **Database Models**: 18
 
 ---
 
@@ -34,6 +34,8 @@ src/
 │   │   ├── revenue/                  # Revenue module (Phase 06) - single page
 │   │   │   ├── page.tsx              # List + create form
 │   │   │   └── [id]/page.tsx         # Revenue detail
+│   │   ├── reports/                  # Reports & Dashboard (Phase 07.2) - 1 page
+│   │   │   └── page.tsx              # Dashboard with charts + KPI cards
 │   │   ├── suppliers/                # Supplier CRUD pages (Phase 01)
 │   │   │   ├── page.tsx              # Supplier list
 │   │   │   ├── create/page.tsx       # Create supplier
@@ -90,6 +92,12 @@ src/
 │   │   ├── revenue-form.tsx          # Create/edit revenue form
 │   │   ├── revenue-table.tsx         # Revenue list table
 │   │   └── revenue-summary-card.tsx  # Revenue summary statistics
+│   ├── reports/                      # Reports & Dashboard components (Phase 07.2)
+│   │   ├── date-range-selector.tsx   # Date range dropdown (5 options)
+│   │   ├── kpi-cards.tsx             # 5 KPI metric cards with trends (memoized)
+│   │   ├── revenue-trend-chart.tsx   # Composed chart: Revenue/Cost/Profit (memoized)
+│   │   ├── cost-breakdown-chart.tsx  # Pie + payment status bars (memoized)
+│   │   └── funnel-chart.tsx          # Sales funnel horizontal bar chart (memoized)
 │   ├── suppliers/                    # Supplier module components (Phase 01)
 │   │   ├── supplier-form.tsx         # Create/edit supplier form
 │   │   ├── supplier-selector.tsx     # Supplier selection component
@@ -124,6 +132,7 @@ src/
 │       └── report-validation.ts      # Report query schema with date range validation (Phase 07.1)
 ├── hooks/
 │   ├── use-permission.ts             # can(), canAll(), canAny(), role shortcuts
+│   ├── use-reports.ts                # Data fetching hook for 4 report APIs (Phase 07.2)
 │   └── index.ts                      # Barrel export
 ├── stores/                           # Zustand state management
 ├── types/index.ts                    # 40+ TypeScript definitions
@@ -739,6 +748,184 @@ Roles with `revenue:view`:
 
 ---
 
+## Phase 07.2: Dashboard UI Components
+
+### Overview
+
+Phase 07.2 implements the complete dashboard UI for Phase 07.1 APIs with memoized chart components, responsive layouts, and real-time data fetching. The `/reports` page consolidates 4 API endpoints into a cohesive dashboard with KPI cards, trend visualization, cost analysis, and sales funnel metrics.
+
+### Route & Pages
+
+**src/app/(dashboard)/reports/page.tsx**
+- New `/reports` route (30 lines)
+- Permission gating: ADMIN/ACCOUNTANT only
+- State management: Date range via useState
+- Data fetching: useReports hook with 4 parallel APIs
+- Error handling: ErrorFallback component with retry
+- Responsive layout: Grid with space-y-6 vertical spacing
+- Features:
+  - Loading indicator ("Đang tải...")
+  - Unauthorized access message
+  - Data error with retry button
+  - Header with DateRangeSelector on right
+  - KPI cards (responsive: 2 col mobile, 5 col desktop)
+  - Revenue trend chart (400px height)
+  - 2-column grid: Cost breakdown + Funnel charts
+
+### Components (5 new)
+
+**src/components/reports/date-range-selector.tsx** (43 lines)
+- Select dropdown (w-48) with 5 options
+- Vietnamese labels: "Tháng này", "Tháng trước", etc.
+- Types: `DateRangeOption` (thisMonth, lastMonth, last3Months, last6Months, thisYear)
+- Props: `value: DateRangeOption`, `onChange: (value) => void`
+- Non-memoized (simple form control)
+
+**src/components/reports/kpi-cards.tsx** (82 lines, memoized)
+- 5 metric cards with trend badges
+- Metrics:
+  1. Tổng Booking (Total Bookings) - number
+  2. Tổng Doanh thu (Total Revenue) - currency (₫)
+  3. Tổng Lợi nhuận (Total Profit) - currency (₫)
+  4. Yêu cầu đang xử lý (Active Requests) - number
+  5. Tỷ lệ chuyển đổi (Conversion Rate) - percentage
+- Responsive grid: `grid-cols-2 md:grid-cols-5 gap-4`
+- Trend display: Green badge (positive), Red badge (negative)
+- Loading: 5 skeleton loaders
+- Memoization: `memo()` prevents parent re-renders
+
+**src/components/reports/revenue-trend-chart.tsx** (162 lines, memoized)
+- Composed chart: Bar (profit) + 2 Lines (revenue, cost)
+- Metrics:
+  - Bar: Lợi nhuận (Profit) - Green (#22c55e)
+  - Line: Doanh thu (Revenue) - Blue (#3b82f6)
+  - Line: Chi phí (Cost) - Red (#ef4444)
+- Chart container: h-[400px] w-full
+- Period format: "Th.1/26" (Th.M/YY)
+- Y-axis compact: 1M, 500K, 100 formatting
+- Custom tooltip with currency values
+- Memoization: `memo()` + `useMemo()` for chart data
+
+**src/components/reports/cost-breakdown-chart.tsx** (168 lines, memoized)
+- Dual visualization:
+  1. Pie chart by service type (250px height)
+  2. Horizontal progress bars by payment status
+- Pie colors: 6-color palette (blue, green, amber, red, purple, cyan)
+- Payment status bars:
+  - Đã thanh toán (Paid) - Green (#22c55e)
+  - Thanh toán một phần (Partial) - Amber (#f59e0b)
+  - Chưa thanh toán (Unpaid) - Red (#ef4444)
+- Layout: `grid md:grid-cols-2 gap-6`
+- Service type labels in Vietnamese
+- Custom tooltip with currency formatting
+- Memoization: `memo()` + `useMemo()` for data transformation
+
+**src/components/reports/funnel-chart.tsx** (137 lines, memoized)
+- Horizontal bar chart with stage breakdown
+- Stages (in order): LEAD, QUOTE, FOLLOWUP, OUTCOME
+- Colors: Blue → Indigo → Purple → Green gradient
+- Features:
+  - 300px height responsive container
+  - Percentage and count labels
+  - Conversion rate badge at top-right
+  - Stage names translated to Vietnamese
+  - Count labels on bar right edge
+- Custom tooltip: Stage name, count, percentage
+- Memoization: `memo()` + `useMemo()`
+
+### Data Fetching Hook
+
+**src/hooks/use-reports.ts** (95 lines)
+- Fetches all 4 report APIs in parallel
+- Features:
+  - AbortController for race condition prevention
+  - Error handling with Vietnamese fallback messages
+  - Automatic refetch on date range change
+  - Manual refetch capability via `refetch()`
+  - Loading state across all 4 endpoints
+- Implementation:
+  - `useState` for state management
+  - `useRef(AbortController)` for request cancellation
+  - `useCallback` for fetchAll function
+  - `useEffect` for lifecycle management
+- Return type:
+  ```typescript
+  {
+    dashboard: DashboardResponse | null
+    trend: RevenueTrendResponse | null
+    costBreakdown: CostBreakdownResponse | null
+    funnel: FunnelResponse | null
+    loading: boolean
+    error: string | null
+    refetch: () => void
+  }
+  ```
+
+### Performance Optimizations
+
+**Component Memoization**:
+- All chart components use `React.memo()` to prevent unnecessary re-renders
+- Parent page re-renders on state change don't cascade to charts
+
+**Data Memoization**:
+- `useMemo()` in each chart for data transformation
+- Only recalculates when data prop changes
+
+**Parallel API Calls**:
+- All 4 endpoints fetched concurrently via `Promise.all()`
+- Reduces total fetch time from sequential
+
+**Abort Signal Handling**:
+- AbortController prevents memory leaks
+- Cancels previous requests on date range change
+- Cleanup on component unmount
+
+### Responsive Design
+
+**Mobile (< 768px)**:
+- KPI cards: 2 columns
+- Charts: Full width, stacked vertically
+- All containers: 100% width
+
+**Desktop (>= 768px)**:
+- KPI cards: 5 columns
+- Cost breakdown: 2-column grid (pie + bars)
+- Chart cards: Full width in rows
+
+### Error Handling
+
+1. **Unauthorized Access**: Red error card "Không có quyền truy cập"
+2. **Permission Denied**: "Bạn cần quyền Admin hoặc Kế toán"
+3. **API Error**: Error message + "Tải lại" retry button
+4. **No Data**: "Không có dữ liệu" center text per chart
+5. **Loading**: Skeleton loaders on initial load
+
+### Vietnamese UI Text
+
+All labels fully localized:
+- Page: "Báo cáo Tổng quan", "Phân tích hiệu suất kinh doanh"
+- KPI labels: "Tổng Booking", "Tổng Doanh thu", "Tổng Lợi nhuận", etc.
+- Date ranges: "Tháng này", "Tháng trước", "3 tháng gần đây", etc.
+- Chart titles: "Xu hướng Doanh thu", "Phân tích Chi phí", "Phễu Chuyển đổi"
+- Payment status: "Đã thanh toán", "Thanh toán một phần", "Chưa thanh toán"
+- Service types: "Khách sạn", "Vé máy bay", "Vận chuyển", "Tour", "Visa", "Bảo hiểm"
+
+### Files Summary
+
+| File | Lines | Type | Status |
+|------|-------|------|--------|
+| `src/app/(dashboard)/reports/page.tsx` | 130 | Page | Complete |
+| `src/components/reports/date-range-selector.tsx` | 43 | Component | Complete |
+| `src/components/reports/kpi-cards.tsx` | 82 | Component (memoized) | Complete |
+| `src/components/reports/revenue-trend-chart.tsx` | 162 | Component (memoized) | Complete |
+| `src/components/reports/cost-breakdown-chart.tsx` | 168 | Component (memoized) | Complete |
+| `src/components/reports/funnel-chart.tsx` | 137 | Component (memoized) | Complete |
+| `src/hooks/use-reports.ts` | 95 | Hook | Complete |
+
+**Total**: ~817 lines of production code
+
+---
+
 ## Environment Variables
 
 ```env
@@ -774,7 +961,7 @@ GOOGLE_SHEETS_API_KEY="xxx"
 | 05 | Revenue Module - Pages + Multi-currency | Complete | 2026-01-07+ |
 | 06 | Request/Operator/Revenue Components & Forms | 75% | 2026-01-08 |
 | **07.1** | **Dashboard Report APIs (KPI, Trend, Cost, Funnel)** | **Complete** | **2026-01-09** |
-| 07.2+ | Report Components & Dashboard UI | Planned | TBD |
-| 08 | AI Assistant & Knowledge Base | Planned | TBD |
-| 09 | Production Hardening & Deployment | Planned | TBD |
+| **07.2** | **Dashboard UI (Reports Page + 5 Chart Components + Data Hook)** | **Complete** | **2026-01-09** |
+| 08+ | AI Assistant & Knowledge Base | Planned | TBD |
+| 09+ | Production Hardening & Deployment | Planned | TBD |
 
