@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { createOperatorHistory, diffObjects } from '@/lib/operator-history';
+import {
+  updateOperatorApiSchema,
+  extractOperatorZodErrors,
+} from '@/lib/validations/operator-validation';
 
 // GET /api/operators/[id]
 export async function GET(
@@ -57,6 +61,18 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
+    // Validate with Zod schema
+    const validation = updateOperatorApiSchema.safeParse(body);
+    if (!validation.success) {
+      const errors = extractOperatorZodErrors(validation.error);
+      return NextResponse.json(
+        { success: false, error: 'Dữ liệu không hợp lệ', errors },
+        { status: 400 }
+      );
+    }
+
+    const validatedData = validation.data;
+
     // Get existing operator
     const existing = await prisma.operator.findUnique({ where: { id } });
 
@@ -75,40 +91,35 @@ export async function PUT(
       );
     }
 
-    // Prepare update data - only update fields that are provided
+    // Prepare update data from validated input
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: Record<string, any> = {};
 
-    if (body.supplierId !== undefined) updateData.supplierId = body.supplierId || null;
-    if (body.serviceDate !== undefined) updateData.serviceDate = new Date(body.serviceDate);
-    if (body.serviceType !== undefined) updateData.serviceType = body.serviceType;
-    if (body.serviceName !== undefined) updateData.serviceName = body.serviceName.trim();
-    if (body.supplier !== undefined) updateData.supplier = body.supplier?.trim() || null;
-    if (body.costBeforeTax !== undefined) updateData.costBeforeTax = Number(body.costBeforeTax);
-    if (body.vat !== undefined) updateData.vat = body.vat !== null ? Number(body.vat) : null;
-    if (body.totalCost !== undefined) updateData.totalCost = Number(body.totalCost);
-    if (body.paymentDeadline !== undefined) {
-      updateData.paymentDeadline = body.paymentDeadline ? new Date(body.paymentDeadline) : null;
+    if (validatedData.supplierId !== undefined) updateData.supplierId = validatedData.supplierId || null;
+    if (validatedData.serviceDate !== undefined) updateData.serviceDate = new Date(validatedData.serviceDate);
+    if (validatedData.serviceType !== undefined) updateData.serviceType = validatedData.serviceType;
+    if (validatedData.serviceName !== undefined) updateData.serviceName = validatedData.serviceName.trim();
+    if (validatedData.supplier !== undefined) updateData.supplier = validatedData.supplier?.trim() || null;
+    if (validatedData.costBeforeTax !== undefined) updateData.costBeforeTax = validatedData.costBeforeTax;
+    if (validatedData.vat !== undefined) updateData.vat = validatedData.vat ?? null;
+    if (validatedData.totalCost !== undefined) updateData.totalCost = validatedData.totalCost;
+    if (validatedData.paymentDeadline !== undefined) {
+      updateData.paymentDeadline = validatedData.paymentDeadline ? new Date(validatedData.paymentDeadline) : null;
     }
-    if (body.bankAccount !== undefined) updateData.bankAccount = body.bankAccount?.trim() || null;
-    if (body.notes !== undefined) updateData.notes = body.notes?.trim() || null;
+    if (validatedData.bankAccount !== undefined) updateData.bankAccount = validatedData.bankAccount?.trim() || null;
+    if (validatedData.notes !== undefined) updateData.notes = validatedData.notes?.trim() || null;
 
-    // Handle paidAmount with validation
-    if (body.paidAmount !== undefined) {
-      const paidAmount = Number(body.paidAmount) || 0;
-      const totalCost = body.totalCost !== undefined
-        ? Number(body.totalCost)
+    // Handle paidAmount with cross-field validation
+    if (validatedData.paidAmount !== undefined) {
+      const paidAmount = validatedData.paidAmount;
+      const totalCost = validatedData.totalCost !== undefined
+        ? validatedData.totalCost
         : Number(existing.totalCost);
 
-      if (paidAmount < 0) {
-        return NextResponse.json(
-          { success: false, error: 'Số tiền thanh toán không được âm' },
-          { status: 400 }
-        );
-      }
+      // Additional cross-field validation
       if (paidAmount > totalCost) {
         return NextResponse.json(
-          { success: false, error: 'Số tiền thanh toán không được lớn hơn tổng chi phí' },
+          { success: false, error: 'Số tiền thanh toán không được lớn hơn tổng chi phí', errors: { paidAmount: 'Vượt quá tổng chi phí' } },
           { status: 400 }
         );
       }
@@ -145,7 +156,7 @@ export async function PUT(
         operatorId: id,
         action: 'UPDATE',
         changes,
-        userId: body.userId || 'system',
+        userId: validatedData.userId || 'system',
       });
     }
 
