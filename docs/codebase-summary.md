@@ -2,8 +2,8 @@
 
 MyVivaTour Platform - Comprehensive directory structure and implementation details.
 
-**Last Updated**: 2026-01-08 (Phase 01 Foundation - ID Generation & Lock System Complete)
-**Total Files**: 100+ source files | **Pages**: 18 | **Components**: 65+ | **API Routes**: 33+ | **Database Models**: 18
+**Last Updated**: 2026-01-09 (Phase 07.1 - Dashboard Report APIs Complete)
+**Total Files**: 100+ source files | **Pages**: 18 | **Components**: 65+ | **API Routes**: 37+ | **Database Models**: 18
 
 ---
 
@@ -41,14 +41,18 @@ src/
 │   │   │   └── reports/page.tsx      # Supplier reports
 │   │   ├── layout.tsx                # Dashboard layout (Header + AIAssistant)
 │   │   └── page.tsx                  # Dashboard home with widgets
-│   ├── api/                          # REST API routes (33 endpoints)
+│   ├── api/                          # REST API routes (37 endpoints)
 │   │   ├── auth/[...nextauth]/       # NextAuth.js v5 handlers
 │   │   ├── requests/                 # Request CRUD (2 endpoints)
 │   │   ├── operators/                # Operator CRUD (8 endpoints)
 │   │   ├── suppliers/                # Supplier CRUD (5 endpoints)
 │   │   ├── supplier-transactions/    # Transaction CRUD (5 endpoints)
 │   │   ├── revenue/                  # Revenue CRUD (4 endpoints)
-│   │   ├── reports/                  # Reports (3 endpoints)
+│   │   ├── reports/                  # Reports & Analytics (7 endpoints - Phase 07.1)
+│   │   │   ├── dashboard/route.ts    # Dashboard KPIs (Phase 07.1)
+│   │   │   ├── revenue-trend/route.ts# Revenue trend over time (Phase 07.1)
+│   │   │   ├── cost-breakdown/route.ts# Cost analysis by service (Phase 07.1)
+│   │   │   └── funnel/route.ts       # Sales funnel analysis (Phase 07.1)
 │   │   ├── config/                   # Config endpoints (8 endpoints)
 │   │   ├── sync/sheets/              # Google Sheets sync
 │   │   └── users/                    # User management
@@ -111,11 +115,13 @@ src/
 │   ├── id-utils.ts                   # ID generation (RequestID, ServiceID, RevenueID) - Phase 01 Foundation
 │   ├── lock-utils.ts                 # Lock tier utilities (3-tier lock: KT/Admin/Final) - Phase 01 Foundation
 │   ├── revenue-history.ts            # Revenue audit trail + history retrieval with user names (Phase 2b)
+│   ├── report-utils.ts               # Date range, KPI calculation, dashboard response types (Phase 07.1)
 │   ├── logger.ts                     # Structured logging
 │   ├── utils.ts                      # cn(), formatCurrency(), formatDate()
 │   └── validations/                  # Zod schemas
 │       ├── seller.ts                 # Seller schema validation
-│       └── config.ts                 # Config validation schemas
+│       ├── config.ts                 # Config validation schemas
+│       └── report-validation.ts      # Report query schema with date range validation (Phase 07.1)
 ├── hooks/
 │   ├── use-permission.ts             # can(), canAll(), canAny(), role shortcuts
 │   └── index.ts                      # Barrel export
@@ -625,6 +631,114 @@ interface LockState {
 
 ---
 
+## Phase 07.1: Dashboard Report APIs
+
+### Overview
+
+Phase 07.1 implements four core reporting APIs for business analytics dashboards:
+- **Dashboard KPI Cards**: Summary metrics (bookings, revenue, profit, active requests, conversion rate)
+- **Revenue Trend Analysis**: Monthly revenue/cost/profit over time
+- **Cost Breakdown**: Cost analysis by service type + payment status
+- **Sales Funnel**: Stage-wise request distribution + conversion rates
+
+All endpoints require `revenue:view` permission and support fixed date ranges (thisMonth, lastMonth, last3Months, last6Months, thisYear).
+
+### Validation & Utilities
+
+**src/lib/validations/report-validation.ts**
+- `reportQuerySchema`: Zod schema for date range validation
+- `DATE_RANGE_OPTIONS`: Const array of valid range options
+- `extractReportZodErrors()`: Helper to extract Zod error messages
+
+**src/lib/report-utils.ts**
+- Date range functions:
+  - `getDateRange(range)`: Returns start/end dates for range option
+  - `getComparisonRange(range)`: Previous period calculation
+  - `formatPeriodKey(date)`: YYYY-MM format for grouping
+  - `calcChangePercent(current, previous)`: % change calculation
+- Response types:
+  - `KpiCards`: Bookings, revenue, profit, active requests, conversion rate
+  - `ComparisonMetric`: Current value, previous value, % change
+  - `DashboardResponse`: KPI + comparison + date range
+  - `TrendDataPoint`: Period-wise revenue, cost, profit
+  - `RevenueTrendResponse`: Trend data + summary + date range
+  - `CostByType`: Service type breakdown with percentage
+  - `CostBreakdownResponse`: By-type costs + payment status
+  - `FunnelStage`: Stage name, count, percentage
+  - `FunnelResponse`: Stages array + conversion rate
+
+### API Endpoints (4 new)
+
+**GET /api/reports/dashboard**
+- Query: `?range=thisMonth` (default)
+- Response: KPI cards + comparison metrics
+- Data sources:
+  - Bookings: Request count with bookingCode (current + previous period)
+  - Revenue: Sum of Revenue.amountVND (current + previous period)
+  - Costs: Sum of Operator.totalCost (non-archived, current period)
+  - Active Requests: Count where stage in [LEAD, QUOTE]
+  - Leads: Total requests created in range (for conversion rate)
+- Calculations:
+  - Profit = totalRevenue - totalCost
+  - ConversionRate = (bookings / leads) * 100%
+  - ChangePercent = ((current - previous) / previous) * 100%
+
+**GET /api/reports/revenue-trend**
+- Query: `?range=thisMonth` (default)
+- Response: Monthly data points + summary statistics
+- Data sources:
+  - Revenues: Grouped by month (YYYY-MM key)
+  - Operators: Grouped by month (non-archived)
+- Summary:
+  - Total revenue, total cost, total profit, average monthly
+- Use case: Line/area chart visualization
+
+**GET /api/reports/cost-breakdown**
+- Query: `?range=thisMonth` (default)
+- Response: Costs by service type + payment status
+- Data sources:
+  - Operators: Grouped by serviceType (non-archived)
+  - Payment status aggregation: PAID, PARTIAL, UNPAID
+- Format: Array sorted by amount descending
+- Use case: Pie/bar chart visualization
+
+**GET /api/reports/funnel**
+- Query: `?range=thisMonth` (default)
+- Response: Stage distribution + overall conversion rate
+- Data sources:
+  - Requests: Grouped by stage (LEAD, QUOTE, FOLLOWUP, OUTCOME)
+  - Converted: Count with bookingCode
+- Stage order: LEAD → QUOTE → FOLLOWUP → OUTCOME
+- Conversion rate: (bookings / total requests) * 100%
+- Use case: Funnel/waterfall chart visualization
+
+### Error Handling
+
+All endpoints return consistent error response:
+```typescript
+{ success: false, error: "Vietnamese error message" }
+```
+
+HTTP status codes:
+- 401: Unauthorized (not logged in)
+- 403: Forbidden (missing revenue:view permission)
+- 400: Bad Request (invalid date range)
+- 500: Server error (with message)
+
+### Authentication & Authorization
+
+All endpoints check:
+1. Session exists: `await auth()`
+2. User has role
+3. Role has `revenue:view` permission via `hasPermission(role, 'revenue:view')`
+
+Roles with `revenue:view`:
+- ADMIN
+- ACCOUNTANT
+- SELLER (depending on implementation)
+
+---
+
 ## Environment Variables
 
 ```env
@@ -659,7 +773,8 @@ GOOGLE_SHEETS_API_KEY="xxx"
 | 05 | Operator Module - Pages + Approvals + Locking | Complete | 2026-01-07+ |
 | 05 | Revenue Module - Pages + Multi-currency | Complete | 2026-01-07+ |
 | 06 | Request/Operator/Revenue Components & Forms | 75% | 2026-01-08 |
-| 07 | Operator/Revenue Reports & Analytics | Planned | TBD |
+| **07.1** | **Dashboard Report APIs (KPI, Trend, Cost, Funnel)** | **Complete** | **2026-01-09** |
+| 07.2+ | Report Components & Dashboard UI | Planned | TBD |
 | 08 | AI Assistant & Knowledge Base | Planned | TBD |
 | 09 | Production Hardening & Deployment | Planned | TBD |
 
