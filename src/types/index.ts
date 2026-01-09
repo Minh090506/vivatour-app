@@ -150,6 +150,8 @@ export interface Operator {
   paymentDeadline: Date | null;
   paymentStatus: PaymentStatus;
   paymentDate: Date | null;
+  paidAmount: number;  // V - Số tiền đã thanh toán
+  // debt = totalCost - paidAmount (computed on read)
   bankAccount: string | null;
   // 3-tier lock system
   lockKT: boolean;
@@ -183,8 +185,14 @@ export interface OperatorFormData {
   vat?: number;
   totalCost: number;
   paymentDeadline?: string;
+  paidAmount?: number;  // V - Số tiền đã thanh toán
   bankAccount?: string;
   notes?: string;
+}
+
+// Operator with computed debt
+export interface OperatorWithDebt extends Operator {
+  debt: number;  // W = totalCost - paidAmount
 }
 
 // Revenue types
@@ -515,6 +523,9 @@ export interface ApprovalQueueItem {
   serviceName: string;
   supplierName: string | null;
   totalCost: number;
+  paidAmount: number;
+  debt: number;  // W = totalCost - paidAmount
+  paymentStatus: PaymentStatus;
   paymentDeadline: Date | null;
   daysOverdue: number;
   isLocked: boolean;

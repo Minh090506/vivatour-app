@@ -144,6 +144,8 @@ model Operator {
   paymentDeadline DateTime?
   paymentStatus   String    @default("PENDING")  // PENDING, PAID, PARTIAL
   paymentDate     DateTime?
+  paidAmount      Decimal   @default(0) @db.Decimal(15, 0)  // V - Số tiền đã thanh toán
+  // debt = totalCost - paidAmount (computed, not stored)
   bankAccount     String?
 
   // Lock (for accounting) - Legacy single lock (keep for backward compat)

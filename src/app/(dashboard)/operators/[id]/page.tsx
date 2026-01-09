@@ -44,8 +44,8 @@ interface OperatorDetail {
   vat: number | null;
   totalCost: number;
   paymentStatus: string;
-  paidAmount: number | null;
-  paidAt: Date | null;
+  paidAmount: number;
+  debt: number;  // Computed: totalCost - paidAmount
   paymentDeadline: Date | string | null;
   paymentDate: Date | null;
   bankAccount: string | null;
@@ -372,7 +372,7 @@ export default function OperatorDetailPage({ params }: { params: Promise<PagePar
 
               <hr />
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-4 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Trạng thái TT</p>
                   <Badge
@@ -388,8 +388,14 @@ export default function OperatorDetailPage({ params }: { params: Promise<PagePar
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Đã thanh toán</p>
-                  <p className="font-medium mt-1">
-                    {operator.paidAmount ? `${formatCurrency(operator.paidAmount)} ₫` : '-'}
+                  <p className="font-medium mt-1 text-green-600">
+                    {formatCurrency(operator.paidAmount || 0)} ₫
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Còn nợ</p>
+                  <p className={`font-bold mt-1 ${operator.debt > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                    {formatCurrency(operator.debt || 0)} ₫
                   </p>
                 </div>
                 <div>

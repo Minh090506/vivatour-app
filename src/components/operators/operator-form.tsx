@@ -30,6 +30,7 @@ interface OperatorData {
   costBeforeTax: number;
   vat?: number | null;
   totalCost: number;
+  paidAmount?: number;
   paymentDeadline?: Date | string | null;
   bankAccount?: string | null;
   notes?: string | null;
@@ -61,6 +62,7 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
     paymentDeadline: operator?.paymentDeadline
       ? new Date(operator.paymentDeadline).toISOString().split('T')[0]
       : '',
+    paidAmount: operator?.paidAmount?.toString() || '0',
     bankAccount: operator?.bankAccount || '',
     notes: operator?.notes || '',
   });
@@ -181,6 +183,7 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
         costBeforeTax: parseFloat(formData.costBeforeTax) || 0,
         vat: formData.vat ? parseFloat(formData.vat) : null,
         totalCost: parseFloat(formData.totalCost) || 0,
+        paidAmount: parseFloat(formData.paidAmount) || 0,
         paymentDeadline: formData.paymentDeadline || null,
         bankAccount: formData.bankAccount?.trim() || null,
         notes: formData.notes?.trim() || null,
@@ -412,7 +415,7 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
           <CardTitle>Thanh toán</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="paymentDeadline">Hạn thanh toán</Label>
               <Input
@@ -423,14 +426,45 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="bankAccount">Tài khoản ngân hàng</Label>
+              <Label htmlFor="paidAmount">Đã thanh toán</Label>
               <Input
-                id="bankAccount"
-                value={formData.bankAccount}
-                onChange={(e) => updateField('bankAccount', e.target.value)}
-                placeholder="0123456789 - Vietcombank"
+                id="paidAmount"
+                type="number"
+                min="0"
+                max={formData.totalCost}
+                value={formData.paidAmount}
+                onChange={(e) => updateField('paidAmount', e.target.value)}
+                placeholder="0"
               />
+              {formData.paidAmount && parseFloat(formData.paidAmount) > 0 && (
+                <p className="text-sm text-green-600">
+                  {formatCurrency(parseFloat(formData.paidAmount))} ₫
+                </p>
+              )}
             </div>
+            <div className="space-y-2">
+              <Label>Còn nợ</Label>
+              <div className="h-10 px-3 py-2 rounded-md border bg-gray-100 flex items-center">
+                <span className={`font-medium ${
+                  (parseFloat(formData.totalCost) || 0) - (parseFloat(formData.paidAmount) || 0) > 0
+                    ? 'text-red-600'
+                    : 'text-green-600'
+                }`}>
+                  {formatCurrency(
+                    Math.max(0, (parseFloat(formData.totalCost) || 0) - (parseFloat(formData.paidAmount) || 0))
+                  )} ₫
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="bankAccount">Tài khoản ngân hàng</Label>
+            <Input
+              id="bankAccount"
+              value={formData.bankAccount}
+              onChange={(e) => updateField('bankAccount', e.target.value)}
+              placeholder="0123456789 - Vietcombank"
+            />
           </div>
 
           <div className="space-y-2">

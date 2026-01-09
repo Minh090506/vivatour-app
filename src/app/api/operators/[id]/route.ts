@@ -29,7 +29,15 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ success: true, data: operator });
+    // Compute debt = totalCost - paidAmount
+    const totalCost = Number(operator.totalCost) || 0;
+    const paidAmount = Number(operator.paidAmount) || 0;
+    const debt = totalCost - paidAmount;
+
+    return NextResponse.json({
+      success: true,
+      data: { ...operator, debt }
+    });
   } catch (error) {
     console.error('Error fetching operator:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
@@ -84,6 +92,37 @@ export async function PUT(
     }
     if (body.bankAccount !== undefined) updateData.bankAccount = body.bankAccount?.trim() || null;
     if (body.notes !== undefined) updateData.notes = body.notes?.trim() || null;
+
+    // Handle paidAmount with validation
+    if (body.paidAmount !== undefined) {
+      const paidAmount = Number(body.paidAmount) || 0;
+      const totalCost = body.totalCost !== undefined
+        ? Number(body.totalCost)
+        : Number(existing.totalCost);
+
+      if (paidAmount < 0) {
+        return NextResponse.json(
+          { success: false, error: 'Số tiền thanh toán không được âm' },
+          { status: 400 }
+        );
+      }
+      if (paidAmount > totalCost) {
+        return NextResponse.json(
+          { success: false, error: 'Số tiền thanh toán không được lớn hơn tổng chi phí' },
+          { status: 400 }
+        );
+      }
+      updateData.paidAmount = paidAmount;
+
+      // Auto-update paymentStatus based on paidAmount
+      if (paidAmount === 0) {
+        updateData.paymentStatus = 'PENDING';
+      } else if (paidAmount >= totalCost) {
+        updateData.paymentStatus = 'PAID';
+      } else {
+        updateData.paymentStatus = 'PARTIAL';
+      }
+    }
 
     // Update operator
     const operator = await prisma.operator.update({

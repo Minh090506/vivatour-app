@@ -63,9 +63,15 @@ export async function GET(request: NextRequest) {
       prisma.operator.count({ where }),
     ]);
 
+    // Add computed debt for each operator
+    const operatorsWithDebt = operators.map((op) => ({
+      ...op,
+      debt: Number(op.totalCost) - Number(op.paidAmount),
+    }));
+
     return NextResponse.json({
       success: true,
-      data: operators,
+      data: operatorsWithDebt,
       total,
       hasMore: offset + operators.length < total,
     });
@@ -156,6 +162,29 @@ export async function POST(request: NextRequest) {
     const vat = body.vat !== undefined && body.vat !== null ? Number(body.vat) : null;
     const totalCost = Number(body.totalCost) || costBeforeTax + (vat || 0);
 
+    // Validate paidAmount
+    const paidAmount = Number(body.paidAmount) || 0;
+    if (paidAmount < 0) {
+      return NextResponse.json(
+        { success: false, error: 'Số tiền thanh toán không được âm' },
+        { status: 400 }
+      );
+    }
+    if (paidAmount > totalCost) {
+      return NextResponse.json(
+        { success: false, error: 'Số tiền thanh toán không được lớn hơn tổng chi phí' },
+        { status: 400 }
+      );
+    }
+
+    // Determine payment status based on paidAmount
+    let paymentStatus = 'PENDING';
+    if (paidAmount > 0 && paidAmount < totalCost) {
+      paymentStatus = 'PARTIAL';
+    } else if (paidAmount >= totalCost) {
+      paymentStatus = 'PAID';
+    }
+
     // Create operator with serviceId and lock fields initialized
     const operator = await prisma.operator.create({
       data: {
@@ -169,6 +198,8 @@ export async function POST(request: NextRequest) {
         costBeforeTax,
         vat,
         totalCost,
+        paidAmount,
+        paymentStatus,
         paymentDeadline: body.paymentDeadline ? new Date(body.paymentDeadline) : null,
         bankAccount: body.bankAccount?.trim() || null,
         notes: body.notes?.trim() || null,

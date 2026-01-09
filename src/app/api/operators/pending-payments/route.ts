@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
       ],
     });
 
-    // Calculate overdue days for each
+    // Calculate overdue days and debt for each
     const data = operators.map((op) => {
       let daysOverdue = 0;
       if (op.paymentDeadline) {
@@ -58,8 +58,13 @@ export async function GET(request: NextRequest) {
         deadline.setHours(0, 0, 0, 0);
         daysOverdue = Math.floor((today.getTime() - deadline.getTime()) / (24 * 60 * 60 * 1000));
       }
+      const totalCost = Number(op.totalCost) || 0;
+      const paidAmount = Number(op.paidAmount) || 0;
+      const debt = totalCost - paidAmount;
       return {
         ...op,
+        paidAmount,
+        debt,
         daysOverdue,
         requestCode: op.request?.code,
         customerName: op.request?.customerName,
@@ -67,14 +72,19 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Summary
+    // Summary with debt tracking
     const summary = {
       total: data.length,
       totalAmount: data.reduce((sum, op) => sum + Number(op.totalCost), 0),
+      totalDebt: data.reduce((sum, op) => sum + op.debt, 0),
+      totalPaid: data.reduce((sum, op) => sum + op.paidAmount, 0),
       overdue: data.filter((op) => op.daysOverdue > 0).length,
       overdueAmount: data
         .filter((op) => op.daysOverdue > 0)
         .reduce((sum, op) => sum + Number(op.totalCost), 0),
+      overdueDebt: data
+        .filter((op) => op.daysOverdue > 0)
+        .reduce((sum, op) => sum + op.debt, 0),
       dueToday: data.filter((op) => op.daysOverdue === 0).length,
       dueThisWeek: data.filter((op) => op.daysOverdue <= 0 && op.daysOverdue > -7).length,
     };

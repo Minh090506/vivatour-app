@@ -112,7 +112,9 @@ export function OperatorApprovalTable({ items, onApprove, loading }: Props) {
             <TableHead>Ngày DV</TableHead>
             <TableHead>Dịch vụ</TableHead>
             <TableHead>NCC</TableHead>
-            <TableHead className="text-right">Chi phí</TableHead>
+            <TableHead className="text-right">Tổng CP</TableHead>
+            <TableHead className="text-right">Đã TT</TableHead>
+            <TableHead className="text-right">Còn nợ</TableHead>
             <TableHead>Hạn TT</TableHead>
             <TableHead className="text-center">Trạng thái</TableHead>
             <TableHead></TableHead>
@@ -145,6 +147,12 @@ export function OperatorApprovalTable({ items, onApprove, loading }: Props) {
               <TableCell>{item.supplierName || '-'}</TableCell>
               <TableCell className="text-right font-medium">
                 {formatCurrency(item.totalCost)} ₫
+              </TableCell>
+              <TableCell className="text-right text-green-600">
+                {formatCurrency(item.paidAmount || 0)} ₫
+              </TableCell>
+              <TableCell className={`text-right font-medium ${item.debt > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                {formatCurrency(item.debt || 0)} ₫
               </TableCell>
               <TableCell className="whitespace-nowrap">
                 {formatDate(item.paymentDeadline)}
