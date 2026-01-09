@@ -1,0 +1,881 @@
+
+> vivatour-app@0.1.0 test
+> jest --no-coverage
+
+PASS src/__tests__/config/supplier-config.test.ts
+  SUPPLIER_TYPES configuration
+    √ should have 9 supplier types (18 ms)
+    √ should have 3-character prefixes for all types (39 ms)
+    √ should include all expected types (2 ms)
+    √ should have correct prefix mappings (4 ms)
+  SUPPLIER_LOCATIONS configuration
+    √ should have 18 locations (1 ms)
+    √ should have 2-3 character prefixes for all locations (8 ms)
+    √ should include key Vietnam locations (1 ms)
+    √ should include international locations (2 ms)
+  PAYMENT_MODELS configuration
+    √ should have 3 payment models (1 ms)
+    √ should include all expected models (3 ms)
+    √ should have labels and descriptions (2 ms)
+  removeDiacritics
+    √ should remove Vietnamese diacritics from A variants (2 ms)
+    √ should remove Vietnamese diacritics from E variants (1 ms)
+    √ should remove Vietnamese diacritics from I variants (1 ms)
+    √ should remove Vietnamese diacritics from O variants (2 ms)
+    √ should remove Vietnamese diacritics from U variants (1 ms)
+    √ should remove Vietnamese diacritics from Y variants (1 ms)
+    √ should convert Đ to D (1 ms)
+    √ should preserve non-diacritic characters (1 ms)
+    √ should handle mixed strings (1 ms)
+    √ should handle empty string (1 ms)
+  getNamePrefix
+    √ should extract first 3 characters from simple name (1 ms)
+    √ should use first word only (1 ms)
+    √ should handle Vietnamese names with diacritics (2 ms)
+    √ should pad short names with X (1 ms)
+    √ should return XXX for empty name (1 ms)
+    √ should return XXX for null/undefined (1 ms)
+    √ should trim whitespace (1 ms)
+    √ should convert to uppercase (1 ms)
+  generateSupplierCode
+    √ should generate correct code format: TYPE-LOCATION-NAME-SEQUENCE (1 ms)
+    √ should use XX for missing location
+    √ should use XX for undefined location
+    √ should pad sequence to 4 digits (2 ms)
+    √ should default sequence to 1 (1 ms)
+    √ should handle Vietnamese names correctly
+    √ should handle single character name
+    √ should handle empty name (1 ms)
+    √ should handle name with only spaces (1 ms)
+    √ should handle multi-word names (use first word only) (1 ms)
+    for each supplier type
+      √ should use HOT for HOTEL (1 ms)
+      √ should use RES for RESTAURANT
+      √ should use TRA for TRANSPORT
+      √ should use GUI for GUIDE (1 ms)
+      √ should use VIS for VISA (1 ms)
+      √ should use VMB for VMB
+      √ should use CRU for CRUISE (1 ms)
+      √ should use ACT for ACTIVITY (1 ms)
+      √ should use OTH for OTHER (1 ms)
+    for each location
+      √ should use HN for HA_NOI (1 ms)
+      √ should use DN for DA_NANG (1 ms)
+      √ should use HCM for HO_CHI_MINH
+      √ should use HL for HA_LONG (1 ms)
+      √ should use PQ for PHU_QUOC (1 ms)
+      √ should use TL for THAI_LAN
+      √ should use CB for CAMBODIA
+
+PASS src/__tests__/lib/supplier-balance.test.ts
+  calculateSupplierBalance
+    √ should calculate balance correctly with all transaction types (17 ms)
+    √ should handle zero transactions (new supplier) (25 ms)
+    √ should handle deposits only (12 ms)
+    √ should calculate negative balance when costs exceed deposits (33 ms)
+    √ should handle large numeric values (20 ms)
+    √ should call Prisma with correct supplier ID (11 ms)
+  getSupplierBalanceSummary
+    √ should return balance summary for all active suppliers (12 ms)
+    √ should filter by supplier type when provided (16 ms)
+    √ should return empty results for no active suppliers (14 ms)
+    √ should count positive and negative balances correctly (14 ms)
+
+FAIL src/__tests__/config/operator-config.test.ts
+  SERVICE_TYPES configuration
+    √ should have 9 service types (29 ms)
+    √ should include all expected types (36 ms)
+    √ should have labels and icons for all types (12 ms)
+    √ should have correct Vietnamese labels (3 ms)
+    √ should have valid Lucide icon names (1 ms)
+  PAYMENT_STATUSES configuration
+    √ should have 3 payment statuses
+    √ should include all expected statuses (1 ms)
+    √ should have labels and colors for all statuses (1 ms)
+    √ should have correct Vietnamese labels (1 ms)
+    √ should have appropriate colors (1 ms)
+  HISTORY_ACTIONS configuration
+    × should have 6 history action types (3 ms)
+    √ should include all expected action types (3 ms)
+    √ should have labels and colors for all actions (4 ms)
+    √ should have correct Vietnamese labels (1 ms)
+    √ should have appropriate colors (2 ms)
+  DEFAULT_VAT_RATE constant
+    √ should be 10 (percent) (1 ms)
+    √ should be a positive number (1 ms)
+    √ should be less than 100 (reasonable VAT rate) (1 ms)
+  Service types alignment with Supplier types
+    √ should have matching service types with supplier types (3 ms)
+
+  ● HISTORY_ACTIONS configuration › should have 6 history action types
+
+    expect(received).toHaveLength(expected)
+
+    Expected length: 6
+    Received length: 12
+    Received array:  ["CREATE", "UPDATE", "DELETE", "LOCK", "UNLOCK", "LOCK_KT", "UNLOCK_KT", "LOCK_ADMIN", "UNLOCK_ADMIN", "LOCK_FINAL", …]
+
+    [0m [90m 93 |[39m describe([32m'HISTORY_ACTIONS configuration'[39m[33m,[39m () [33m=>[39m {
+     [90m 94 |[39m   it([32m'should have 6 history action types'[39m[33m,[39m () [33m=>[39m {
+    [31m[1m>[22m[39m[90m 95 |[39m     expect([33mObject[39m[33m.[39mkeys([33mHISTORY_ACTIONS[39m))[33m.[39mtoHaveLength([35m6[39m)[33m;[39m
+     [90m    |[39m                                          [31m[1m^[22m[39m
+     [90m 96 |[39m   })[33m;[39m
+     [90m 97 |[39m
+     [90m 98 |[39m   it([32m'should include all expected action types'[39m[33m,[39m () [33m=>[39m {[0m
+
+      at Object.toHaveLength (src/__tests__/config/operator-config.test.ts:95:42)
+
+  console.error
+    Error generating cost report: Error: Database error
+        at Object.<anonymous> (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\src\__tests__\api\operator-reports.test.ts:149:52)
+        at Promise.finally.completed (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:275:16)
+        at runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:343:7)
+        at Object.worker (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:497:12)
+
+    [0m [90m 145 |[39m     })[33m;[39m
+     [90m 146 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 147 |[39m     console[33m.[39merror([32m'Error generating cost report:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 148 |[39m     [36mconst[39m message [33m=[39m error [36minstanceof[39m [33mError[39m [33m?[39m error[33m.[39mmessage [33m:[39m [32m'Unknown error'[39m[33m;[39m
+     [90m 149 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson(
+     [90m 150 |[39m       { success[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m [32m`Lỗi tạo báo cáo: ${message}`[39m }[33m,[39m[0m
+
+      at error (src/app/api/reports/operator-costs/route.ts:147:13)
+      at Object.<anonymous> (src/__tests__/api/operator-reports.test.ts:152:22)
+
+  console.error
+    Error generating payment report: Error: Database error
+        at Object.<anonymous> (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\src\__tests__\api\operator-reports.test.ts:232:53)
+        at Promise.finally.completed (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:275:16)
+        at runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:343:7)
+        at Object.worker (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:497:12)
+
+    [0m [90m 104 |[39m     })[33m;[39m
+     [90m 105 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 106 |[39m     console[33m.[39merror([32m'Error generating payment report:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 107 |[39m     [36mconst[39m message [33m=[39m error [36minstanceof[39m [33mError[39m [33m?[39m error[33m.[39mmessage [33m:[39m [32m'Unknown error'[39m[33m;[39m
+     [90m 108 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson(
+     [90m 109 |[39m       { success[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m [32m`Lỗi tạo báo cáo: ${message}`[39m }[33m,[39m[0m
+
+      at error (src/app/api/reports/operator-payments/route.ts:106:13)
+      at Object.<anonymous> (src/__tests__/api/operator-reports.test.ts:235:22)
+
+  console.error
+    Error fetching suppliers: Error: Database connection failed
+        at Object.<anonymous> (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\src\__tests__\api\suppliers.test.ts:203:52)
+        at Promise.finally.completed (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:275:16)
+        at runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:343:7)
+        at Object.worker (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:497:12)
+
+    [0m [90m 55 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson({ success[33m:[39m [36mtrue[39m[33m,[39m data[33m:[39m result })[33m;[39m
+     [90m 56 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 57 |[39m     console[33m.[39merror([32m'Error fetching suppliers:'[39m[33m,[39m error)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 58 |[39m     [36mconst[39m message [33m=[39m error [36minstanceof[39m [33mError[39m [33m?[39m error[33m.[39mmessage [33m:[39m [32m'Unknown error'[39m[33m;[39m
+     [90m 59 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson(
+     [90m 60 |[39m       { success[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m [32m`Failed to fetch suppliers: ${message}`[39m }[33m,[39m[0m
+
+      at error (src/app/api/suppliers/route.ts:57:13)
+      at Object.<anonymous> (src/__tests__/api/suppliers.test.ts:206:22)
+
+PASS src/__tests__/api/operator-reports.test.ts
+  GET /api/reports/operator-costs
+    √ should return cost report grouped by service type, supplier, and month (88 ms)
+    √ should filter by date range (14 ms)
+    √ should filter by service type (8 ms)
+    √ should handle empty data gracefully (11 ms)
+    √ should handle database errors (168 ms)
+    √ should reject invalid date format (7 ms)
+    √ should reject invalid service type (7 ms)
+  GET /api/reports/operator-payments
+    √ should return payment status summary (10 ms)
+    √ should handle null totals gracefully (9 ms)
+    √ should handle database errors (30 ms)
+    √ should reject invalid month format (22 ms)
+
+  console.error
+    Error fetching pending payments: Error: Database error
+        at Object.<anonymous> (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\src\__tests__\api\operator-approvals.test.ts:183:52)
+        at Promise.finally.completed (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:275:16)
+        at runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:343:7)
+        at Object.worker (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:497:12)
+
+    [0m [90m 82 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson({ success[33m:[39m [36mtrue[39m[33m,[39m data[33m,[39m summary })[33m;[39m
+     [90m 83 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 84 |[39m     console[33m.[39merror([32m'Error fetching pending payments:'[39m[33m,[39m error)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 85 |[39m     [36mconst[39m message [33m=[39m error [36minstanceof[39m [33mError[39m [33m?[39m error[33m.[39mmessage [33m:[39m [32m'Unknown error'[39m[33m;[39m
+     [90m 86 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson(
+     [90m 87 |[39m       { success[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m [32m`Lỗi tải danh sách: ${message}`[39m }[33m,[39m[0m
+
+      at error (src/app/api/operators/pending-payments/route.ts:84:13)
+      at Object.<anonymous> (src/__tests__/api/operator-approvals.test.ts:186:22)
+
+PASS src/__tests__/lib/request-utils.test.ts
+  generateRQID
+    √ should generate RQID with correct format RQ-YYMMDD-XXXX (23 ms)
+    √ should pad sequence number with zeros (26 ms)
+    √ should pad sequence to 4 digits for count 999 (6 ms)
+    √ should query requests created today (7 ms)
+  generateBookingCode - Phase 1 Schema Changes
+    with explicit sellerCode
+      √ should use sellerCode when available (6 ms)
+      √ should accept single char sellerCode (12 ms)
+      √ should handle multi-char sellerCode (edge case) (11 ms)
+    fallback to sellerName first letter
+      √ should use first letter of name when sellerCode is null (9 ms)
+      √ should uppercase first letter of name (9 ms)
+      √ should handle single character name (11 ms)
+    ultimate fallback to X
+      √ should use X when no sellerCode and no name (13 ms)
+      √ should use X when config user not found (10 ms)
+      √ should use X when user object is missing (19 ms)
+    sequence numbering
+      √ should increment sequence for same date and code (57 ms)
+      √ should start at 0001 when no existing codes (8 ms)
+      √ should pad sequence with zeros (7 ms)
+      √ should handle max 4-digit sequence (9999) (5 ms)
+    date formatting
+      √ should format date as YYYYMMDD (6 ms)
+      √ should pad month and day with zeros (13 ms)
+      √ should handle December dates (10 ms)
+    existing booking codes preservation
+      √ should not modify existing booking codes (9 ms)
+      √ should query correctly with startsWith filter (11 ms)
+  calculateEndDate
+    √ should calculate end date as startDate + tourDays - 1 (14 ms)
+    √ should handle single day tour (11 ms)
+    √ should handle two day tour (22 ms)
+    √ should handle long tour (cross month) (27 ms)
+    √ should not mutate original date (18 ms)
+  calculateNextFollowUp
+    √ should calculate next follow-up date based on config (12 ms)
+    √ should return null when config is not found (22 ms)
+    √ should return null when config is inactive (30 ms)
+    √ should handle 0 days to wait (22 ms)
+    √ should handle large days to wait (15 ms)
+  getSellerCode
+    √ should return seller code when available (14 ms)
+    √ should return null when seller code is null (17 ms)
+    √ should return null when config not found (48 ms)
+    √ should call findUnique with correct userId (13 ms)
+  canUserViewAll
+    √ should return true when canViewAll is true (20 ms)
+    √ should return false when canViewAll is false (24 ms)
+    √ should return false when config not found (11 ms)
+  getFollowUpDateBoundaries
+    √ should return today start and end dates (12 ms)
+    √ todayStart should be at 00:00:00 (30 ms)
+    √ todayEnd should be at 23:59:59.999 (15 ms)
+    √ threeDaysLater should be 3 days after todayStart (14 ms)
+    √ should have same date for todayStart and todayEnd (13 ms)
+
+PASS src/__tests__/api/operator-approvals.test.ts
+  GET /api/operators/pending-payments
+    √ should return pending payments with success (40 ms)
+    √ should filter by overdue (13 ms)
+    √ should filter by today (27 ms)
+    √ should filter by week (12 ms)
+    √ should filter by serviceType (10 ms)
+    √ should calculate daysOverdue correctly (7 ms)
+    √ should return correct summary (7 ms)
+    √ should return 500 on database error (264 ms)
+  POST /api/operators/approve (batch)
+    √ should batch approve operators successfully (12 ms)
+    √ should return 400 when no operatorIds provided (10 ms)
+    √ should return 400 when paymentDate is missing (10 ms)
+    √ should return 404 when some operators not found (9 ms)
+    √ should return 403 when trying to approve locked operators (9 ms)
+  POST /api/operators/[id]/approve (single)
+    √ should approve single operator successfully (13 ms)
+    √ should return 404 when operator not found (19 ms)
+    √ should return 403 when operator is locked (34 ms)
+    √ should return 400 when already paid (16 ms)
+    √ should use current date when paymentDate not provided (15 ms)
+
+  console.error
+    Error creating supplier: Error: Database write failed
+        at Object.<anonymous> (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\src\__tests__\api\suppliers.test.ts:531:50)
+        at Promise.finally.completed (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:275:16)
+        at runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:343:7)
+        at Object.worker (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:497:12)
+
+    [0m [90m 148 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson({ success[33m:[39m [36mtrue[39m[33m,[39m data[33m:[39m supplier }[33m,[39m { status[33m:[39m [35m201[39m })[33m;[39m
+     [90m 149 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 150 |[39m     console[33m.[39merror([32m'Error creating supplier:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 151 |[39m     [36mconst[39m message [33m=[39m error [36minstanceof[39m [33mError[39m [33m?[39m error[33m.[39mmessage [33m:[39m [32m'Unknown error'[39m[33m;[39m
+     [90m 152 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson(
+     [90m 153 |[39m       { success[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m [32m`Lỗi tạo NCC: ${message}`[39m }[33m,[39m[0m
+
+      at error (src/app/api/suppliers/route.ts:150:13)
+      at Object.<anonymous> (src/__tests__/api/suppliers.test.ts:541:22)
+
+PASS src/__tests__/api/suppliers.test.ts
+  GET /api/suppliers
+    √ should return all suppliers with success response (27 ms)
+    √ should filter by search term (code or name) (10 ms)
+    √ should filter by type (9 ms)
+    √ should filter by location (23 ms)
+    √ should filter by paymentModel (11 ms)
+    √ should filter by isActive=true (7 ms)
+    √ should filter by isActive=false (6 ms)
+    √ should handle multiple filters combined (8 ms)
+    √ should include balance when includeBalance=true (8 ms)
+    √ should return 500 on database error (216 ms)
+    √ should return empty array when no suppliers found (8 ms)
+  POST /api/suppliers
+    √ should create supplier with valid data (13 ms)
+    √ should return 400 when name is missing (12 ms)
+    √ should return 400 when type is missing (23 ms)
+    √ should return 400 for invalid supplier type (53 ms)
+    √ should return 400 when code already exists (11 ms)
+    √ should auto-generate code when not provided (28 ms)
+    √ should increment sequence for existing prefix (13 ms)
+    √ should default paymentModel to PREPAID (32 ms)
+    √ should default isActive to true (13 ms)
+    √ should trim text fields (27 ms)
+    √ should convert creditLimit to number (12 ms)
+    √ should return 500 on database error (23 ms)
+
+  console.error
+    Error fetching transactions: Error: Database connection failed
+        at Object.<anonymous> (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\src\__tests__\api\supplier-transactions.test.ts:229:7)
+        at Promise.finally.completed (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:275:16)
+        at runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:343:7)
+        at Object.worker (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:497:12)
+
+    [0m [90m 48 |[39m     })[33m;[39m
+     [90m 49 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 50 |[39m     console[33m.[39merror([32m'Error fetching transactions:'[39m[33m,[39m error)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 51 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson(
+     [90m 52 |[39m       { success[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m [32m'Failed to fetch transactions'[39m }[33m,[39m
+     [90m 53 |[39m       { status[33m:[39m [35m500[39m }[0m
+
+      at error (src/app/api/supplier-transactions/route.ts:50:13)
+      at Object.<anonymous> (src/__tests__/api/supplier-transactions.test.ts:233:22)
+
+  console.error
+    Error creating transaction: Error: Database write failed
+        at Object.<anonymous> (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\src\__tests__\api\supplier-transactions.test.ts:597:61)
+        at Promise.finally.completed (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:275:16)
+        at runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:343:7)
+        at Object.worker (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:497:12)
+
+    [0m [90m 125 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson({ success[33m:[39m [36mtrue[39m[33m,[39m data[33m:[39m transaction }[33m,[39m { status[33m:[39m [35m201[39m })[33m;[39m
+     [90m 126 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 127 |[39m     console[33m.[39merror([32m'Error creating transaction:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 128 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson(
+     [90m 129 |[39m       { success[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m [32m'Failed to create transaction'[39m }[33m,[39m
+     [90m 130 |[39m       { status[33m:[39m [35m500[39m }[0m
+
+      at error (src/app/api/supplier-transactions/route.ts:127:13)
+      at Object.<anonymous> (src/__tests__/api/supplier-transactions.test.ts:604:22)
+
+PASS src/__tests__/api/supplier-transactions.test.ts
+  GET /api/supplier-transactions
+    √ should return all transactions with success response (55 ms)
+    √ should filter by supplierId (18 ms)
+    √ should filter by transaction type (23 ms)
+    √ should filter by date range (fromDate only) (13 ms)
+    √ should filter by date range (toDate only) (14 ms)
+    √ should filter by date range (both fromDate and toDate) (8 ms)
+    √ should paginate with limit and offset (8 ms)
+    √ should default limit to 50 (9 ms)
+    √ should return hasMore=true when more records exist (17 ms)
+    √ should include supplier details in response (35 ms)
+    √ should order by transactionDate desc (22 ms)
+    √ should return 500 on database error (335 ms)
+  POST /api/supplier-transactions
+    √ should create transaction with valid data (10 ms)
+    √ should return 400 when supplierId is missing (14 ms)
+    √ should return 400 when type is missing (16 ms)
+    √ should return 400 when amount is missing (15 ms)
+    √ should return 400 when transactionDate is missing (12 ms)
+    √ should return 400 when amount is zero (18 ms)
+    √ should return 400 when amount is negative (14 ms)
+    √ should return 404 when supplier not found (11 ms)
+    √ should convert amount to number (16 ms)
+    √ should parse transactionDate as Date (14 ms)
+    √ should use authenticated user ID as createdBy (15 ms)
+    √ should ignore body createdBy and use authenticated user (9 ms)
+    √ should include optional fields when provided (37 ms)
+    √ should return 500 on database error (20 ms)
+    transaction type validation
+      √ should accept valid type: DEPOSIT (16 ms)
+      √ should accept valid type: REFUND (22 ms)
+      √ should accept valid type: ADJUSTMENT (16 ms)
+      √ should accept valid type: FEE (24 ms)
+      √ should return 400 for invalid type (31 ms)
+
+PASS src/__tests__/api/operator-lock.test.ts
+  GET /api/operators/lock-period
+    √ should return tier breakdown for a month (19 ms)
+    √ should return isFullyLocked=true when all at Final tier (7 ms)
+    √ should return operators eligible for specific tier (7 ms)
+    √ should return 400 for invalid month format (11 ms)
+    √ should return 400 when month is missing (12 ms)
+  POST /api/operators/lock-period
+    √ should lock operators at KT tier (default) (13 ms)
+    √ should lock operators at Admin tier (19 ms)
+    √ should return count=0 when no operators to lock (12 ms)
+    √ should return 400 for invalid month format (14 ms)
+    √ should return 400 when month is missing (10 ms)
+    √ should return 400 for invalid tier (15 ms)
+  POST /api/operators/[id]/lock
+    √ should lock at KT tier successfully (29 ms)
+    √ should return 404 when operator not found (12 ms)
+    √ should return 400 when tier already locked (17 ms)
+    √ should return 400 when trying to skip tier progression (11 ms)
+  POST /api/operators/[id]/unlock
+    √ should unlock KT tier successfully (25 ms)
+    √ should return 404 when operator not found (16 ms)
+    √ should return 400 when tier not locked (16 ms)
+    √ should return 400 when trying to unlock out of order (60 ms)
+  Lock protection in existing APIs
+    √ PUT should reject editing locked operator (12 ms)
+    √ DELETE should reject deleting locked operator (11 ms)
+    √ APPROVE should reject approving locked operator (12 ms)
+
+PASS src/__tests__/lib/id-utils.test.ts
+  ID Utilities
+    removeDiacritics - Remove Vietnamese diacritics
+      √ removes A diacritics (13 ms)
+      √ removes E diacritics (2 ms)
+      √ removes I diacritics (2 ms)
+      √ removes O diacritics (2 ms)
+      √ removes all U variants (1 ms)
+      √ removes all Y variants (1 ms)
+      √ converts D with stroke (Đ/đ) (1 ms)
+      √ preserves non-diacritic characters (2 ms)
+      √ handles mixed strings with diacritics and plain text (12 ms)
+      √ handles empty string (1 ms)
+      √ handles whitespace (1 ms)
+    formatTimestamp - Format as yyyyMMddHHmmssSSS
+      √ formats date correctly (17 chars) (2 ms)
+      √ pads single digit month correctly (1 ms)
+      √ pads single digit date correctly (1 ms)
+      √ pads single digit hours/minutes/seconds
+      √ handles midnight (00:00:00)
+      √ handles milliseconds with 3 digits padding (1 ms)
+      √ uses current date/time when not provided (1 ms)
+    formatDatePart - Format as yyyyMMdd
+      √ formats date correctly (1 ms)
+      √ pads single digit month (1 ms)
+      √ pads single digit date (1 ms)
+      √ ignores time component
+      √ uses current date when not provided (1 ms)
+    generateRequestId - Generate {SellerCode}{yyyyMMddHHmmssSSS}
+      √ generates valid requestId format (2 ms)
+      √ converts seller code to uppercase (1 ms)
+      √ removes diacritics from seller code (1 ms)
+      √ removes whitespace from seller code (1 ms)
+      √ checks uniqueness in database (1 ms)
+      √ retries with new timestamp on collision (3 ms)
+    generateServiceId - Generate {bookingCode}-{yyyyMMddHHmmssSSS}
+      √ generates valid serviceId format (1 ms)
+      √ includes booking code in serviceId (1 ms)
+      √ includes timestamp after hyphen (1 ms)
+      √ checks uniqueness in database (1 ms)
+      √ retries on collision (3 ms)
+    generateRevenueId - Generate {bookingCode}-{yyyyMMddHHmmss}-{rowNum}
+      √ generates valid revenueId format (2 ms)
+      √ includes booking code (1 ms)
+      √ formats timestamp without milliseconds (1 ms)
+      √ increments row number for same prefix (1 ms)
+      √ starts with row 1 for new prefix (1 ms)
+      √ filters by prefix correctly (4 ms)
+    ID generation flow
+      √ generates unique IDs for multiple calls (1 ms)
+      √ handles concurrent ID generation (1 ms)
+
+PASS src/__tests__/lib/sheet-mappers.test.ts
+  sheet-mappers.ts - Request Row Mapping
+    mapRequestRow - Basic Structure
+      √ should extract all required and optional fields from row (4 ms)
+      √ should include bookingCode in output
+      √ should handle null bookingCode when not provided (1 ms)
+    mapRequestRow - Vietnamese Status Mapping to Enum Keys
+      √ should map 'Đã báo giá' to DA_BAO_GIA enum key (1 ms)
+      √ should map 'Đang xây Tour' to DANG_XAY_TOUR enum key
+      √ should map 'F1' to F1 enum key
+      √ should map 'F2' to F2 enum key
+      √ should map 'F3' to F3 enum key (1 ms)
+      √ should map 'F4' variations to F4 enum key (1 ms)
+      √ should map 'Booking' to BOOKING enum key (1 ms)
+      √ should map 'Khách hoãn' to KHACH_HOAN enum key
+      √ should map 'Đang suy nghĩ' to KHACH_SUY_NGHI enum key (1 ms)
+      √ should map 'Không đủ TC' to KHONG_DU_TC enum key
+      √ should map 'Đã kết thúc' to DA_KET_THUC enum key (1 ms)
+      √ should map 'Cancel' to CANCEL enum key
+      √ should map 'Đang LL - khách chưa trả lời' to DANG_LL_CHUA_TL enum key (1 ms)
+      √ should map 'Đang LL - khách đã trả lời' to DANG_LL_DA_TL enum key (1 ms)
+      √ should default to DANG_LL_CHUA_TL for unknown status
+      √ should default to DANG_LL_CHUA_TL for empty status
+      √ should always return string enum key (not Vietnamese label)
+    mapRequestRow - Decimal Fields
+      √ should convert expectedRevenue to Prisma.Decimal (1 ms)
+      √ should convert expectedCost to Prisma.Decimal (1 ms)
+      √ should handle Vietnamese decimal format (comma as decimal separator) (1 ms)
+      √ should handle empty Decimal fields as null (1 ms)
+    mapRequestRow - Validation & Filtering
+      √ should return null when Request ID (AR) is empty
+      √ should return null when Seller (A) is empty (1 ms)
+      √ should return null when customer name (B) is empty
+      √ should return null for header rows
+      √ should throw error when no SELLER user found (17 ms)
+    mapRequestRow - Data Types & Conversions
+      √ should convert pax string to number (1 ms)
+      √ should default pax to 1 if empty (1 ms)
+      √ should parse tourDays as number (1 ms)
+      √ should handle null tourDays when empty
+      √ should parse dates in DD/MM/YYYY format (1 ms)
+      √ should trim whitespace from text fields (1 ms)
+    mapRequestRow - Stage Mapping
+      √ should map quote statuses to QUOTE stage
+      √ should map F1-F4 statuses to FOLLOWUP stage (1 ms)
+      √ should map booking/cancel statuses to OUTCOME stage
+      √ should default to LEAD stage for unknown status (1 ms)
+    mapRequestRow - Real-world Integration
+      √ should handle complete real-world request row (1 ms)
+
+PASS src/__tests__/lib/lock-utils.test.ts
+  Lock System Utilities
+    canLock - Role permissions for locking
+      √ ACCOUNTANT can lock KT tier (1 ms)
+      √ ADMIN can lock KT tier (1 ms)
+      √ SELLER cannot lock KT tier
+      √ OPERATOR cannot lock KT tier (1 ms)
+      √ ADMIN can lock Admin tier
+      √ ACCOUNTANT cannot lock Admin tier (1 ms)
+      √ ADMIN can lock Final tier
+    canUnlock - Role permissions for unlocking
+      √ ACCOUNTANT can unlock KT tier (1 ms)
+      √ ADMIN can unlock all tiers
+      √ SELLER cannot unlock any tier
+    canLockTier - Sequential lock progression
+      √ Can lock KT when no locks exist
+      √ Cannot lock KT when already locked (1 ms)
+      √ Cannot lock Admin without KT lock first
+      √ Can lock Admin when KT is locked (1 ms)
+      √ Cannot lock Final without Admin lock first
+      √ Can lock Final when both KT and Admin are locked (1 ms)
+      √ Cannot lock Final when already locked
+    canUnlockTier - Reverse unlock progression
+      √ Cannot unlock any tier when none are locked (1 ms)
+      √ Can unlock Final when Final is locked
+      √ Cannot unlock Admin when Final is locked
+      √ Can unlock Admin when Final is unlocked
+      √ Cannot unlock KT when Admin is locked
+      √ Can unlock KT when Admin is unlocked
+    isEditable - Check if record is editable
+      √ Record is editable with no locks (1 ms)
+      √ Record is not editable with KT lock (1 ms)
+      √ Record is not editable with Admin lock
+      √ Record is not editable with Final lock
+      √ Record is not editable with any combination of locks (1 ms)
+    getLockFields - Generate DB update fields
+      √ generates lock fields for KT tier (1 ms)
+      √ generates lock fields for Admin tier (1 ms)
+      √ generates lock fields for Final tier (1 ms)
+      √ generates unlock fields (sets to false/null) (1 ms)
+      √ sets correct timestamp for lock operations (1 ms)
+    getCurrentLockTier - Get highest active lock tier
+      √ returns null when no locks (1 ms)
+      √ returns KT when only KT is locked
+      √ returns Admin when KT and Admin are locked
+      √ returns Final when all are locked (1 ms)
+      √ prioritizes higher tiers (Final > Admin > KT)
+    getActiveLockTiers - Get all active lock tiers
+      √ returns empty array when no locks
+      √ returns [KT] when only KT is locked (1 ms)
+      √ returns [KT, Admin] when both are locked (1 ms)
+      √ returns all tiers when all are locked (1 ms)
+    hasAnyLock - Check if any lock is active
+      √ returns false when no locks
+      √ returns true when KT is locked
+      √ returns true when Admin is locked (1 ms)
+      √ returns true when Final is locked
+      √ returns true when any combination of locks exist (1 ms)
+    Lock configuration constants
+      √ LOCK_TIERS has 3 tiers (1 ms)
+      √ LOCK_TIER_ORDER has correct progression (1 ms)
+      √ LOCK_PERMISSIONS configured for all tiers (1 ms)
+      √ KT tier allows ACCOUNTANT and ADMIN to lock/unlock (1 ms)
+      √ Admin and Final tiers allow only ADMIN (1 ms)
+
+PASS src/app/login/__tests__/login-validation.test.ts
+  Login Form Validation Schema
+    Email Validation
+      √ accepts valid email addresses (5 ms)
+      √ rejects invalid email format (4 ms)
+      √ rejects empty email (1 ms)
+      √ rejects missing email field (2 ms)
+    Password Validation
+      √ accepts non-empty password (1 ms)
+      √ rejects empty password (1 ms)
+      √ rejects missing password field (1 ms)
+    Combined Validation
+      √ accepts valid credentials (1 ms)
+      √ rejects both invalid email and empty password (1 ms)
+      √ rejects extra fields in data (4 ms)
+      √ maintains type safety of parsed data (1 ms)
+    Edge Cases
+      √ handles very long email
+      √ handles very long password (1 ms)
+      √ handles unicode characters in password (1 ms)
+      √ handles whitespace in email (should fail) (1 ms)
+      √ trims whitespace from inputs (1 ms)
+
+PASS src/app/login/__tests__/page.test.tsx
+  LoginPage
+    Rendering
+      √ renders login page without errors (41 ms)
+      √ displays page title (7 ms)
+      √ displays subtitle (4 ms)
+      √ renders LoginForm component (5 ms)
+      √ applies correct styling classes (6 ms)
+      √ renders form container with max-width (4 ms)
+    Layout Structure
+      √ renders header section before form (4 ms)
+      √ centers header text (3 ms)
+      √ renders text-based UI elements in correct order (5 ms)
+    Responsive Design
+      √ applies responsive padding (4 ms)
+      √ limits form width on larger screens (2 ms)
+    Integration with LoginForm
+      √ passes no props to LoginForm (3 ms)
+      √ mounts LoginForm as a child component (3 ms)
+    Accessibility
+      √ maintains semantic HTML structure (3 ms)
+      √ uses proper heading hierarchy (2 ms)
+
+  console.error
+    An update to LoginFormContent inside a test was not wrapped in act(...).
+    
+    When testing, code that causes React state updates should be wrapped into act(...):
+    
+    act(() => {
+      /* fire events that update state */
+    });
+    /* assert on the output */
+    
+    This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+      at node_modules/react-dom/cjs/react-dom-client.development.js:18758:19
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at warnIfUpdatesNotWrappedWithActDEV (node_modules/react-dom/cjs/react-dom-client.development.js:18757:9)
+      at scheduleUpdateOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:16409:11)
+      at dispatchSetStateInternal (node_modules/react-dom/cjs/react-dom-client.development.js:9170:13)
+      at dispatchSetState (node_modules/react-dom/cjs/react-dom-client.development.js:9127:7)
+      at Object.callback (node_modules/react-hook-form/src/useForm.ts:99:5)
+      at Object.find (node_modules/react-hook-form/src/logic/shouldRenderFormState.ts:25:28)
+      at Object.next (node_modules/react-hook-form/src/utils/createSubject.ts:40:5)
+      at name (node_modules/react-hook-form/src/logic/createFormControl.ts:1276:20)
+
+  console.error
+    An update to LoginFormContent inside a test was not wrapped in act(...).
+    
+    When testing, code that causes React state updates should be wrapped into act(...):
+    
+    act(() => {
+      /* fire events that update state */
+    });
+    /* assert on the output */
+    
+    This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+    [0m [90m 49 |[39m
+     [90m 50 |[39m   [36masync[39m [36mfunction[39m onSubmit(data[33m:[39m [33mLoginFormData[39m) {
+    [31m[1m>[22m[39m[90m 51 |[39m     setIsLoading([36mtrue[39m)[33m;[39m
+     [90m    |[39m     [31m[1m^[22m[39m
+     [90m 52 |[39m
+     [90m 53 |[39m     [36mtry[39m {
+     [90m 54 |[39m       [36mconst[39m result [33m=[39m [36mawait[39m signIn([32m"credentials"[39m[33m,[39m {[0m
+
+      at node_modules/react-dom/cjs/react-dom-client.development.js:18758:19
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at warnIfUpdatesNotWrappedWithActDEV (node_modules/react-dom/cjs/react-dom-client.development.js:18757:9)
+      at scheduleUpdateOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:16409:11)
+      at dispatchSetStateInternal (node_modules/react-dom/cjs/react-dom-client.development.js:9170:13)
+      at dispatchSetState (node_modules/react-dom/cjs/react-dom-client.development.js:9127:7)
+      at setIsLoading (src/app/login/login-form.tsx:51:5)
+      at errors (node_modules/react-hook-form/src/logic/createFormControl.ts:1281:24)
+
+  console.error
+    An update to LoginFormContent inside a test was not wrapped in act(...).
+    
+    When testing, code that causes React state updates should be wrapped into act(...):
+    
+    act(() => {
+      /* fire events that update state */
+    });
+    /* assert on the output */
+    
+    This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+    [0m [90m 74 |[39m       })[33m;[39m
+     [90m 75 |[39m     } [36mfinally[39m {
+    [31m[1m>[22m[39m[90m 76 |[39m       setIsLoading([36mfalse[39m)[33m;[39m
+     [90m    |[39m       [31m[1m^[22m[39m
+     [90m 77 |[39m     }
+     [90m 78 |[39m   }
+     [90m 79 |[39m[0m
+
+      at node_modules/react-dom/cjs/react-dom-client.development.js:18758:19
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at warnIfUpdatesNotWrappedWithActDEV (node_modules/react-dom/cjs/react-dom-client.development.js:18757:9)
+      at scheduleUpdateOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:16409:11)
+      at dispatchSetStateInternal (node_modules/react-dom/cjs/react-dom-client.development.js:9170:13)
+      at dispatchSetState (node_modules/react-dom/cjs/react-dom-client.development.js:9127:7)
+      at setIsLoading (src/app/login/login-form.tsx:76:7)
+      at unset (node_modules/react-hook-form/src/logic/createFormControl.ts:1281:7)
+
+  console.error
+    An update to LoginFormContent inside a test was not wrapped in act(...).
+    
+    When testing, code that causes React state updates should be wrapped into act(...):
+    
+    act(() => {
+      /* fire events that update state */
+    });
+    /* assert on the output */
+    
+    This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+      at node_modules/react-dom/cjs/react-dom-client.development.js:18758:19
+      at runWithFiberInDEV (node_modules/react-dom/cjs/react-dom-client.development.js:874:13)
+      at warnIfUpdatesNotWrappedWithActDEV (node_modules/react-dom/cjs/react-dom-client.development.js:18757:9)
+      at scheduleUpdateOnFiber (node_modules/react-dom/cjs/react-dom-client.development.js:16409:11)
+      at dispatchSetStateInternal (node_modules/react-dom/cjs/react-dom-client.development.js:9170:13)
+      at dispatchSetState (node_modules/react-dom/cjs/react-dom-client.development.js:9127:7)
+      at Object.callback (node_modules/react-hook-form/src/useForm.ts:99:5)
+      at Object.find (node_modules/react-hook-form/src/logic/shouldRenderFormState.ts:25:28)
+      at Object.next (node_modules/react-hook-form/src/utils/createSubject.ts:40:5)
+      at node_modules/react-hook-form/src/logic/createFormControl.ts:1292:7
+
+PASS src/app/login/__tests__/login-form.test.tsx
+  LoginForm Component
+    Rendering
+      √ renders login form without errors (104 ms)
+      √ renders email and password inputs with correct attributes (8 ms)
+      √ renders submit button in initial state (11 ms)
+      √ renders form labels (7 ms)
+    Form Validation - Email
+      √ validates empty email field on submit (22 ms)
+      √ allows typing invalid email format into field (7 ms)
+      √ accepts valid email format (6 ms)
+    Form Validation - Password
+      √ validates empty password field on submit (17 ms)
+      √ accepts non-empty password (10 ms)
+    Form Structure
+      √ renders form with proper structure (8 ms)
+      √ groups form inputs in container divs (7 ms)
+      √ renders input elements within form (7 ms)
+    User Interaction Handling
+      √ allows user to type in email field (6 ms)
+      √ allows user to type in password field (6 ms)
+      √ handles form submission event (106 ms)
+    Accessibility
+      √ associates labels with input fields (6 ms)
+      √ submit button is accessible via keyboard (7 ms)
+      √ uses proper ARIA attributes on inputs (4 ms)
+    Error Display
+      √ displays validation errors below fields (17 ms)
+      √ displays errors in red text (15 ms)
+    Button State Management
+      √ button is clickable in initial state (9 ms)
+      √ button text is Dang nhap in initial state (7 ms)
+
+Test Suites: 1 failed, 14 passed, 15 total
+Tests:       1 failed, 419 passed, 420 total
+Snapshots:   0 total
+Time:        8.008 s
+Ran all test suites.
