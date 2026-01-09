@@ -359,3 +359,75 @@ export function parseIntegerInput(
   const parsed = typeof value === 'number' ? Math.floor(value) : parseInt(value, 10);
   return isNaN(parsed) ? defaultValue : parsed;
 }
+
+// ============================================
+// API Schema (for server-side validation)
+// Dates as strings (ISO or YYYY-MM-DD), looser than form schema
+// ============================================
+
+// Date string validator - accepts ISO, YYYY-MM-DD, or empty
+const dateStringOptional = z
+  .string()
+  .refine((val) => !val || !isNaN(Date.parse(val)), { message: 'Ngày không hợp lệ' })
+  .optional()
+  .nullable();
+
+// API Create Request Schema
+export const createRequestApiSchema = z.object({
+  customerName: z
+    .string({ message: 'Tên khách hàng là bắt buộc' })
+    .min(2, 'Tên khách hàng phải có ít nhất 2 ký tự')
+    .max(100, 'Tên khách hàng không được quá 100 ký tự'),
+
+  contact: z
+    .string({ message: 'Thông tin liên hệ là bắt buộc' })
+    .min(1, 'Thông tin liên hệ không được trống')
+    .max(255, 'Thông tin liên hệ không được quá 255 ký tự'),
+
+  country: z
+    .string({ message: 'Quốc gia là bắt buộc' })
+    .min(1, 'Quốc gia không được trống')
+    .max(100, 'Quốc gia không được quá 100 ký tự'),
+
+  source: z
+    .string({ message: 'Nguồn là bắt buộc' })
+    .min(1, 'Nguồn không được trống')
+    .max(100, 'Nguồn không được quá 100 ký tự'),
+
+  status: requestStatusEnum.optional().default('DANG_LL_CHUA_TL'),
+
+  whatsapp: z.string().max(50).optional().nullable(),
+  pax: z.number().int().min(1).max(100).optional().default(1),
+  tourDays: z.number().int().min(1).max(365).optional().nullable(),
+  startDate: dateStringOptional,
+  expectedDate: dateStringOptional,
+  expectedRevenue: z.number().min(0).optional().nullable(),
+  expectedCost: z.number().min(0).optional().nullable(),
+  lastContactDate: dateStringOptional,
+  notes: z.string().max(1000).optional().nullable(),
+  sellerId: z.string().uuid().optional().nullable(),
+});
+
+// API Update Request Schema (all fields optional)
+export const updateRequestApiSchema = createRequestApiSchema.partial().extend({
+  // Additional fields for updates
+  statusChangedBy: z.string().optional(),
+  nextFollowUp: dateStringOptional,
+});
+
+export type CreateRequestApiData = z.infer<typeof createRequestApiSchema>;
+export type UpdateRequestApiData = z.infer<typeof updateRequestApiSchema>;
+
+/**
+ * Extract field errors from Zod error for API response
+ */
+export function extractZodErrors(error: z.ZodError): Record<string, string> {
+  const errors: Record<string, string> = {};
+  for (const issue of error.issues) {
+    const field = issue.path.join('.');
+    if (field && !errors[field]) {
+      errors[field] = issue.message;
+    }
+  }
+  return errors;
+}

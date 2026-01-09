@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { generateRQID, calculateNextFollowUp, getFollowUpDateBoundaries } from '@/lib/request-utils';
 import { getStageFromStatus, isFollowUpStatus, type RequestStatus } from '@/config/request-config';
 import { getSessionUser, unauthorizedResponse } from '@/lib/auth-utils';
+import { createRequestApiSchema, extractZodErrors } from '@/lib/validations/request-validation';
 
 // GET /api/requests - List with filters
 export async function GET(request: NextRequest) {
@@ -115,23 +116,30 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
-    // SELLER must create requests for themselves only
-    // ADMIN can create for any seller
-    const sellerId = user.role === 'SELLER' ? user.id : (body.sellerId || user.id);
-
-    // Validate required fields
-    if (!body.customerName || !body.contact || !body.country || !body.source) {
+    // Validate with Zod schema
+    const validation = createRequestApiSchema.safeParse(body);
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'Thiếu thông tin bắt buộc: customerName, contact, country, source' },
+        {
+          success: false,
+          error: 'Dữ liệu không hợp lệ',
+          details: extractZodErrors(validation.error),
+        },
         { status: 400 }
       );
     }
 
+    const data = validation.data;
+
+    // SELLER must create requests for themselves only
+    // ADMIN can create for any seller
+    const sellerId = user.role === 'SELLER' ? user.id : (data.sellerId || user.id);
+
     // Generate legacy code: YYMMDD-NAME-COUNTRY
     const now = new Date();
     const dateStr = now.toISOString().slice(2, 10).replace(/-/g, '');
-    const namePart = body.customerName.split(' ')[0].toUpperCase().slice(0, 4);
-    const countryPart = body.country.toUpperCase().slice(0, 2);
+    const namePart = data.customerName.split(' ')[0].toUpperCase().slice(0, 4);
+    const countryPart = data.country.toUpperCase().slice(0, 2);
     const randomSuffix = Math.random().toString(36).substring(2, 4).toUpperCase();
     const code = `${dateStr}-${namePart}-${countryPart}-${randomSuffix}`;
 
@@ -139,13 +147,13 @@ export async function POST(request: NextRequest) {
     const rqid = await generateRQID();
 
     // Determine status and stage
-    const status = (body.status || 'DANG_LL_CHUA_TL') as RequestStatus;
+    const status = (data.status || 'DANG_LL_CHUA_TL') as RequestStatus;
     const stage = getStageFromStatus(status);
 
     // Calculate nextFollowUp if status is F1-F4
     let nextFollowUp: Date | null = null;
     if (isFollowUpStatus(status)) {
-      const contactDate = body.lastContactDate ? new Date(body.lastContactDate) : now;
+      const contactDate = data.lastContactDate ? new Date(data.lastContactDate) : now;
       nextFollowUp = await calculateNextFollowUp(status, contactDate);
     }
 
@@ -154,22 +162,22 @@ export async function POST(request: NextRequest) {
       data: {
         code,
         rqid,
-        customerName: body.customerName.trim(),
-        contact: body.contact.trim(),
-        whatsapp: body.whatsapp?.trim() || null,
-        pax: body.pax || 1,
-        country: body.country.trim(),
-        source: body.source.trim(),
+        customerName: data.customerName.trim(),
+        contact: data.contact.trim(),
+        whatsapp: data.whatsapp?.trim() || null,
+        pax: data.pax || 1,
+        country: data.country.trim(),
+        source: data.source.trim(),
         status,
         stage,
-        tourDays: body.tourDays || null,
-        startDate: body.startDate ? new Date(body.startDate) : null,
-        expectedDate: body.expectedDate ? new Date(body.expectedDate) : null,
-        expectedRevenue: body.expectedRevenue || null,
-        expectedCost: body.expectedCost || null,
-        lastContactDate: body.lastContactDate ? new Date(body.lastContactDate) : null,
+        tourDays: data.tourDays || null,
+        startDate: data.startDate ? new Date(data.startDate) : null,
+        expectedDate: data.expectedDate ? new Date(data.expectedDate) : null,
+        expectedRevenue: data.expectedRevenue || null,
+        expectedCost: data.expectedCost || null,
+        lastContactDate: data.lastContactDate ? new Date(data.lastContactDate) : null,
         nextFollowUp,
-        notes: body.notes?.trim() || null,
+        notes: data.notes?.trim() || null,
         sellerId,
       },
       include: {

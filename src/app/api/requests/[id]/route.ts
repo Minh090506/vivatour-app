@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db';
 import { calculateNextFollowUp, calculateEndDate, generateBookingCode } from '@/lib/request-utils';
 import { getStageFromStatus, isFollowUpStatus, type RequestStatus } from '@/config/request-config';
 import { getSessionUser, unauthorizedResponse, forbiddenResponse } from '@/lib/auth-utils';
+import { updateRequestApiSchema, extractZodErrors } from '@/lib/validations/request-validation';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -69,6 +70,21 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const { id } = await params;
     const body = await request.json();
 
+    // Validate with Zod schema (partial - all fields optional)
+    const validation = updateRequestApiSchema.safeParse(body);
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Dữ liệu không hợp lệ',
+          details: extractZodErrors(validation.error),
+        },
+        { status: 400 }
+      );
+    }
+
+    const data = validation.data;
+
     // Check if request exists
     const existing = await prisma.request.findUnique({ where: { id } });
     if (!existing) {
@@ -88,59 +104,59 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return forbiddenResponse('Kế toán không có quyền chỉnh sửa yêu cầu');
     }
 
-    // Build update data
+    // Build update data from validated input
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: Record<string, any> = {};
     let responseWarning: string | null = null;
 
-    // Basic fields
-    if (body.customerName !== undefined) updateData.customerName = body.customerName.trim();
-    if (body.contact !== undefined) updateData.contact = body.contact.trim();
-    if (body.whatsapp !== undefined) updateData.whatsapp = body.whatsapp?.trim() || null;
-    if (body.pax !== undefined) updateData.pax = body.pax;
-    if (body.country !== undefined) updateData.country = body.country.trim();
-    if (body.source !== undefined) updateData.source = body.source.trim();
-    if (body.tourDays !== undefined) updateData.tourDays = body.tourDays;
-    if (body.expectedDate !== undefined) {
-      updateData.expectedDate = body.expectedDate ? new Date(body.expectedDate) : null;
+    // Basic fields - only update if provided
+    if (data.customerName !== undefined) updateData.customerName = data.customerName.trim();
+    if (data.contact !== undefined) updateData.contact = data.contact.trim();
+    if (data.whatsapp !== undefined) updateData.whatsapp = data.whatsapp?.trim() || null;
+    if (data.pax !== undefined) updateData.pax = data.pax;
+    if (data.country !== undefined) updateData.country = data.country.trim();
+    if (data.source !== undefined) updateData.source = data.source.trim();
+    if (data.tourDays !== undefined) updateData.tourDays = data.tourDays;
+    if (data.expectedDate !== undefined) {
+      updateData.expectedDate = data.expectedDate ? new Date(data.expectedDate) : null;
     }
-    if (body.expectedRevenue !== undefined) updateData.expectedRevenue = body.expectedRevenue;
-    if (body.expectedCost !== undefined) updateData.expectedCost = body.expectedCost;
-    if (body.notes !== undefined) updateData.notes = body.notes?.trim() || null;
-    if (body.lastContactDate !== undefined) {
-      updateData.lastContactDate = body.lastContactDate ? new Date(body.lastContactDate) : null;
+    if (data.expectedRevenue !== undefined) updateData.expectedRevenue = data.expectedRevenue;
+    if (data.expectedCost !== undefined) updateData.expectedCost = data.expectedCost;
+    if (data.notes !== undefined) updateData.notes = data.notes?.trim() || null;
+    if (data.lastContactDate !== undefined) {
+      updateData.lastContactDate = data.lastContactDate ? new Date(data.lastContactDate) : null;
     }
 
     // Handle startDate and calculate endDate
-    if (body.startDate !== undefined) {
-      updateData.startDate = body.startDate ? new Date(body.startDate) : null;
+    if (data.startDate !== undefined) {
+      updateData.startDate = data.startDate ? new Date(data.startDate) : null;
       // Calculate endDate if startDate and tourDays available
-      if (body.startDate) {
-        const days = body.tourDays ?? existing.tourDays;
+      if (data.startDate) {
+        const days = data.tourDays ?? existing.tourDays;
         if (days) {
-          updateData.endDate = calculateEndDate(new Date(body.startDate), days);
+          updateData.endDate = calculateEndDate(new Date(data.startDate), days);
         }
       }
-    } else if (body.tourDays !== undefined && existing.startDate) {
+    } else if (data.tourDays !== undefined && existing.startDate) {
       // If only tourDays changed, recalculate endDate
-      updateData.endDate = calculateEndDate(existing.startDate, body.tourDays);
+      updateData.endDate = calculateEndDate(existing.startDate, data.tourDays);
     }
 
     // Handle status change → update stage and nextFollowUp
-    if (body.status !== undefined && body.status !== existing.status) {
-      const newStatus = body.status as RequestStatus;
+    if (data.status !== undefined && data.status !== existing.status) {
+      const newStatus = data.status as RequestStatus;
       updateData.status = newStatus;
       updateData.stage = getStageFromStatus(newStatus);
       updateData.statusChangedAt = new Date();
       // Note: statusChangedBy should be set from auth context when available
-      if (body.statusChangedBy) {
-        updateData.statusChangedBy = body.statusChangedBy;
+      if (data.statusChangedBy) {
+        updateData.statusChangedBy = data.statusChangedBy;
       }
 
       // Recalculate nextFollowUp based on new status
       if (isFollowUpStatus(newStatus)) {
-        const contactDate = body.lastContactDate
-          ? new Date(body.lastContactDate)
+        const contactDate = data.lastContactDate
+          ? new Date(data.lastContactDate)
           : existing.lastContactDate || new Date();
         updateData.nextFollowUp = await calculateNextFollowUp(newStatus, contactDate);
       } else {
@@ -150,10 +166,14 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       // Handle BOOKING status transition - generate booking code
       if (newStatus === 'BOOKING' && existing.status !== 'BOOKING') {
         // Require startDate for booking
-        const startDate = body.startDate ? new Date(body.startDate) : existing.startDate;
+        const startDate = data.startDate ? new Date(data.startDate) : existing.startDate;
         if (!startDate) {
           return NextResponse.json(
-            { success: false, error: 'Cần nhập ngày bắt đầu tour trước khi chuyển Booking' },
+            {
+              success: false,
+              error: 'Cần nhập ngày bắt đầu tour trước khi chuyển Booking',
+              details: { startDate: 'Ngày bắt đầu là bắt buộc khi chuyển sang Booking' },
+            },
             { status: 400 }
           );
         }
@@ -167,17 +187,17 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       if (existing.status === 'BOOKING' && newStatus !== 'BOOKING') {
         responseWarning = 'Đã chuyển khỏi Booking. Mã booking và operators vẫn được giữ lại.';
       }
-    } else if (body.lastContactDate !== undefined && isFollowUpStatus(existing.status as RequestStatus)) {
+    } else if (data.lastContactDate !== undefined && isFollowUpStatus(existing.status as RequestStatus)) {
       // If only lastContactDate changed and status is F1-F4, recalculate nextFollowUp
       updateData.nextFollowUp = await calculateNextFollowUp(
         existing.status as RequestStatus,
-        new Date(body.lastContactDate)
+        new Date(data.lastContactDate)
       );
     }
 
     // Manual nextFollowUp override (if explicitly provided)
-    if (body.nextFollowUp !== undefined && !body.status) {
-      updateData.nextFollowUp = body.nextFollowUp ? new Date(body.nextFollowUp) : null;
+    if (data.nextFollowUp !== undefined && !data.status) {
+      updateData.nextFollowUp = data.nextFollowUp ? new Date(data.nextFollowUp) : null;
     }
 
     const updatedRequest = await prisma.request.update({
