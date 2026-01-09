@@ -33,70 +33,72 @@ const dateStringOptional = z
   .nullable()
   .or(z.literal(''));
 
-// Base schema for operator form data
-export const operatorFormSchema = z
-  .object({
-    // Required fields
-    requestId: z
-      .string({ message: 'Vui lòng chọn Booking' })
-      .min(1, 'Vui lòng chọn Booking'),
+// Base object schema for operator form data (without refinements)
+const operatorFormBaseSchema = z.object({
+  // Required fields
+  requestId: z
+    .string({ message: 'Vui lòng chọn Booking' })
+    .min(1, 'Vui lòng chọn Booking'),
 
-    serviceDate: dateStringRequired,
+  serviceDate: dateStringRequired,
 
-    serviceType: serviceTypeEnum,
+  serviceType: serviceTypeEnum,
 
-    serviceName: z
-      .string({ message: 'Tên dịch vụ là bắt buộc' })
-      .min(1, 'Vui lòng nhập tên dịch vụ')
-      .max(255, 'Tên dịch vụ không được quá 255 ký tự')
-      .transform((val) => val.trim()),
+  serviceName: z
+    .string({ message: 'Tên dịch vụ là bắt buộc' })
+    .min(1, 'Vui lòng nhập tên dịch vụ')
+    .max(255, 'Tên dịch vụ không được quá 255 ký tự')
+    .transform((val) => val.trim()),
 
-    // Supplier - either supplierId or supplier name required
-    supplierId: z.string().optional().nullable().or(z.literal('')),
-    supplier: z
-      .string()
-      .max(255, 'Tên NCC không được quá 255 ký tự')
-      .optional()
-      .nullable()
-      .or(z.literal('')),
+  // Supplier - either supplierId or supplier name required
+  supplierId: z.string().optional().nullable().or(z.literal('')),
+  supplier: z
+    .string()
+    .max(255, 'Tên NCC không được quá 255 ký tự')
+    .optional()
+    .nullable()
+    .or(z.literal('')),
 
-    // Cost fields
-    costBeforeTax: z
-      .number({ message: 'Chi phí trước thuế phải là số' })
-      .min(0, 'Chi phí trước thuế không được âm'),
+  // Cost fields
+  costBeforeTax: z
+    .number({ message: 'Chi phí trước thuế phải là số' })
+    .min(0, 'Chi phí trước thuế không được âm'),
 
-    vat: z
-      .number({ message: 'Thuế VAT phải là số' })
-      .min(0, 'Thuế VAT không được âm')
-      .optional()
-      .nullable(),
+  vat: z
+    .number({ message: 'Thuế VAT phải là số' })
+    .min(0, 'Thuế VAT không được âm')
+    .optional()
+    .nullable(),
 
-    totalCost: z
-      .number({ message: 'Tổng chi phí phải là số' })
-      .min(0, 'Tổng chi phí không được âm'),
+  totalCost: z
+    .number({ message: 'Tổng chi phí phải là số' })
+    .min(0, 'Tổng chi phí không được âm'),
 
-    // Payment fields
-    paidAmount: z
-      .number({ message: 'Số tiền thanh toán phải là số' })
-      .min(0, 'Số tiền thanh toán không được âm')
-      .default(0),
+  // Payment fields
+  paidAmount: z
+    .number({ message: 'Số tiền thanh toán phải là số' })
+    .min(0, 'Số tiền thanh toán không được âm')
+    .default(0),
 
-    paymentDeadline: dateStringOptional,
+  paymentDeadline: dateStringOptional,
 
-    bankAccount: z
-      .string()
-      .max(255, 'Thông tin tài khoản không được quá 255 ký tự')
-      .optional()
-      .nullable()
-      .or(z.literal('')),
+  bankAccount: z
+    .string()
+    .max(255, 'Thông tin tài khoản không được quá 255 ký tự')
+    .optional()
+    .nullable()
+    .or(z.literal('')),
 
-    notes: z
-      .string()
-      .max(1000, 'Ghi chú không được quá 1000 ký tự')
-      .optional()
-      .nullable()
-      .or(z.literal('')),
-  })
+  notes: z
+    .string()
+    .max(1000, 'Ghi chú không được quá 1000 ký tự')
+    .optional()
+    .nullable()
+    .or(z.literal('')),
+});
+
+// Full form schema with refinements (for create)
+export const operatorFormSchema = operatorFormBaseSchema
   // Supplier validation: either supplierId or supplier name required
   .refine(
     (data) => data.supplierId || data.supplier,
@@ -138,8 +140,8 @@ export const operatorFormSchema = z
 // Schema for creating new operator (same as form)
 export const createOperatorSchema = operatorFormSchema;
 
-// Schema for updating operator (all fields optional except id)
-export const updateOperatorSchema = operatorFormSchema.partial().extend({
+// Schema for updating operator (all fields optional - use base schema to allow partial)
+export const updateOperatorSchema = operatorFormBaseSchema.partial().extend({
   id: z.string().uuid('ID dịch vụ không hợp lệ').optional(),
 });
 

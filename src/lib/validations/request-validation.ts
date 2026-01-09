@@ -24,129 +24,130 @@ const requestStageEnum = z.enum(REQUEST_STAGE_KEYS as [RequestStage, ...RequestS
 // Phone regex: international format or Vietnamese format
 const phoneRegex = /^(\+?[0-9]{8,15}|0[0-9]{9,10})$/;
 
-// Base schema for request form data
-export const requestFormSchema = z
-  .object({
-    // Required fields
-    customerName: z
-      .string()
-      .min(2, 'Tên khách hàng phải có ít nhất 2 ký tự')
-      .max(100, 'Tên khách hàng không được quá 100 ký tự')
-      .transform((val) => val.trim()),
+// Base object schema for request form data (without refinements)
+const requestFormBaseSchema = z.object({
+  // Required fields
+  customerName: z
+    .string()
+    .min(2, 'Tên khách hàng phải có ít nhất 2 ký tự')
+    .max(100, 'Tên khách hàng không được quá 100 ký tự')
+    .transform((val) => val.trim()),
 
-    contact: z
-      .string()
-      .min(1, 'Thông tin liên hệ không được trống')
-      .max(255, 'Thông tin liên hệ không được quá 255 ký tự')
-      .transform((val) => val.trim()),
+  contact: z
+    .string()
+    .min(1, 'Thông tin liên hệ không được trống')
+    .max(255, 'Thông tin liên hệ không được quá 255 ký tự')
+    .transform((val) => val.trim()),
 
-    country: z
-      .string()
-      .min(1, 'Quốc gia không được trống')
-      .max(100, 'Quốc gia không được quá 100 ký tự')
-      .transform((val) => val.trim()),
+  country: z
+    .string()
+    .min(1, 'Quốc gia không được trống')
+    .max(100, 'Quốc gia không được quá 100 ký tự')
+    .transform((val) => val.trim()),
 
-    source: z
-      .string()
-      .min(1, 'Nguồn không được trống')
-      .max(100, 'Nguồn không được quá 100 ký tự')
-      .transform((val) => val.trim()),
+  source: z
+    .string()
+    .min(1, 'Nguồn không được trống')
+    .max(100, 'Nguồn không được quá 100 ký tự')
+    .transform((val) => val.trim()),
 
-    pax: z
-      .number({ message: 'Số khách phải là số' })
-      .int('Số khách phải là số nguyên')
-      .min(1, 'Số khách phải ít nhất 1')
-      .max(100, 'Số khách không được quá 100'),
+  pax: z
+    .number({ message: 'Số khách phải là số' })
+    .int('Số khách phải là số nguyên')
+    .min(1, 'Số khách phải ít nhất 1')
+    .max(100, 'Số khách không được quá 100'),
 
-    status: requestStatusEnum,
+  status: requestStatusEnum,
 
-    // Optional fields
-    whatsapp: z
-      .string()
-      .regex(phoneRegex, 'Số WhatsApp không hợp lệ (8-15 số)')
-      .optional()
-      .nullable()
-      .or(z.literal('')),
+  // Optional fields
+  whatsapp: z
+    .string()
+    .regex(phoneRegex, 'Số WhatsApp không hợp lệ (8-15 số)')
+    .optional()
+    .nullable()
+    .or(z.literal('')),
 
-    stage: requestStageEnum.optional(),
+  stage: requestStageEnum.optional(),
 
-    tourDays: z
-      .number({ message: 'Số ngày tour phải là số' })
-      .int('Số ngày tour phải là số nguyên')
-      .min(1, 'Số ngày tour phải ít nhất 1')
-      .max(365, 'Số ngày tour không được quá 365')
-      .optional()
-      .nullable(),
+  tourDays: z
+    .number({ message: 'Số ngày tour phải là số' })
+    .int('Số ngày tour phải là số nguyên')
+    .min(1, 'Số ngày tour phải ít nhất 1')
+    .max(365, 'Số ngày tour không được quá 365')
+    .optional()
+    .nullable(),
 
-    startDate: z
-      .string()
-      .datetime({ message: 'Ngày bắt đầu không hợp lệ' })
-      .optional()
-      .nullable()
-      .or(z.literal('')),
+  startDate: z
+    .string()
+    .datetime({ message: 'Ngày bắt đầu không hợp lệ' })
+    .optional()
+    .nullable()
+    .or(z.literal('')),
 
-    endDate: z
-      .string()
-      .datetime({ message: 'Ngày kết thúc không hợp lệ' })
-      .optional()
-      .nullable()
-      .or(z.literal('')),
+  endDate: z
+    .string()
+    .datetime({ message: 'Ngày kết thúc không hợp lệ' })
+    .optional()
+    .nullable()
+    .or(z.literal('')),
 
-    expectedDate: z
-      .string()
-      .datetime({ message: 'Ngày dự kiến không hợp lệ' })
-      .optional()
-      .nullable()
-      .or(z.literal('')),
+  expectedDate: z
+    .string()
+    .datetime({ message: 'Ngày dự kiến không hợp lệ' })
+    .optional()
+    .nullable()
+    .or(z.literal('')),
 
-    expectedRevenue: z
-      .number({ message: 'Doanh thu dự kiến phải là số' })
-      .min(0, 'Doanh thu dự kiến không được âm')
-      .optional()
-      .nullable(),
+  expectedRevenue: z
+    .number({ message: 'Doanh thu dự kiến phải là số' })
+    .min(0, 'Doanh thu dự kiến không được âm')
+    .optional()
+    .nullable(),
 
-    expectedCost: z
-      .number({ message: 'Chi phí dự kiến phải là số' })
-      .min(0, 'Chi phí dự kiến không được âm')
-      .optional()
-      .nullable(),
+  expectedCost: z
+    .number({ message: 'Chi phí dự kiến phải là số' })
+    .min(0, 'Chi phí dự kiến không được âm')
+    .optional()
+    .nullable(),
 
-    lastContactDate: z
-      .string()
-      .datetime({ message: 'Ngày liên hệ cuối không hợp lệ' })
-      .optional()
-      .nullable()
-      .or(z.literal('')),
+  lastContactDate: z
+    .string()
+    .datetime({ message: 'Ngày liên hệ cuối không hợp lệ' })
+    .optional()
+    .nullable()
+    .or(z.literal('')),
 
-    notes: z
-      .string()
-      .max(1000, 'Ghi chú không được quá 1000 ký tự')
-      .optional()
-      .nullable()
-      .or(z.literal('')),
+  notes: z
+    .string()
+    .max(1000, 'Ghi chú không được quá 1000 ký tự')
+    .optional()
+    .nullable()
+    .or(z.literal('')),
 
-    // Seller assignment (for ADMIN creating on behalf)
-    sellerId: z.string().uuid('ID seller không hợp lệ').optional().nullable(),
-  })
-  .refine(
-    (data) => {
-      // If both startDate and endDate are provided, endDate must be >= startDate
-      if (data.startDate && data.endDate) {
-        return new Date(data.endDate) >= new Date(data.startDate);
-      }
-      return true;
-    },
-    {
-      message: 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu',
-      path: ['endDate'],
+  // Seller assignment (for ADMIN creating on behalf)
+  sellerId: z.string().uuid('ID seller không hợp lệ').optional().nullable(),
+});
+
+// Full form schema with refinements (for create)
+export const requestFormSchema = requestFormBaseSchema.refine(
+  (data) => {
+    // If both startDate and endDate are provided, endDate must be >= startDate
+    if (data.startDate && data.endDate) {
+      return new Date(data.endDate) >= new Date(data.startDate);
     }
-  );
+    return true;
+  },
+  {
+    message: 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu',
+    path: ['endDate'],
+  }
+);
 
 // Schema for creating new request (stricter - requires status)
 export const createRequestSchema = requestFormSchema;
 
-// Schema for updating request (all fields optional except id)
-export const updateRequestSchema = requestFormSchema.partial().extend({
+// Schema for updating request (all fields optional - use base schema to allow partial)
+export const updateRequestSchema = requestFormBaseSchema.partial().extend({
   id: z.string().uuid('ID yêu cầu không hợp lệ'),
 });
 

@@ -137,7 +137,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
           updateData.endDate = calculateEndDate(new Date(data.startDate), days);
         }
       }
-    } else if (data.tourDays !== undefined && existing.startDate) {
+    } else if (data.tourDays !== undefined && data.tourDays !== null && existing.startDate) {
       // If only tourDays changed, recalculate endDate
       updateData.endDate = calculateEndDate(existing.startDate, data.tourDays);
     }
@@ -187,7 +187,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       if (existing.status === 'BOOKING' && newStatus !== 'BOOKING') {
         responseWarning = 'Đã chuyển khỏi Booking. Mã booking và operators vẫn được giữ lại.';
       }
-    } else if (data.lastContactDate !== undefined && isFollowUpStatus(existing.status as RequestStatus)) {
+    } else if (data.lastContactDate !== undefined && data.lastContactDate !== null && isFollowUpStatus(existing.status as RequestStatus)) {
       // If only lastContactDate changed and status is F1-F4, recalculate nextFollowUp
       updateData.nextFollowUp = await calculateNextFollowUp(
         existing.status as RequestStatus,
