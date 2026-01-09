@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowUpDown, TrendingUp, TrendingDown } from 'lucide-react';
+import { ArrowUpDown, TrendingUp, TrendingDown, Download } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import type { ProfitByBooking, ProfitReportSummary } from '@/types';
 
@@ -46,13 +46,61 @@ export function ProfitReportTable({ data, summary }: Props) {
     }
   };
 
+  // Export to CSV
+  const handleExportCSV = () => {
+    if (data.length === 0) return;
+
+    // CSV headers
+    const headers = ['Mã Booking', 'Khách hàng', 'Chi phí (VND)', 'Doanh thu (VND)', 'Lợi nhuận (VND)', 'Tỷ suất (%)'];
+
+    // Data rows
+    const rows = sortedData.map((item) => [
+      item.bookingCode,
+      `"${item.customerName}"`, // Wrap in quotes in case of commas
+      item.totalCost,
+      item.totalRevenue,
+      item.profit,
+      item.profitMargin.toFixed(1),
+    ]);
+
+    // Summary row
+    const summaryRow = [
+      'TỔNG CỘNG',
+      `${summary.bookingCount} bookings`,
+      summary.totalCost,
+      summary.totalRevenue,
+      summary.totalProfit,
+      summary.avgProfitMargin.toFixed(1),
+    ];
+
+    // Build CSV content with BOM for Excel UTF-8
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(',')), summaryRow.join(',')].join('\n');
+
+    // Create download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `bao-cao-loi-nhuan-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5" />
           Chi tiết lợi nhuận theo Booking
         </CardTitle>
+        {data.length > 0 && (
+          <Button variant="outline" size="sm" onClick={handleExportCSV}>
+            <Download className="h-4 w-4 mr-2" />
+            Xuất CSV
+          </Button>
+        )}
       </CardHeader>
       <CardContent>
         {/* Summary Row */}

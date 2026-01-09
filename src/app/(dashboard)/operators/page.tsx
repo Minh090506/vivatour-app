@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, ClipboardList, Lock, RefreshCw, Archive, ArchiveRestore } from 'lucide-react';
+import { Plus, ClipboardList, Lock, RefreshCw, Archive, ArchiveRestore, BarChart3 } from 'lucide-react';
 import { OperatorListFilters } from '@/components/operators/operator-list-filters';
 import { OperatorLockDialog } from '@/components/operators/operator-lock-dialog';
 import { SERVICE_TYPES, PAYMENT_STATUSES, type ServiceTypeKey, type PaymentStatusKey } from '@/config/operator-config';
@@ -146,6 +146,11 @@ export default function OperatorsPage() {
           <p className="text-muted-foreground">Chi phí dịch vụ theo Booking</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/operators/reports">
+              <BarChart3 className="mr-2 h-4 w-4" /> Báo cáo
+            </Link>
+          </Button>
           <Button
             variant="outline"
             onClick={handleAutoArchive}
