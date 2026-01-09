@@ -13,8 +13,9 @@ import { LoginForm } from "../login-form";
  */
 
 // Mock next-auth/react with simple module mock
+// Return resolved promise to prevent async state update warnings
 jest.mock("next-auth/react", () => ({
-  signIn: jest.fn(),
+  signIn: jest.fn().mockResolvedValue({ ok: true }),
 }));
 
 // Mock next/navigation
@@ -203,12 +204,16 @@ describe("LoginForm Component", () => {
       const passwordInput = screen.getByLabelText(/mat khau/i) as HTMLInputElement;
       const submitButton = screen.getByRole("button", { name: /dang nhap/i });
 
-      fireEvent.change(emailInput, { target: { value: "test@example.com" } });
-      fireEvent.change(passwordInput, { target: { value: "password123" } });
-      fireEvent.click(submitButton);
+      await act(async () => {
+        fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+        fireEvent.change(passwordInput, { target: { value: "password123" } });
+        fireEvent.click(submitButton);
+      });
 
-      // Verify form can be submitted without throwing error
-      expect(submitButton).toBeInTheDocument();
+      // Wait for async state updates to complete
+      await waitFor(() => {
+        expect(submitButton).toBeInTheDocument();
+      });
     });
   });
 
