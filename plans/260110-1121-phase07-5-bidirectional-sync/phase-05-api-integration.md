@@ -1,8 +1,8 @@
 ---
 date: 2026-01-10
 priority: P1
-status: pending
-review: pending
+status: completed
+completed: 2026-01-10
 parent: ./plan.md
 ---
 

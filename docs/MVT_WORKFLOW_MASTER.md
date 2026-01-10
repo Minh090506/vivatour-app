@@ -1284,6 +1284,11 @@ function canEditLockedRow(userInfo, row) {
 │  GET  /api/reports/profit/:month       - Profit report by month             │
 │  GET  /api/reports/booking-summary     - Booking summary                    │
 │                                                                              │
+│  SYNC MODULE (Phase 05)                                                      │
+│  ─────────────────────────────────────────────────────────────────────────  │
+│  POST /api/sync/write-back              - Process queue → update Sheets      │
+│  GET  /api/sync/queue                   - Get queue stats & recent items     │
+│                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 

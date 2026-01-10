@@ -1360,6 +1360,140 @@ prisma/
 
 ---
 
+## Phase 05: API Integration
+
+### Write-Back Sync API
+
+**Endpoint**: `POST /api/sync/write-back`
+
+**Purpose**: Process pending queue items and write database changes to Google Sheets
+
+**Authentication**:
+- Cron trigger: Bearer token via `Authorization: Bearer {CRON_SECRET}` (timing-safe comparison)
+- Manual trigger: Admin user session with wildcard permission
+
+**Cron Schedule**: Every 5 minutes (Vercel cron, requires Pro plan)
+```json
+{
+  "crons": [
+    {
+      "path": "/api/sync/write-back",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}
+```
+
+**Environment Variable**:
+```
+CRON_SECRET="your-secure-random-string-here"  # Generated: openssl rand -hex 32
+```
+
+**Request/Response**:
+```typescript
+// POST /api/sync/write-back
+Response {
+  success: true,
+  result: {
+    processed: number,        // Total items dequeued
+    succeeded: number,        // Successfully synced
+    failed: number,          // Retry or failed
+    skipped: number          // Not queued
+  },
+  queueStats: {
+    total: number,
+    pending: number,
+    processing: number,
+    completed: number,
+    failed: number
+  }
+}
+```
+
+**Processing Logic**:
+1. Reset stuck items (PROCESSING > 10 minutes → PENDING)
+2. Dequeue up to 100 items in batches of 25
+3. For each item:
+   - **DELETE**: Skip (don't modify Sheets on DB delete)
+   - **CREATE** without sheetRowIndex: Append new row to sheet
+   - **CREATE/UPDATE** with sheetRowIndex: Update existing row in place
+4. Log success/failure to SyncLog table
+5. Weekly cleanup: Remove completed items older than 7 days (Sundays at 3 AM UTC)
+
+**Response Codes**:
+- `200`: Processing completed (check result for failures)
+- `401`: Unauthorized (invalid cron secret or missing session)
+- `403`: Forbidden (user not admin)
+- `500`: Processing error
+
+---
+
+### Queue Status API
+
+**Endpoint**: `GET /api/sync/queue`
+
+**Purpose**: Get queue statistics and recent failed items (admin view)
+
+**Authentication**: Authenticated user session required
+
+**Response**:
+```typescript
+{
+  success: true,
+  data: {
+    stats: {
+      total: number,
+      pending: number,
+      processing: number,
+      completed: number,
+      failed: number
+    },
+    recentFailed: [
+      {
+        id: string,
+        model: "Request" | "Operator" | "Revenue",
+        action: "CREATE" | "UPDATE" | "DELETE",
+        recordId: string,
+        lastError: string,
+        retries: number,
+        createdAt: Date
+      }
+    ],
+    recentLogs: SyncLog[],
+    lastProcessed: Date | null
+  }
+}
+```
+
+**Access Control**:
+- Non-admins: Only see stats (total/pending counts)
+- Admins: See stats + failed items + recent write-back logs
+
+**Response Codes**:
+- `200`: Success
+- `401`: Unauthorized
+- `500`: Error fetching queue status
+
+---
+
+### Environment Configuration
+
+**Required for cron**:
+```bash
+# Vercel cron secret (timing-safe verification)
+CRON_SECRET="your-secure-random-string-here"
+
+# Generate: openssl rand -hex 32
+```
+
+**Vercel Deployment Requirements**:
+- Vercel Pro or Enterprise plan (crons not available on free tier)
+- vercel.json configured with cron schedule
+- CRON_SECRET set in Vercel environment variables
+- POST endpoint must accept Authorization header
+
+---
+
 ## Architecture Evolution
 
 ### Current (MVP)
