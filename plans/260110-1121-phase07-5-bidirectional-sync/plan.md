@@ -44,7 +44,7 @@ Extend existing one-way sync (Sheets -> DB) to bidirectional. DB changes write b
 |-------|-------------|--------|------|--------|
 | 01 | Database Queue Model + Utils | 2h | [phase-01](./phase-01-database-queue.md) | ✓ DONE |
 | 02 | Sheets Writer + Retry Logic | 3h | [phase-02](./phase-02-sheets-writer.md) | ✓ DONE |
-| 03 | Reverse Mappers (DB->Sheet) | 2h | [phase-03](./phase-03-reverse-mappers.md) | |
+| 03 | Reverse Mappers (DB->Sheet) | 2h | [phase-03](./phase-03-reverse-mappers.md) | ✓ DONE |
 | 04 | Prisma Change Tracking | 3h | [phase-04](./phase-04-change-tracking.md) | |
 | 05 | API Endpoints + Cron | 2h | [phase-05](./phase-05-api-integration.md) | |
 
