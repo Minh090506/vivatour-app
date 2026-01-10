@@ -165,7 +165,7 @@ function RequestsPageContent() {
         if (sellersData) setSellers(sellersData);
       }
     }
-    init();
+    void init();
   }, []);
 
   // Debounced search: update filters.search after 300ms delay
@@ -182,7 +182,7 @@ function RequestsPageContent() {
     listAbortRef.current?.abort();
     listAbortRef.current = new AbortController();
 
-    fetchRequests(listAbortRef.current.signal);
+    void fetchRequests(listAbortRef.current.signal);
 
     return () => {
       listAbortRef.current?.abort();
@@ -196,7 +196,8 @@ function RequestsPageContent() {
 
     if (selectedId) {
       detailAbortRef.current = new AbortController();
-      fetchRequestDetail(selectedId, detailAbortRef.current.signal);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- async fetch pattern is valid
+      void fetchRequestDetail(selectedId, detailAbortRef.current.signal);
     } else {
       setSelectedRequest(null);
     }

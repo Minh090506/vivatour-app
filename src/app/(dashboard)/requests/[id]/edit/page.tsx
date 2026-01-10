@@ -17,19 +17,21 @@ export default function RequestEditPage() {
   const router = useRouter();
   const params = useParams();
 
+  // ALL hooks MUST be declared before any conditional returns
+  const [request, setRequest] = useState<Request | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   // Safe params validation - handle undefined or array
   const rawId = params.id;
   const id = typeof rawId === 'string' ? rawId : Array.isArray(rawId) ? rawId[0] : '';
 
-  // Redirect if invalid ID
-  if (!id) {
-    router.replace('/requests');
-    return null;
-  }
-
-  const [request, setRequest] = useState<Request | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Redirect effect for invalid ID (replaces early return)
+  useEffect(() => {
+    if (!id) {
+      router.replace('/requests');
+    }
+  }, [id, router]);
 
   const fetchRequest = async () => {
     setLoading(true);
@@ -51,9 +53,16 @@ export default function RequestEditPage() {
   };
 
   useEffect(() => {
-    fetchRequest();
+    if (id) {
+      void fetchRequest();
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // Early return for invalid ID (after all hooks)
+  if (!id) {
+    return null;
+  }
 
   const handleUpdate = async (data: RequestFormData) => {
     const { error: updateError } = await safePut<Request>(`/api/requests/${id}`, data);

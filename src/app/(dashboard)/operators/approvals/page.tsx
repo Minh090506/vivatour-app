@@ -59,7 +59,8 @@ export default function ApprovalsPage() {
   }, [filter]);
 
   useEffect(() => {
-    fetchData();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- async fetch pattern is valid
+    void fetchData();
   }, [fetchData]);
 
   const handleApprove = async (ids: string[], paymentDate: Date) => {
