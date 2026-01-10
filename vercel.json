@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/sync/write-back",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}
