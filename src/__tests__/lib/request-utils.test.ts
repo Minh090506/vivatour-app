@@ -60,9 +60,11 @@ describe('generateRQID', () => {
 
     await generateRQID();
 
-    const callArgs = prismaMock.request.count.mock.calls[0][0];
-    expect(callArgs.where?.createdAt?.gte).toBeDefined();
-    expect(callArgs.where?.createdAt?.lte).toBeDefined();
+    const callArgs = prismaMock.request.count.mock.calls[0]?.[0];
+    expect(callArgs).toBeDefined();
+    const createdAt = callArgs?.where?.createdAt as { gte?: unknown; lte?: unknown } | undefined;
+    expect(createdAt?.gte).toBeDefined();
+    expect(createdAt?.lte).toBeDefined();
   });
 });
 
@@ -487,8 +489,10 @@ describe('generateBookingCode - Phase 1 Schema Changes', () => {
 
       await generateBookingCode(startDate, sellerId);
 
-      const findManyCall = prismaMock.request.findMany.mock.calls[0][0];
-      expect(findManyCall.where?.bookingCode?.startsWith).toBe('20260220T');
+      const findManyCall = prismaMock.request.findMany.mock.calls[0]?.[0];
+      expect(findManyCall).toBeDefined();
+      const bookingCodeFilter = findManyCall?.where?.bookingCode as { startsWith?: string } | undefined;
+      expect(bookingCodeFilter?.startsWith).toBe('20260220T');
     });
   });
 });

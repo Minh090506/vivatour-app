@@ -16,7 +16,8 @@ jest.mock("@/lib/db", () => ({
   },
 }));
 
-const prismaMock = prisma as jest.Mocked<typeof prisma>;
+// Type-safe mock accessor
+const mockUserFindFirst = prisma.user.findFirst as jest.Mock;
 
 const mockSeller = {
   id: "seller-1",
@@ -32,7 +33,7 @@ const mockSeller = {
 describe("sheet-mappers.ts - Request Row Mapping", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    prismaMock.user.findFirst.mockResolvedValue(mockSeller);
+    mockUserFindFirst.mockResolvedValue(mockSeller);
   });
 
   describe("mapRequestRow - Basic Structure", () => {
@@ -278,7 +279,7 @@ describe("sheet-mappers.ts - Request Row Mapping", () => {
     });
 
     test("should return null when Seller (A) is empty", async () => {
-      prismaMock.user.findFirst.mockResolvedValueOnce(null);
+      mockUserFindFirst.mockResolvedValueOnce(null);
 
       const row = Array(44).fill("");
       row[0] = "";
@@ -313,7 +314,7 @@ describe("sheet-mappers.ts - Request Row Mapping", () => {
     });
 
     test("should throw error when no SELLER user found", async () => {
-      prismaMock.user.findFirst.mockResolvedValueOnce(null);
+      mockUserFindFirst.mockResolvedValueOnce(null);
 
       const row = Array(44).fill("");
       row[0] = "Non-existent Seller";
@@ -458,7 +459,7 @@ describe("sheet-mappers.ts - Request Row Mapping", () => {
 
   describe("mapRequestRow - Real-world Integration", () => {
     test("should handle complete real-world request row", async () => {
-      prismaMock.user.findFirst.mockResolvedValueOnce({
+      mockUserFindFirst.mockResolvedValueOnce({
         id: "seller-123",
         email: "phuong@vivatour.com",
         password: null,

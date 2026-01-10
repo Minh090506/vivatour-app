@@ -28,6 +28,9 @@ jest.mock('@/auth', () => ({
 
 import { auth } from '@/auth';
 
+// Type-safe auth mock - use jest.Mock for flexible mocking
+const mockAuth = auth as jest.Mock;
+
 function createMockRequest(url: string): NextRequest {
   return new NextRequest(new URL(url, 'http://localhost:3000'));
 }
@@ -46,12 +49,12 @@ describe('GET /api/reports/dashboard', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.mocked(auth).mockResolvedValue(mockSession as any);
+    mockAuth.mockResolvedValue(mockSession as any);
   });
 
   describe('Authentication & Authorization', () => {
     it('should return 401 when unauthenticated', async () => {
-      jest.mocked(auth).mockResolvedValue(null as any);
+      mockAuth.mockResolvedValue(null as any);
 
       const request = createMockRequest('http://localhost:3000/api/reports/dashboard');
       const response = await GET(request);
@@ -62,7 +65,7 @@ describe('GET /api/reports/dashboard', () => {
     });
 
     it('should return 403 for SELLER role (no revenue:view)', async () => {
-      jest.mocked(auth).mockResolvedValue({
+      mockAuth.mockResolvedValue({
         user: { id: 'user-123', role: 'SELLER' }
       } as any);
 
@@ -75,7 +78,7 @@ describe('GET /api/reports/dashboard', () => {
     });
 
     it('should return 403 for OPERATOR role (no revenue:view)', async () => {
-      jest.mocked(auth).mockResolvedValue({
+      mockAuth.mockResolvedValue({
         user: { id: 'user-123', role: 'OPERATOR' }
       } as any);
 
@@ -227,11 +230,11 @@ describe('GET /api/reports/revenue-trend', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.mocked(auth).mockResolvedValue(mockSession as any);
+    mockAuth.mockResolvedValue(mockSession as any);
   });
 
   it('should return 401 when unauthenticated', async () => {
-    jest.mocked(auth).mockResolvedValue(null as any);
+    mockAuth.mockResolvedValue(null as any);
 
     const request = createMockRequest('http://localhost:3000/api/reports/revenue-trend');
     const response = await GET(request);
@@ -240,7 +243,7 @@ describe('GET /api/reports/revenue-trend', () => {
   });
 
   it('should return 403 for SELLER role', async () => {
-    jest.mocked(auth).mockResolvedValue({
+    mockAuth.mockResolvedValue({
       user: { id: 'user-123', role: 'SELLER' }
     } as any);
 
@@ -319,11 +322,11 @@ describe('GET /api/reports/cost-breakdown', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.mocked(auth).mockResolvedValue(mockSession as any);
+    mockAuth.mockResolvedValue(mockSession as any);
   });
 
   it('should return 401 when unauthenticated', async () => {
-    jest.mocked(auth).mockResolvedValue(null as any);
+    mockAuth.mockResolvedValue(null as any);
 
     const request = createMockRequest('http://localhost:3000/api/reports/cost-breakdown');
     const response = await GET(request);
@@ -332,7 +335,7 @@ describe('GET /api/reports/cost-breakdown', () => {
   });
 
   it('should return 403 for OPERATOR role', async () => {
-    jest.mocked(auth).mockResolvedValue({
+    mockAuth.mockResolvedValue({
       user: { id: 'user-123', role: 'OPERATOR' }
     } as any);
 
@@ -421,11 +424,11 @@ describe('GET /api/reports/funnel', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.mocked(auth).mockResolvedValue(mockSession as any);
+    mockAuth.mockResolvedValue(mockSession as any);
   });
 
   it('should return 401 when unauthenticated', async () => {
-    jest.mocked(auth).mockResolvedValue(null as any);
+    mockAuth.mockResolvedValue(null as any);
 
     const request = createMockRequest('http://localhost:3000/api/reports/funnel');
     const response = await GET(request);
@@ -434,7 +437,7 @@ describe('GET /api/reports/funnel', () => {
   });
 
   it('should return 403 for SELLER role', async () => {
-    jest.mocked(auth).mockResolvedValue({
+    mockAuth.mockResolvedValue({
       user: { id: 'user-123', role: 'SELLER' }
     } as any);
 

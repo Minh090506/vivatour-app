@@ -7,6 +7,7 @@
 
 import { NextRequest } from 'next/server';
 import { prismaMock } from '@/lib/__mocks__/db';
+import type { Supplier } from '@prisma/client';
 
 // Mock the db module
 jest.mock('@/lib/db', () => ({
@@ -32,7 +33,7 @@ import { GET, POST } from '@/app/api/suppliers/route';
 
 // Helper to create mock NextRequest
 function createMockRequest(url: string, options?: RequestInit): NextRequest {
-  return new NextRequest(new URL(url, 'http://localhost:3000'), options);
+  return new NextRequest(new URL(url, 'http://localhost:3000'), options as never);
 }
 
 describe('GET /api/suppliers', () => {
@@ -41,7 +42,7 @@ describe('GET /api/suppliers', () => {
   });
 
   it('should return all suppliers with success response', async () => {
-    const mockSuppliers = [
+    const mockSuppliers: Supplier[] = [
       {
         id: 'sup-1',
         code: 'HOT-DN-ABC-0001',
@@ -170,7 +171,7 @@ describe('GET /api/suppliers', () => {
   });
 
   it('should include balance when includeBalance=true', async () => {
-    const mockSupplier = {
+    const mockSupplier: Supplier = {
       id: 'sup-1',
       code: 'HOT-DN-ABC-0001',
       name: 'Hotel ABC',
@@ -230,7 +231,7 @@ describe('POST /api/suppliers', () => {
   });
 
   it('should create supplier with valid data', async () => {
-    const newSupplier = {
+    const newSupplier: Supplier = {
       id: 'sup-new',
       code: 'HOT-DN-ANK-0001',
       name: 'Ankora Hotel',
@@ -381,11 +382,20 @@ describe('POST /api/suppliers', () => {
       { code: 'HOT-DN-TES-0005' },
     ] as never);
     prismaMock.supplier.findUnique.mockResolvedValue(null);
-    prismaMock.supplier.create.mockImplementation((args) => {
-      return Promise.resolve({
-        id: 'sup-new',
-        ...args.data,
-      } as never);
+    (prismaMock.supplier.create as jest.Mock).mockResolvedValue({
+      id: 'sup-new',
+      code: 'HOT-DN-TES-0006',
+      name: 'Test Hotel',
+      type: 'HOTEL',
+      location: 'DA_NANG',
+      paymentModel: 'PREPAID',
+      isActive: true,
+      creditLimit: null,
+      contact: null,
+      address: null,
+      note: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
 
     const request = createMockRequest('http://localhost:3000/api/suppliers', {
@@ -408,11 +418,20 @@ describe('POST /api/suppliers', () => {
   it('should default paymentModel to PREPAID', async () => {
     prismaMock.supplier.findMany.mockResolvedValue([]);
     prismaMock.supplier.findUnique.mockResolvedValue(null);
-    prismaMock.supplier.create.mockImplementation((args) => {
-      return Promise.resolve({
-        id: 'sup-new',
-        ...args.data,
-      } as never);
+    (prismaMock.supplier.create as jest.Mock).mockResolvedValue({
+      id: 'sup-new',
+      code: 'HOT-DN-TES-0006',
+      name: 'Test Hotel',
+      type: 'HOTEL',
+      location: 'DA_NANG',
+      paymentModel: 'PREPAID',
+      isActive: true,
+      creditLimit: null,
+      contact: null,
+      address: null,
+      note: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
 
     const request = createMockRequest('http://localhost:3000/api/suppliers', {
@@ -437,11 +456,20 @@ describe('POST /api/suppliers', () => {
   it('should default isActive to true', async () => {
     prismaMock.supplier.findMany.mockResolvedValue([]);
     prismaMock.supplier.findUnique.mockResolvedValue(null);
-    prismaMock.supplier.create.mockImplementation((args) => {
-      return Promise.resolve({
-        id: 'sup-new',
-        ...args.data,
-      } as never);
+    (prismaMock.supplier.create as jest.Mock).mockResolvedValue({
+      id: 'sup-new',
+      code: 'HOT-DN-TES-0006',
+      name: 'Test Hotel',
+      type: 'HOTEL',
+      location: 'DA_NANG',
+      paymentModel: 'PREPAID',
+      isActive: true,
+      creditLimit: null,
+      contact: null,
+      address: null,
+      note: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
 
     const request = createMockRequest('http://localhost:3000/api/suppliers', {
@@ -466,11 +494,20 @@ describe('POST /api/suppliers', () => {
   it('should trim text fields', async () => {
     prismaMock.supplier.findMany.mockResolvedValue([]);
     prismaMock.supplier.findUnique.mockResolvedValue(null);
-    prismaMock.supplier.create.mockImplementation((args) => {
-      return Promise.resolve({
-        id: 'sup-new',
-        ...args.data,
-      } as never);
+    (prismaMock.supplier.create as jest.Mock).mockResolvedValue({
+      id: 'sup-new',
+      code: 'HOT-DN-TES-0006',
+      name: 'Test Hotel',
+      type: 'HOTEL',
+      location: 'DA_NANG',
+      paymentModel: 'PREPAID',
+      isActive: true,
+      creditLimit: null,
+      contact: null,
+      address: null,
+      note: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
 
     const request = createMockRequest('http://localhost:3000/api/suppliers', {
@@ -497,11 +534,20 @@ describe('POST /api/suppliers', () => {
   it('should convert creditLimit to number', async () => {
     prismaMock.supplier.findMany.mockResolvedValue([]);
     prismaMock.supplier.findUnique.mockResolvedValue(null);
-    prismaMock.supplier.create.mockImplementation((args) => {
-      return Promise.resolve({
-        id: 'sup-new',
-        ...args.data,
-      } as never);
+    (prismaMock.supplier.create as jest.Mock).mockResolvedValue({
+      id: 'sup-new',
+      code: 'HOT-DN-TES-0006',
+      name: 'Test Hotel',
+      type: 'HOTEL',
+      location: 'DA_NANG',
+      paymentModel: 'PREPAID',
+      isActive: true,
+      creditLimit: null,
+      contact: null,
+      address: null,
+      note: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
 
     const request = createMockRequest('http://localhost:3000/api/suppliers', {

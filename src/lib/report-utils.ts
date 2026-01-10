@@ -1,5 +1,8 @@
 import type { DateRangeOption } from './validations/report-validation';
 
+// Re-export DateRangeOption for consumers
+export type { DateRangeOption } from './validations/report-validation';
+
 // ============================================
 // Date Range Types and Functions
 // ============================================

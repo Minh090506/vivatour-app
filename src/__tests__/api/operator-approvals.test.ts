@@ -227,7 +227,7 @@ describe('POST /api/operators/approve (batch)', () => {
       { ...mockOperator, id: 'op-2' },
     ] as never);
 
-    prismaMock.$transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
+    (prismaMock.$transaction as jest.Mock).mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
       return fn({
         operator: {
           update: jest.fn().mockResolvedValue({ ...mockOperator, paymentStatus: 'PAID' }),

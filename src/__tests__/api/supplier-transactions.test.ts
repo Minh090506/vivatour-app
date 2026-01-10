@@ -7,6 +7,19 @@
 
 import { NextRequest } from 'next/server';
 import { prismaMock } from '@/lib/__mocks__/db';
+import type { SupplierTransaction, TransactionType } from '@prisma/client';
+
+// Mock Decimal type for test data
+class MockDecimal {
+  private value: number;
+  constructor(value: number | string) {
+    this.value = typeof value === 'string' ? parseFloat(value) : value;
+  }
+  toNumber() { return this.value; }
+  toString() { return this.value.toString(); }
+}
+// Use local mock class to avoid Prisma runtime import issues
+const Decimal = MockDecimal;
 
 // Mock the db module
 jest.mock('@/lib/db', () => ({
@@ -20,16 +33,21 @@ import { GET, POST } from '@/app/api/supplier-transactions/route';
 
 // Helper to create mock NextRequest
 function createMockRequest(url: string, options?: RequestInit): NextRequest {
-  return new NextRequest(new URL(url, 'http://localhost:3000'), options);
+  return new NextRequest(new URL(url, 'http://localhost:3000'), options as never);
 }
+
+// Type for transaction with supplier relation
+type TransactionWithSupplier = SupplierTransaction & {
+  supplier: { code: string; name: string };
+};
 
 describe('GET /api/supplier-transactions', () => {
   const mockTransactions = [
     {
       id: 'tx-1',
       supplierId: 'sup-1',
-      type: 'DEPOSIT',
-      amount: 5000000,
+      type: 'DEPOSIT' as TransactionType,
+      amount: new Decimal(5000000) as never,
       transactionDate: new Date('2024-01-15'),
       description: 'Monthly deposit',
       proofLink: 'https://example.com/receipt.pdf',
@@ -41,7 +59,7 @@ describe('GET /api/supplier-transactions', () => {
         name: 'Hotel ABC',
       },
     },
-  ];
+  ] as TransactionWithSupplier[];
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -255,9 +273,11 @@ describe('POST /api/supplier-transactions', () => {
   it('should create transaction with valid data', async () => {
     const createdTransaction = {
       id: 'tx-new',
-      ...validTransactionData,
-      amount: 5000000,
+      supplierId: 'sup-1',
+      type: 'DEPOSIT' as TransactionType,
+      amount: new Decimal(5000000) as never,
       transactionDate: new Date('2024-01-15'),
+      description: 'Monthly deposit',
       proofLink: null,
       relatedBookingCode: null,
       createdBy: 'system',
@@ -266,7 +286,7 @@ describe('POST /api/supplier-transactions', () => {
         code: 'HOT-DN-ABC-0001',
         name: 'Hotel ABC',
       },
-    };
+    } as TransactionWithSupplier;
 
     prismaMock.supplier.findUnique.mockResolvedValue({ id: 'sup-1' } as never);
     prismaMock.supplierTransaction.create.mockResolvedValue(createdTransaction);
@@ -282,7 +302,8 @@ describe('POST /api/supplier-transactions', () => {
     expect(response.status).toBe(201);
     expect(data.success).toBe(true);
     expect(data.data.type).toBe('DEPOSIT');
-    expect(data.data.amount).toBe(5000000);
+    // Amount may be Decimal object or number depending on serialization
+    expect(Number(data.data.amount.value ?? data.data.amount)).toBe(5000000);
   });
 
   it('should return 400 when supplierId is missing', async () => {

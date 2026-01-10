@@ -23,7 +23,10 @@ jest.mock('@/lib/db', () => ({
   },
 }));
 
-const mockPrisma = prisma as jest.Mocked<typeof prisma>;
+// Type-safe mock accessors
+const mockRequestFindUnique = prisma.request.findUnique as jest.Mock;
+const mockOperatorFindUnique = prisma.operator.findUnique as jest.Mock;
+const mockRevenueFindMany = prisma.revenue.findMany as jest.Mock;
 
 describe('ID Utilities', () => {
   beforeEach(() => {
@@ -190,7 +193,7 @@ describe('ID Utilities', () => {
   // ============================================
   describe('generateRequestId - Generate {SellerCode}{yyyyMMddHHmmssSSS}', () => {
     it('generates valid requestId format', async () => {
-      mockPrisma.request.findUnique.mockResolvedValue(null);
+      mockRequestFindUnique.mockResolvedValue(null);
 
       const date = new Date(2026, 0, 8, 14, 30, 45, 123);
       const result = await generateRequestId('LY', date);
@@ -198,7 +201,7 @@ describe('ID Utilities', () => {
     });
 
     it('converts seller code to uppercase', async () => {
-      mockPrisma.request.findUnique.mockResolvedValue(null);
+      mockRequestFindUnique.mockResolvedValue(null);
 
       const date = new Date(2026, 0, 8, 14, 30, 45, 123);
       const result = await generateRequestId('ly', date);
@@ -206,7 +209,7 @@ describe('ID Utilities', () => {
     });
 
     it('removes diacritics from seller code', async () => {
-      mockPrisma.request.findUnique.mockResolvedValue(null);
+      mockRequestFindUnique.mockResolvedValue(null);
 
       const date = new Date(2026, 0, 8, 14, 30, 45, 123);
       const result = await generateRequestId('Lý', date);
@@ -214,7 +217,7 @@ describe('ID Utilities', () => {
     });
 
     it('removes whitespace from seller code', async () => {
-      mockPrisma.request.findUnique.mockResolvedValue(null);
+      mockRequestFindUnique.mockResolvedValue(null);
 
       const date = new Date(2026, 0, 8, 14, 30, 45, 123);
       const result = await generateRequestId('L Y', date);
@@ -222,21 +225,21 @@ describe('ID Utilities', () => {
     });
 
     it('checks uniqueness in database', async () => {
-      mockPrisma.request.findUnique.mockResolvedValue(null);
+      mockRequestFindUnique.mockResolvedValue(null);
 
       const date = new Date(2026, 0, 8, 14, 30, 45, 123);
       await generateRequestId('LY', date);
-      expect(mockPrisma.request.findUnique).toHaveBeenCalled();
+      expect(mockRequestFindUnique).toHaveBeenCalled();
     });
 
     it('retries with new timestamp on collision', async () => {
-      mockPrisma.request.findUnique
+      mockRequestFindUnique
         .mockResolvedValueOnce({ id: 'some-id' }) // First call: collision
         .mockResolvedValueOnce(null); // Second call: available
 
       const date = new Date(2026, 0, 8, 14, 30, 45, 123);
       const result = await generateRequestId('LY', date);
-      expect(mockPrisma.request.findUnique).toHaveBeenCalledTimes(2);
+      expect(mockRequestFindUnique).toHaveBeenCalledTimes(2);
       expect(result).toMatch(/^LY\d{17}$/);
     });
   });
@@ -246,7 +249,7 @@ describe('ID Utilities', () => {
   // ============================================
   describe('generateServiceId - Generate {bookingCode}-{yyyyMMddHHmmssSSS}', () => {
     it('generates valid serviceId format', async () => {
-      mockPrisma.operator.findUnique.mockResolvedValue(null);
+      mockOperatorFindUnique.mockResolvedValue(null);
 
       const date = new Date(2026, 0, 8, 14, 30, 45, 123);
       const result = await generateServiceId('20260108L0001', date);
@@ -254,7 +257,7 @@ describe('ID Utilities', () => {
     });
 
     it('includes booking code in serviceId', async () => {
-      mockPrisma.operator.findUnique.mockResolvedValue(null);
+      mockOperatorFindUnique.mockResolvedValue(null);
 
       const date = new Date(2026, 0, 8, 14, 30, 45, 123);
       const result = await generateServiceId('ABC123', date);
@@ -262,7 +265,7 @@ describe('ID Utilities', () => {
     });
 
     it('includes timestamp after hyphen', async () => {
-      mockPrisma.operator.findUnique.mockResolvedValue(null);
+      mockOperatorFindUnique.mockResolvedValue(null);
 
       const date = new Date(2026, 0, 8, 14, 30, 45, 123);
       const result = await generateServiceId('BC', date);
@@ -270,21 +273,21 @@ describe('ID Utilities', () => {
     });
 
     it('checks uniqueness in database', async () => {
-      mockPrisma.operator.findUnique.mockResolvedValue(null);
+      mockOperatorFindUnique.mockResolvedValue(null);
 
       const date = new Date(2026, 0, 8, 14, 30, 45, 123);
       await generateServiceId('BC', date);
-      expect(mockPrisma.operator.findUnique).toHaveBeenCalled();
+      expect(mockOperatorFindUnique).toHaveBeenCalled();
     });
 
     it('retries on collision', async () => {
-      mockPrisma.operator.findUnique
+      mockOperatorFindUnique
         .mockResolvedValueOnce({ id: 'some-id' })
         .mockResolvedValueOnce(null);
 
       const date = new Date(2026, 0, 8, 14, 30, 45, 123);
       const result = await generateServiceId('BC', date);
-      expect(mockPrisma.operator.findUnique).toHaveBeenCalledTimes(2);
+      expect(mockOperatorFindUnique).toHaveBeenCalledTimes(2);
       expect(result).toMatch(/^BC-\d{17}$/);
     });
   });
@@ -294,7 +297,7 @@ describe('ID Utilities', () => {
   // ============================================
   describe('generateRevenueId - Generate {bookingCode}-{yyyyMMddHHmmss}-{rowNum}', () => {
     it('generates valid revenueId format', async () => {
-      mockPrisma.revenue.findMany.mockResolvedValue([]);
+      mockRevenueFindMany.mockResolvedValue([]);
 
       const date = new Date(2026, 0, 8, 14, 30, 45, 123);
       const result = await generateRevenueId('20260108L0001', date);
@@ -302,7 +305,7 @@ describe('ID Utilities', () => {
     });
 
     it('includes booking code', async () => {
-      mockPrisma.revenue.findMany.mockResolvedValue([]);
+      mockRevenueFindMany.mockResolvedValue([]);
 
       const date = new Date(2026, 0, 8, 14, 30, 45, 123);
       const result = await generateRevenueId('ABC123', date);
@@ -310,7 +313,7 @@ describe('ID Utilities', () => {
     });
 
     it('formats timestamp without milliseconds', async () => {
-      mockPrisma.revenue.findMany.mockResolvedValue([]);
+      mockRevenueFindMany.mockResolvedValue([]);
 
       const date = new Date(2026, 0, 8, 14, 30, 45, 123);
       const result = await generateRevenueId('BC', date);
@@ -322,7 +325,7 @@ describe('ID Utilities', () => {
         { revenueId: 'BC-20260108143045-1' },
         { revenueId: 'BC-20260108143045-2' },
       ];
-      mockPrisma.revenue.findMany.mockResolvedValue(existingRevenue as any);
+      mockRevenueFindMany.mockResolvedValue(existingRevenue as any);
 
       const date = new Date(2026, 0, 8, 14, 30, 45, 123);
       const result = await generateRevenueId('BC', date);
@@ -330,7 +333,7 @@ describe('ID Utilities', () => {
     });
 
     it('starts with row 1 for new prefix', async () => {
-      mockPrisma.revenue.findMany.mockResolvedValue([]);
+      mockRevenueFindMany.mockResolvedValue([]);
 
       const date = new Date(2026, 0, 8, 14, 30, 45, 123);
       const result = await generateRevenueId('BC', date);
@@ -338,11 +341,11 @@ describe('ID Utilities', () => {
     });
 
     it('filters by prefix correctly', async () => {
-      mockPrisma.revenue.findMany.mockResolvedValue([]);
+      mockRevenueFindMany.mockResolvedValue([]);
 
       const date = new Date(2026, 0, 8, 14, 30, 45, 123);
       await generateRevenueId('BC', date);
-      expect(mockPrisma.revenue.findMany).toHaveBeenCalledWith(
+      expect(mockRevenueFindMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             revenueId: expect.objectContaining({
@@ -359,7 +362,7 @@ describe('ID Utilities', () => {
   // ============================================
   describe('ID generation flow', () => {
     it('generates unique IDs for multiple calls', async () => {
-      mockPrisma.request.findUnique.mockResolvedValue(null);
+      mockRequestFindUnique.mockResolvedValue(null);
 
       const date1 = new Date(2026, 0, 8, 14, 30, 45, 100);
       const date2 = new Date(2026, 0, 8, 14, 30, 45, 200);
@@ -373,7 +376,7 @@ describe('ID Utilities', () => {
     });
 
     it('handles concurrent ID generation', async () => {
-      mockPrisma.request.findUnique.mockResolvedValue(null);
+      mockRequestFindUnique.mockResolvedValue(null);
 
       const date1 = new Date(2026, 0, 8, 14, 30, 45, 100);
       const date2 = new Date(2026, 0, 8, 14, 30, 45, 200);

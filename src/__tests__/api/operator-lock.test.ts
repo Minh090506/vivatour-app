@@ -121,7 +121,7 @@ describe('POST /api/operators/lock-period', () => {
       { id: 'op-2' },
     ] as never);
 
-    prismaMock.$transaction.mockImplementation(async (fn) => {
+    (prismaMock.$transaction as jest.Mock).mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
       if (typeof fn === 'function') {
         return fn({
           operator: {
@@ -154,7 +154,7 @@ describe('POST /api/operators/lock-period', () => {
       { id: 'op-1' },
     ] as never);
 
-    prismaMock.$transaction.mockImplementation(async (fn) => {
+    (prismaMock.$transaction as jest.Mock).mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
       if (typeof fn === 'function') {
         return fn({
           operator: {
