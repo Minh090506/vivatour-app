@@ -1054,16 +1054,208 @@ Production:
 
 ---
 
+## Phase 07.5: Bidirectional Sync Architecture
+
+### Overview
+
+Phase 07.5 implements bidirectional synchronization infrastructure. Read-sync (Sheets → DB) existed since Phase 01. Write-sync (DB → Sheets) is implemented via database queue in Phase 07.5.1.
+
+### Architecture Diagram
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                     User Actions                             │
+│              (Create/Update/Delete Records)                  │
+└──────────────────────┬───────────────────────────────────────┘
+                       │
+                       ↓
+        ┌──────────────────────────────┐
+        │   API Route Handler          │
+        │  (POST/PUT/DELETE /api/...)  │
+        └──────────┬───────────────────┘
+                   │
+                   ├→ Validate input
+                   ├→ Update database (Prisma)
+                   ├→ Enqueue to SyncQueue
+                   └→ Return success response
+                       (fire-and-forget)
+                       │
+                       ↓
+            ┌─────────────────────────┐
+            │    SyncQueue Table      │
+            │  (Status: PENDING)      │
+            │  - id, action, model    │
+            │  - recordId, payload    │
+            │  - retries, lastError   │
+            └──────────┬──────────────┘
+                       │
+                       │ [Background Worker / Cron Job - Phase 07.5.2+]
+                       │
+                       ↓
+            ┌─────────────────────────────────────┐
+            │   Sync Worker Process               │
+            │  (dequeue → process → mark status)  │
+            │                                     │
+            │  1. dequeue(25) // Get PENDING      │
+            │  2. For each item:                  │
+            │     - syncToSheet(item)             │
+            │     - markComplete() if success     │
+            │     - markFailed() if error         │
+            │  3. resetStuck() // Crash recovery  │
+            │  4. cleanupCompleted() // Retention │
+            └──────────┬────────────────────────┘
+                       │
+                       ├→ Write to Google Sheets API
+                       │
+                       ↓
+            ┌──────────────────────────┐
+            │   Google Sheets          │
+            │   (Source of Truth)      │
+            └──────────────────────────┘
+
+SyncQueue Status Flow:
+  PENDING --dequeue→ PROCESSING
+     ↑                    │
+     │                    ├→ markComplete() → COMPLETED
+     │                    │
+     │                    └→ markFailed() →
+     │                              │
+     │                              └→ retries < maxRetries?
+     │                                    YES → PENDING (retry)
+     │                                    NO → FAILED
+     └─── resetStuck() [Crash recovery]
+```
+
+### Database Queue Design
+
+**SyncQueue Model** (src/lib/sync/write-back-queue.ts):
+
+```typescript
+export interface EnqueueParams {
+  action: "CREATE" | "UPDATE" | "DELETE"; // What changed
+  model: "Request" | "Operator" | "Revenue"; // Which table
+  recordId: string; // DB record ID
+  sheetRowIndex?: number | null; // Row in sheet (null for CREATE)
+  payload: Record<string, unknown>; // Changed fields
+}
+
+export interface QueueItem {
+  id: string;
+  action: string;
+  model: string;
+  recordId: string;
+  sheetRowIndex: number | null;
+  payload: Prisma.JsonValue;
+}
+
+export interface QueueStats {
+  pending: number;
+  processing: number;
+  completed: number;
+  failed: number;
+}
+```
+
+### Queue Functions
+
+| Function | Purpose | Returns |
+|----------|---------|---------|
+| `enqueue(params)` | Add item to queue | void |
+| `dequeue(batchSize)` | Fetch & mark PENDING items | QueueItem[] |
+| `markComplete(id)` | Mark as synced successfully | void |
+| `markFailed(id, error)` | Mark failed, retry if retries remaining | void |
+| `resetStuck(olderThanMinutes)` | Crash recovery: PROCESSING → PENDING | count |
+| `cleanupCompleted(olderThanDays)` | Delete old completed items | count |
+| `getQueueStats()` | Get queue status counts | QueueStats |
+| `getFailedItems(limit)` | List failed items | Array<FailedItem> |
+| `retryFailed(id)` | Manual retry: reset status & counters | void |
+| `deleteQueueItem(id)` | Force delete queue item | void |
+
+### Retry Logic
+
+1. **Initial Attempt**: maxRetries = 3
+2. **On Failure**:
+   - Increment retries counter
+   - Store lastError message
+   - If retries < maxRetries: Reset to PENDING (automatic retry)
+   - If retries ≥ maxRetries: Set to FAILED (manual intervention needed)
+3. **Retry Backoff**: Linear (future: exponential via Phase 07.5.2)
+
+### Integration with Existing System
+
+**Enqueue Triggers** (future implementation in each API route):
+```typescript
+// After successful DB operation
+await enqueue({
+  action: "CREATE",
+  model: "Request",
+  recordId: newRequest.id,
+  payload: { code, customerName, contact, ... }
+});
+```
+
+**Sync Flow** (Phase 07.5.2 - background worker):
+```typescript
+while (true) {
+  const items = await dequeue(25); // Get next batch
+  for (const item of items) {
+    try {
+      await syncToSheet(item); // Call Google Sheets API
+      await markComplete(item.id);
+    } catch (error) {
+      await markFailed(item.id, error.message);
+    }
+  }
+
+  // Maintenance
+  await resetStuck(10); // Crash recovery
+  await cleanupCompleted(7); // Retention policy
+}
+```
+
+### Monitoring & Operations
+
+**Queue Health Dashboard** (Phase 07.5.3 - future):
+- Live queue stats (pending, processing, completed, failed counts)
+- Failed items with error details
+- Manual retry/delete UI
+- Queue processor status (running/stopped)
+
+**Observability**:
+- Console logging: `[SyncQueue] Operation: message`
+- Error tracking: failed items with lastError field
+- Audit trail: SyncLog table (Phase 01) for completed syncs
+
+### Files Structure
+
+```
+src/lib/sync/
+├── write-back-queue.ts           # Queue utilities (10 functions, 237 lines)
+└── __tests__/
+    └── write-back-queue.test.ts  # Unit tests (~150 lines)
+
+prisma/
+└── schema.prisma                 # SyncQueue model (+24 lines)
+```
+
+---
+
 ## Architecture Evolution
 
 ### Current (MVP)
 - Monolithic Next.js app
 - PostgreSQL database
 - Direct API calls from client
+- Read-sync only (Sheets → DB, Phase 01)
+
+### Phase 07.5 (In Progress)
+- Database queue for write-sync (DB → Sheets, Phase 07.5.1)
+- Background worker for async processing (Phase 07.5.2)
+- Queue monitoring dashboard (Phase 07.5.3)
 
 ### Planned
 - Microservices for Google Sheets sync
-- Message queue for async operations
+- Message queue for async operations (RabbitMQ/Bull)
 - Separate auth service
 - Analytics service
 

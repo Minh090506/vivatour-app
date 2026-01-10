@@ -126,6 +126,8 @@ src/
 │   ├── report-utils.ts               # Date range, KPI calculation, dashboard response types (Phase 07.1)
 │   ├── logger.ts                     # Structured logging
 │   ├── utils.ts                      # cn(), formatCurrency(), formatDate()
+│   ├── sync/                          # Bidirectional sync utilities (Phase 07.5)
+│   │   └── write-back-queue.ts       # SyncQueue management (enqueue, dequeue, markComplete, markFailed, resetStuck, cleanupCompleted, getQueueStats, getFailedItems, retryFailed, deleteQueueItem)
 │   └── validations/                  # Zod schemas
 │       ├── seller.ts                 # Seller schema validation
 │       ├── config.ts                 # Config validation schemas
@@ -598,6 +600,152 @@ interface LockState {
 
 ---
 
+## Phase 07.5: Bidirectional Sync (Database Queue) - Phase 01
+
+### Overview
+
+Phase 07.5.1 implements database queue infrastructure for bidirectional sync (DB → Google Sheets). Writes to DB are enqueued, processed asynchronously, and synced back to Sheets with retry logic, failure tracking, and queue management.
+
+### Database Schema
+
+**SyncQueue Model** (`prisma/schema.prisma`):
+```prisma
+model SyncQueue {
+  id            String    @id @default(cuid())
+  action        String    // "CREATE", "UPDATE", "DELETE"
+  model         String    // "Request", "Operator", "Revenue"
+  recordId      String    // DB record ID
+  sheetRowIndex Int?      // Row number in sheet (null for CREATE)
+  payload       Json      // Changed fields: { field: value }
+  status        String    @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  retries       Int       @default(0)
+  maxRetries    Int       @default(3)
+  lastError     String?
+  createdAt     DateTime  @default(now())
+  processedAt   DateTime?
+
+  @@index([status, createdAt])
+  @@index([model, recordId])
+  @@index([status])
+}
+```
+
+### Core Utilities
+
+**src/lib/sync/write-back-queue.ts** (237 lines):
+
+#### Types & Interfaces
+- `SyncAction`: "CREATE" | "UPDATE" | "DELETE"
+- `QueueStatus`: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED"
+- `SyncModel`: "Request" | "Operator" | "Revenue"
+- `EnqueueParams`: action, model, recordId, sheetRowIndex?, payload
+- `QueueItem`: id, action, model, recordId, sheetRowIndex, payload
+- `QueueStats`: pending, processing, completed, failed counts
+
+#### Functions (10 total)
+
+**1. enqueue(params: EnqueueParams): Promise<void>**
+- Fire-and-forget queue insertion
+- Creates PENDING status record with maxRetries=3
+- Catches errors internally (best-effort)
+- Called after DB CREATE/UPDATE/DELETE operations
+
+**2. dequeue(batchSize: number = 25): Promise<QueueItem[]>**
+- Atomic batch retrieval + status update
+- Transaction: selects PENDING items, marks PROCESSING
+- Prevents duplicate processing
+- Returns oldest items first (FIFO)
+
+**3. markComplete(id: string): Promise<void>**
+- Sets status=COMPLETED, records processedAt timestamp
+- Called after successful sheet sync
+
+**4. markFailed(id: string, error: string): Promise<void>**
+- Increments retries counter
+- If retries < maxRetries: status=PENDING (retry)
+- Else: status=FAILED (give up)
+- Stores error message for debugging
+
+**5. resetStuck(olderThanMinutes: number = 10): Promise<number>**
+- Crash recovery: PROCESSING items older than threshold → PENDING
+- Default 10min timeout per item
+- Returns count of reset items
+- Useful for worker restart scenarios
+
+**6. cleanupCompleted(olderThanDays: number = 7): Promise<number>**
+- Retention policy: delete COMPLETED items older than threshold
+- Default 7 days retention
+- Returns count of deleted items
+
+**7. getQueueStats(): Promise<QueueStats>**
+- Returns current queue state counts
+- Useful for monitoring dashboards
+- Groups by status: pending, processing, completed, failed
+
+**8. getFailedItems(limit: number = 10): Promise<Array>**
+- Lists failed items with error details
+- Returns: id, model, action, recordId, lastError, retries, createdAt
+- Default limit 10 items
+- Useful for error investigation UI
+
+**9. retryFailed(id: string): Promise<void>**
+- Manual retry: sets status=PENDING, resets retries=0, clears lastError
+- Allows operator intervention on failed syncs
+
+**10. deleteQueueItem(id: string): Promise<void>**
+- Manual cleanup: removes specific queue item
+- For clearing stuck or unwanted items
+
+### Implementation Patterns
+
+**Enqueue Pattern** (after DB operations):
+```typescript
+// In API route POST /api/requests (after create)
+await enqueue({
+  action: "CREATE",
+  model: "Request",
+  recordId: request.id,
+  payload: { code, customerName, contact, ... }
+});
+```
+
+**Process Pattern** (background worker):
+```typescript
+const items = await dequeue(25); // Get next batch
+for (const item of items) {
+  try {
+    await syncToSheet(item);
+    await markComplete(item.id);
+  } catch (error) {
+    await markFailed(item.id, error.message);
+  }
+}
+```
+
+**Maintenance Pattern** (scheduled job):
+```typescript
+// Hourly cron job
+await resetStuck(10); // Reset items stuck >10 min
+await cleanupCompleted(7); // Delete items >7 days old
+```
+
+### Integration Points
+
+- **Database**: Prisma operations trigger enqueue()
+- **API Routes**: POST/PUT/DELETE operations enqueue changes
+- **Sync Worker**: Background job consumes queue (Phase 07.5.2+)
+- **Monitoring**: Queue stats exposed via admin dashboard (Phase 07.5.3+)
+
+### Files
+
+| File | Lines | Status |
+|------|-------|--------|
+| `prisma/schema.prisma` | +24 lines (SyncQueue model) | Complete |
+| `src/lib/sync/write-back-queue.ts` | 237 | Complete |
+| `src/lib/sync/__tests__/write-back-queue.test.ts` | ~150 | Complete |
+
+---
+
 ## Tech Stack Summary
 
 - **Frontend**: Next.js 16, React 19, TypeScript
@@ -963,6 +1111,7 @@ GOOGLE_SHEETS_API_KEY="xxx"
 | 06 | React Hooks violations fixed (3 files): requests/[id]/edit/page.tsx, requests/page.tsx, operators/approvals/page.tsx | Complete | 2026-01-10 |
 | **07.1** | **Dashboard Report APIs (KPI, Trend, Cost, Funnel)** | **Complete** | **2026-01-09** |
 | **07.2** | **Dashboard UI (Reports Page + 5 Chart Components + Data Hook)** | **Complete** | **2026-01-09** |
+| **07.5.1** | **Bidirectional Sync - Phase 01: Database Queue** | **Complete** | **2026-01-10** |
 | 08+ | AI Assistant & Knowledge Base | Planned | TBD |
 | 09+ | Production Hardening & Deployment | Planned | TBD |
 

@@ -520,3 +520,35 @@ model FollowUpStatus {
   @@index([isActive])
   @@map("followup_statuses")
 }
+
+// ============================================
+// SYNC QUEUE (for bidirectional sync)
+// ============================================
+
+model SyncQueue {
+  id            String    @id @default(cuid())
+
+  // What changed
+  action        String    // "CREATE", "UPDATE", "DELETE"
+  model         String    // "Request", "Operator", "Revenue"
+  recordId      String    // DB record ID
+  sheetRowIndex Int?      // Row number in sheet (null for CREATE)
+
+  // Change payload
+  payload       Json      // Changed fields: { field: value }
+
+  // Processing state
+  status        String    @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  retries       Int       @default(0)
+  maxRetries    Int       @default(3)
+  lastError     String?
+
+  // Timestamps
+  createdAt     DateTime  @default(now())
+  processedAt   DateTime?
+
+  @@index([status, createdAt])
+  @@index([model, recordId])
+  @@index([status])
+  @@map("sync_queue")
+}

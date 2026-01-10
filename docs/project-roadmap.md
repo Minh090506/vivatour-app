@@ -1,6 +1,6 @@
 # MyVivaTour Project Roadmap
 
-**Current Status**: Phase 06 (75% Complete) | **Last Updated**: 2026-01-08
+**Current Status**: Phase 06 (75% Complete) | Phase 07.5 (10% In Progress) | **Last Updated**: 2026-01-10
 
 ---
 
@@ -117,6 +117,21 @@
 **Tech**: React, React Hook Form, Zod, Recharts, Vitest
 
 **Timeline**: Estimated completion 2026-01-15
+
+---
+
+### Phase 07.5: Bidirectional Sync (10% - In Progress)
+
+**Deliverables**:
+- [x] Phase 01: Database Queue Model + Utils (SyncQueue, enqueue/dequeue, cleanup)
+- [ ] Phase 02: Sheets Writer + Retry Logic (batchUpdate wrapper, exponential backoff)
+- [ ] Phase 03: Reverse Mappers (DB->Sheet transformation)
+- [ ] Phase 04: Prisma Change Tracking ($extends auto-queue on writes)
+- [ ] Phase 05: API Endpoints + Cron (sync/write-back route, 5min trigger)
+
+**Tech**: Prisma, PostgreSQL, Google Sheets API
+
+**Timeline**: Est. completion 2026-01-15
 
 ---
 
@@ -306,6 +321,7 @@
 | 2026-01-05 | 03-04 | Complete | Login + RBAC + layouts |
 | 2026-01-06+ | 05 | Complete | Core pages implementation |
 | 2026-01-08 | 06 | 75% | Components & forms |
+| 2026-01-10 | 07.5 | 10% | Bidirectional sync (Phase 01 done) |
 | TBD | 07 | Planned | Reports & analytics |
 | TBD | 08 | Planned | AI & email integration |
 | TBD | 09 | Planned | Production hardening |
