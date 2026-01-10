@@ -2,7 +2,7 @@
 
 MyVivaTour Platform - Comprehensive directory structure and implementation details.
 
-**Last Updated**: 2026-01-10 (Phase 02 Complete - Google Sheets Writer Module)
+**Last Updated**: 2026-01-10 (Phase 03 Complete - Reverse Mappers DB to Sheet)
 **Total Files**: 107+ source files | **Pages**: 19 | **Components**: 71+ | **API Routes**: 37+ | **Database Models**: 18
 
 ---
@@ -126,8 +126,9 @@ src/
 │   ├── report-utils.ts               # Date range, KPI calculation, dashboard response types (Phase 07.1)
 │   ├── logger.ts                     # Structured logging
 │   ├── utils.ts                      # cn(), formatCurrency(), formatDate()
-│   ├── sync/                          # Bidirectional sync utilities (Phase 02 + Phase 07.5)
+│   ├── sync/                          # Bidirectional sync utilities (Phase 02, 03, Phase 07.5)
 │   │   ├── sheets-writer.ts          # Google Sheets write module - batch updates, append, rate limiting (Phase 02)
+│   │   ├── db-to-sheet-mappers.ts    # DB record to sheet row conversion (mapRequestToRow, mapOperatorToRow, mapRevenueToRow) (Phase 03)
 │   │   └── write-back-queue.ts       # SyncQueue management (enqueue, dequeue, markComplete, markFailed, resetStuck, cleanupCompleted, getQueueStats, getFailedItems, retryFailed, deleteQueueItem)
 │   └── validations/                  # Zod schemas
 │       ├── seller.ts                 # Seller schema validation
@@ -581,8 +582,154 @@ SHEET_ID_REVENUE="spreadsheet-id"
 - **API Routes**: POST /api/requests, PUT /api/operators, etc. will eventually call updateSheetRows via sync queue
 - **Batch Processing**: Large imports use updateSheetRowsBatched to avoid rate limits
 
----
 
+## Phase 03: Reverse Mappers (DB to Sheet)
+
+### Overview
+
+Phase 03 implements reverse mappers to convert database records back to Google Sheet row format. Complements Phase 02 (Sheets Writer) by enabling bidirectional sync (DB → Sheets) with proper column mapping and formula preservation.
+
+### Core File
+
+**src/lib/sync/db-to-sheet-mappers.ts** (237 lines) - Database record to sheet row conversion
+
+#### Record Interfaces
+
+**RequestRecord** - Request DB record with seller relation
+- code, bookingCode, customerName, contact, country, source, status
+- pax, tourDays, startDate, endDate
+- expectedRevenue, expectedCost, notes
+- seller?: { name }
+
+**OperatorRecord** - Operator DB record with request relation
+- serviceDate, serviceType, serviceName, supplier
+- costBeforeTax, vat, totalCost, notes
+- request?: { bookingCode }
+
+**RevenueRecord** - Revenue DB record with request relation
+- paymentDate, paymentType, paymentSource
+- foreignAmount, currency, exchangeRate, amountVND
+- request?: { bookingCode }
+
+#### Mapping Functions
+
+**mapRequestToRow(record: RequestRecord): (string | null)[]**
+- Converts Request DB record to 52-column sheet row array
+- Column mapping:
+  - A(0)=Seller, B(1)=Name, C(2)=Contact, E(4)=Pax
+  - F(5)=Country, G(6)=Source, H(7)=Status (Vietnamese)
+  - J(9)=TourDays, K(10)=StartDate, L(11)=Revenue
+  - M(12)=Cost, N(13)=Notes, T(19)=BookingCode
+  - Z(25)=EndDate, AR(43)=Code
+- Date format: DD/MM/YYYY (Vietnamese)
+- Number format: Vietnamese locale (dot thousand separator)
+- Status conversion: statusKeyToVietnamese() for label translation
+
+**mapOperatorToRow(record: OperatorRecord): (string | null)[]**
+- Converts Operator DB record to 52-column sheet row array
+- Column mapping:
+  - A(0)=BookingCode, J(9)=ServiceDate, K(10)=ServiceType
+  - O(14)=CostBeforeTax, P(15)=VAT
+  - Q(16)=SKIP (formula: totalCost), S(18)=Supplier, T(19)=Notes
+  - W(22)=SKIP (formula: debt)
+- Skips formula columns (Q, W) to prevent overwrite
+- Date format: DD/MM/YYYY
+- Number format: Vietnamese locale
+- serviceName included in data but not mapped to sheet
+
+**mapRevenueToRow(record: RevenueRecord): (string | null)[]**
+- Converts Revenue DB record to 52-column sheet row array
+- Column mapping:
+  - A(0)=BookingCode, L(11)=PaymentType, M(12)=PaymentDate
+  - N(13)=PaymentSource, Q(16)=ForeignAmount, R(17)=ExchangeRate
+  - S(18)=Currency, T(19)=AmountVND
+- Date format: DD/MM/YYYY
+- Decimal format: 2 decimal places (currency precision)
+- Default currency: "VND" if null
+
+#### Helper Functions
+
+**statusKeyToVietnamese(statusKey: string): string**
+- Converts status enum key to Vietnamese label
+- Maps: BOOKING → "Booking", DA_KET_THUC → "Đã kết thúc", etc.
+- Fallback: returns key as-is if no mapping exists
+
+**formatDate(date: Date | null | undefined): string**
+- Converts Date to DD/MM/YYYY format
+- Returns empty string for null/undefined
+
+**formatNumber(value: number | Prisma.Decimal | null | undefined): string**
+- Formats integer values with Vietnamese locale (dot separator)
+- Supports both JS numbers and Prisma.Decimal
+- Example: 1000000 → "1.000.000"
+- Returns empty string for null/undefined
+
+**formatDecimal(value: number | Prisma.Decimal | null | undefined): string**
+- Formats decimal values with 2 decimal places (currency)
+- Vietnamese locale formatting
+- Example: 1.5 → "1,50"
+
+#### Formula Column Management
+
+**FORMULA_COLUMNS: Record<string, number[]>**
+- Sheet-specific formula column indices (DO NOT overwrite)
+- Request: [] (no formulas)
+- Operator: [16, 22] (Q=totalCost, W=debt)
+- Revenue: [] (no formulas)
+
+**getWritableColumns(sheetName: string): number[]**
+- Returns all columns except formula columns for given sheet
+- Used to determine which columns can be safely updated
+- Example: Operator sheet returns all indices except 16, 22
+
+**filterWritableValues(sheetName: string, row: (string | null)[]): (string | null)[]**
+- Filters row to only writable columns (sets formula columns to null)
+- Safety mechanism to prevent overwriting calculated fields
+- Used before sending rows to updateSheetRows()
+
+### Column Index Reference
+
+**Request Sheet** (52 columns, A-AZ):
+- A(0)=Seller, B(1)=Name, C(2)=Contact, D(3)=Email, E(4)=Pax
+- F(5)=Country, G(6)=Source, H(7)=Status, I(8)=Remark
+- J(9)=TourDays, K(10)=StartDate, L(11)=Revenue, M(12)=Cost
+- N(13)=Notes, O-S reserved, T(19)=BookingCode
+- U-Y reserved, Z(25)=EndDate, AA-AQ reserved, AR(43)=Code
+
+**Operator Sheet** (52 columns):
+- A(0)=BookingCode, B-I reserved, J(9)=ServiceDate, K(10)=ServiceType
+- L(11)=ServiceName, M(12)=Reserved, N(13)=Reserved
+- O(14)=CostBeforeTax, P(15)=VAT, Q(16)=TotalCost (FORMULA), R(17)=Reserved
+- S(18)=Supplier, T(19)=Notes, U-V reserved, W(22)=Debt (FORMULA)
+
+**Revenue Sheet** (52 columns):
+- A(0)=BookingCode, B-K reserved, L(11)=PaymentType, M(12)=PaymentDate
+- N(13)=PaymentSource, O-P reserved, Q(16)=ForeignAmount
+- R(17)=ExchangeRate, S(18)=Currency, T(19)=AmountVND
+
+### Testing
+
+**src/lib/sync/__tests__/db-to-sheet-mappers.test.ts** (330 lines)
+- Request mapping: All fields, column indices, status translation, date formatting
+- Operator mapping: Formula column skipping, numeric formatting
+- Revenue mapping: Foreign amount & exchange rate handling
+- Helper functions: statusKeyToVietnamese, formatDate, formatNumber, formatDecimal
+- Column management: getWritableColumns, filterWritableValues tests
+
+### Integration Points
+
+- **Bidirectional Sync** (Phase 07.5.2): Maps DB changes to sheet rows for updateSheetRows()
+- **Queue Processing**: Dequeue items converted to rows before sheet update
+- **Data Sync**: Complements sheet-mappers.ts (sheet → DB) for full bidirectional flow
+
+### Files & Tests
+
+| File | Lines | Status |
+|------|-------|--------|
+| `src/lib/sync/db-to-sheet-mappers.ts` | 237 | Complete |
+| `src/lib/sync/__tests__/db-to-sheet-mappers.test.ts` | 330 | Complete |
+
+---
 ## Phase 01: ID Generation System
 
 ### Core File
@@ -1208,7 +1355,8 @@ GOOGLE_SHEETS_API_KEY="xxx"
 | 02b | Auth Middleware + Request/Operator/Revenue Sync | Complete | 2026-01-04 |
 | 02b | Revenue API: Lock/Unlock (3-tier) + History (audit trail) | Complete | 2026-01-08 |
 | 02c | Request Sync Fix: Request ID Key + Booking Code Deduplication | Complete | 2026-01-08 |
-| 03 | Login Page + RBAC (4 roles, 24 permissions) | Complete | 2026-01-05 |
+| **03** | **Reverse Mappers (DB to Sheet)** | **Complete** | **2026-01-10** |
+| 03 (Legacy) | Login Page + RBAC (4 roles, 24 permissions) | Complete | 2026-01-05 |
 | 04 | Responsive Layouts (Master-Detail, Mobile Sheets) | Complete | 2026-01-05 |
 | 05 | Request Module - Pages (List, Create, Detail, Edit) | Complete | 2026-01-06+ |
 | 05 | Operator Module - Pages + Approvals + Locking | Complete | 2026-01-07+ |
