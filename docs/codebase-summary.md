@@ -2,7 +2,7 @@
 
 MyVivaTour Platform - Comprehensive directory structure and implementation details.
 
-**Last Updated**: 2026-01-10 (Phase 06 Complete - React Hooks Fixed)
+**Last Updated**: 2026-01-10 (Phase 02 Complete - Google Sheets Writer Module)
 **Total Files**: 107+ source files | **Pages**: 19 | **Components**: 71+ | **API Routes**: 37+ | **Database Models**: 18
 
 ---
@@ -114,7 +114,7 @@ src/
 ├── lib/
 │   ├── db.ts                         # Prisma Client singleton
 │   ├── permissions.ts                # RBAC: roles, permissions, hasPermission()
-│   ├── google-sheets.ts              # Google Sheets API client (Phase 01)
+│   ├── google-sheets.ts              # Google Sheets API client (Phase 01, Phase 02 scope upgrade)
 │   ├── sheet-mappers.ts              # Sheet ↔ DB mapping (Request: 44 cols, Operator: 23, Revenue: 20)
 │   ├── supplier-balance.ts           # Balance calculation utilities
 │   ├── request-utils.ts              # RQID, BookingCode, follow-up utilities
@@ -126,7 +126,8 @@ src/
 │   ├── report-utils.ts               # Date range, KPI calculation, dashboard response types (Phase 07.1)
 │   ├── logger.ts                     # Structured logging
 │   ├── utils.ts                      # cn(), formatCurrency(), formatDate()
-│   ├── sync/                          # Bidirectional sync utilities (Phase 07.5)
+│   ├── sync/                          # Bidirectional sync utilities (Phase 02 + Phase 07.5)
+│   │   ├── sheets-writer.ts          # Google Sheets write module - batch updates, append, rate limiting (Phase 02)
 │   │   └── write-back-queue.ts       # SyncQueue management (enqueue, dequeue, markComplete, markFailed, resetStuck, cleanupCompleted, getQueueStats, getFailedItems, retryFailed, deleteQueueItem)
 │   └── validations/                  # Zod schemas
 │       ├── seller.ts                 # Seller schema validation
@@ -475,6 +476,110 @@ SHEET_ID_REVENUE="spreadsheet-id-for-revenues"
 # Fallback for single spreadsheet (backward compatible)
 GOOGLE_SHEET_ID="fallback-if-all-same-spreadsheet"
 ```
+
+---
+
+## Phase 02: Google Sheets Writer Module
+
+### Overview
+
+Phase 02 extends Google Sheets sync to support **bidirectional writing**. The sheets-writer module handles batch updates, new row appends, and rate limiting for syncing database changes back to Google Sheets. Used by bidirectional sync (Phase 07.5) to write DB changes to Sheets.
+
+### Core File
+
+**src/lib/sync/sheets-writer.ts** (291 lines) - Google Sheets write operations with automatic retry and rate limiting
+
+#### Exports
+
+**Core Functions**:
+- `updateSheetRows(sheetName, updates[])`: Batch update multiple rows
+  - Parameters: sheet name (Request|Operator|Revenue), array of RowUpdate objects
+  - Returns: count of updated rows
+  - Behavior: Builds range-based updates (A:AZ per row), executes via batchUpdate API, tracks request
+  - Retry: Exponential backoff on 429 rate limit errors (max 5 attempts)
+
+- `appendSheetRow(sheetName, values[])`: Append new row to sheet
+  - Parameters: sheet name, array of column values
+  - Returns: approximate appended row index
+  - Behavior: Uses append API with INSERT_ROWS option, extracts row number from response
+  - Retry: Exponential backoff on rate limit errors
+
+- `updateSheetRowsBatched(sheetName, updates[])`: Process large update batches
+  - Parameters: sheet name, array of RowUpdate objects
+  - Returns: total count of updated rows
+  - Behavior: Splits updates into 25-row batches with 100ms delay between batches
+  - Use case: Avoid rate limits for large bulk syncs (>25 rows)
+
+**Rate Limiting**:
+- `shouldThrottle()`: Check if API calls should be throttled
+  - Returns: boolean indicating if rate limit exceeded (55 requests/min)
+  - 1-minute sliding window, auto-resets
+
+- `getRateLimitStatus()`: Get current rate limit information
+  - Returns: { requestsInWindow, windowRemainingMs, shouldThrottle }
+  - Useful for monitoring/logging
+
+- `recordRequest()`: Track API request
+  - Called after successful API calls (automatic in updateSheetRows, appendSheetRow)
+  - Increments window counter
+
+- `resetRateLimiter()`: Reset rate limiter state
+  - For testing only
+  - Clears counter and resets window
+
+**Types**:
+- `RowUpdate`: { rowIndex: number (1-based), values: (string|number|null)[] }
+
+#### Implementation Details
+
+**Authentication**:
+- Uses Google Service Account (email + private key)
+- Same credentials as google-sheets.ts read client
+- Scope: `https://www.googleapis.com/auth/spreadsheets` (read-write)
+
+**Retry Logic**:
+- Exponential backoff: 1s, 2s, 4s, 8s, 16s, 32s, 64s (max)
+- Random jitter ±1s added to avoid thundering herd
+- Only retries on 429 rate limit errors
+- Max 5 attempts per operation
+
+**Rate Limiting**:
+- 55 requests/minute quota (under Google's 60/min limit)
+- Window-based tracking: resets every 60 seconds
+- In-memory state: NOT suitable for multi-instance/serverless (use Redis for distributed)
+
+**Sheet Addressing**:
+- Uses `A:AZ` range (covers columns A-AR, 44 columns)
+- Rows: 1-based indexing (row 1 = header, row 2 = first data)
+- Range format: `{TabName}!A{rowNum}:AZ{rowNum}` (per-row precision)
+
+**Batch Configuration**:
+- Batch size: 25 rows (balances throughput vs. rate limits)
+- Batch delay: 100ms between batches (spreads API load)
+
+### Files & Tests
+
+| File | Lines | Status |
+|------|-------|--------|
+| `src/lib/sync/sheets-writer.ts` | 291 | Complete |
+| `src/lib/sync/__tests__/sheets-writer.test.ts` | 295 | Complete (Jest mocks + rate limit tests) |
+
+### Environment Variables
+
+No new variables required. Uses existing Google Sheets credentials:
+```env
+GOOGLE_SERVICE_ACCOUNT_EMAIL="your-sa@project.iam.gserviceaccount.com"
+GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
+SHEET_ID_REQUEST="spreadsheet-id"
+SHEET_ID_OPERATOR="spreadsheet-id"
+SHEET_ID_REVENUE="spreadsheet-id"
+```
+
+### Integration Points
+
+- **Bidirectional Sync** (Phase 07.5): Dequeue jobs call these functions to sync DB changes back to Sheets
+- **API Routes**: POST /api/requests, PUT /api/operators, etc. will eventually call updateSheetRows via sync queue
+- **Batch Processing**: Large imports use updateSheetRowsBatched to avoid rate limits
 
 ---
 
@@ -1098,6 +1203,7 @@ GOOGLE_SHEETS_API_KEY="xxx"
 | **01 Foundation** | Supplier Module + Multi-Spreadsheet Support | Complete | 2026-01-01, 2026-01-07 |
 | **01 Foundation** | ID Generation System (RequestID, ServiceID, RevenueID) | Complete | 2026-01-08 |
 | **01 Foundation** | Lock System (3-tier: KT/Admin/Final) + RevenueHistory | Complete | 2026-01-08 |
+| **02** | **Google Sheets Writer Module - Bidirectional Writes** | **Complete** | **2026-01-10** |
 | 02a | Dashboard Layout + Google Sheets Sync API | Complete | 2026-01-02 |
 | 02b | Auth Middleware + Request/Operator/Revenue Sync | Complete | 2026-01-04 |
 | 02b | Revenue API: Lock/Unlock (3-tier) + History (audit trail) | Complete | 2026-01-08 |

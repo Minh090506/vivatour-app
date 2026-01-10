@@ -115,7 +115,7 @@ function getSheetsClient() {
       client_email: email,
       private_key: parsePrivateKey(privateKey),
     },
-    scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
+    scopes: ["https://www.googleapis.com/auth/spreadsheets"],
   });
 
   sheetsClient = google.sheets({ version: "v4", auth });
