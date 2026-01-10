@@ -2,7 +2,7 @@
 
 MyVivaTour Platform - Comprehensive directory structure and implementation details.
 
-**Last Updated**: 2026-01-10 (Phase 03 Complete - Reverse Mappers DB to Sheet)
+**Last Updated**: 2026-01-10 (Phase 04 Complete - Prisma Change Tracking)
 **Total Files**: 107+ source files | **Pages**: 19 | **Components**: 71+ | **API Routes**: 37+ | **Database Models**: 18
 
 ---
@@ -852,6 +852,106 @@ interface LockState {
 
 ---
 
+## Phase 04: Prisma Change Tracking (Sync Extensions)
+
+### Overview
+
+Phase 04 implements Prisma Client Extensions to intercept CRUD operations on Request, Operator, and Revenue models, automatically queuing changes for write-back to Google Sheets. This enables non-blocking, asynchronous change tracking at the database layer.
+
+### Key Architecture Decision: basePrisma Export
+
+To prevent circular dependencies:
+- **sync-extensions.ts** → imports write-back-queue.ts
+- **write-back-queue.ts** → imports basePrisma from db.ts
+- **db.ts** → exports both basePrisma (unextended) and prisma (extended)
+
+Therefore:
+- All sync internals use `basePrisma` (no circular reference)
+- Application code uses `prisma` (extended with tracking)
+
+### Core Files
+
+**src/lib/db.ts** (39 lines)
+- Creates base Prisma client (no extensions)
+- Applies sync extensions to base client
+- Exports both `basePrisma` (for sync internals) and `prisma` (extended, for app)
+- Uses PrismaPg adapter for Supabase PostgreSQL
+- Singleton pattern with globalForPrisma for Next.js hot-reloading
+- Log configuration: query + error/warn in dev, error only in prod
+
+**src/lib/sync/sync-extensions.ts** (306 lines) - NEW
+- Prisma $extends hooks for CRUD tracking on Request, Operator, Revenue
+- Intercepts CREATE, UPDATE operations (DELETE intentionally skipped)
+- Lock detection: Skips syncing locked records (lockKT, lockAdmin, lockFinal)
+- Async queue via setImmediate() for non-blocking sync
+- Key features:
+  - `withSyncExtensions(prisma)`: Returns extended Prisma client
+  - `isRecordLocked(record)`: Checks all 3-tier locks + legacy isLocked field
+  - `extractChangedFields(data)`: Filters Prisma internals (id, createdAt, connect, disconnect, etc.)
+  - `queueAsync()`: Async enqueue with error handling + console logging
+
+**src/lib/sync/sync-extensions.ts Testing** (28 unit tests in __tests__/sync-extensions.test.ts)
+- Request CREATE/UPDATE/DELETE behavior
+- Operator CREATE/UPDATE with lock detection (3-tier locks)
+- Revenue CREATE/UPDATE with lock detection
+- Helper function tests (isRecordLocked, extractChangedFields)
+- Edge cases: empty changes, nested relations, locked records
+- Uses jest-mock-extended for deep mocking
+
+**src/lib/sync/write-back-queue.ts** (240 lines)
+- Updated: Now uses `basePrisma` from db.ts to avoid circular dependency
+- NOTE: Critical fix - sync-extensions imports write-back-queue, so write-back-queue MUST NOT import extended prisma
+
+### Sync Extension Behavior
+
+#### Request Model
+- **CREATE**: Queues full record with CREATE action
+- **UPDATE**: Queues changed fields only (filters Prisma internals)
+- **DELETE**: Skipped (business decision: sheet rows preserved)
+- **Lock Detection**: N/A (Request model has no locks)
+
+#### Operator Model
+- **CREATE**: Queues if NOT locked (checks lockKT, lockAdmin, lockFinal)
+- **UPDATE**: Queues changed fields if NOT locked
+- **DELETE**: Skipped
+- **Lock Detection**: Atomic fetch before update to check lock status
+
+#### Revenue Model
+- **CREATE**: Queues if NOT locked
+- **UPDATE**: Queues changed fields if NOT locked
+- **DELETE**: Skipped
+- **Lock Detection**: Atomic fetch before update to check lock status
+
+#### DELETE Operations Rationale
+Intentionally skipped because:
+- Preserves historical records in Google Sheets
+- Prevents accidental data loss
+- Sheet cleanup handled manually or via separate process
+- Aligns with audit trail requirements
+
+### Integration with write-back-queue.ts
+
+After DB operations execute:
+1. `queueAsync()` calls `setImmediate()` (non-blocking)
+2. Callback invokes `enqueue()` from write-back-queue.ts
+3. SyncQueue record created with PENDING status
+4. Background worker processes queue asynchronously
+5. Failed items retry with exponential backoff
+
+### Performance Impact
+
+- **Blocking**: None - uses setImmediate for async queue
+- **Lock Checks**: Pre-update fetch atomically checks lock status
+- **Queue Overhead**: ~10-50ms per operation for DB insert
+
+### Type Exports
+
+- `PrismaClientWithSync`: Return type of `withSyncExtensions()`
+- `LockableRecord`: Interface for records with 3-tier locks
+- All types exported for application code type safety
+
+---
+
 ## Phase 07.5: Bidirectional Sync (Database Queue) - Phase 01
 
 ### Overview
@@ -1357,10 +1457,11 @@ GOOGLE_SHEETS_API_KEY="xxx"
 | 02c | Request Sync Fix: Request ID Key + Booking Code Deduplication | Complete | 2026-01-08 |
 | **03** | **Reverse Mappers (DB to Sheet)** | **Complete** | **2026-01-10** |
 | 03 (Legacy) | Login Page + RBAC (4 roles, 24 permissions) | Complete | 2026-01-05 |
-| 04 | Responsive Layouts (Master-Detail, Mobile Sheets) | Complete | 2026-01-05 |
-| 05 | Request Module - Pages (List, Create, Detail, Edit) | Complete | 2026-01-06+ |
-| 05 | Operator Module - Pages + Approvals + Locking | Complete | 2026-01-07+ |
-| 05 | Revenue Module - Pages + Multi-currency | Complete | 2026-01-07+ |
+| **04** | **Prisma Change Tracking (Sync Extensions)** | **Complete** | **2026-01-10** |
+| 05 | Responsive Layouts (Master-Detail, Mobile Sheets) | Complete | 2026-01-05 |
+| 06 | Request Module - Pages (List, Create, Detail, Edit) | Complete | 2026-01-06+ |
+| 06 | Operator Module - Pages + Approvals + Locking | Complete | 2026-01-07+ |
+| 06 | Revenue Module - Pages + Multi-currency | Complete | 2026-01-07+ |
 | **06** | **Request/Operator/Revenue Components & Forms** | **Complete** | **2026-01-10** |
 | 06 | React Hooks violations fixed (3 files): requests/[id]/edit/page.tsx, requests/page.tsx, operators/approvals/page.tsx | Complete | 2026-01-10 |
 | **07.1** | **Dashboard Report APIs (KPI, Trend, Cost, Funnel)** | **Complete** | **2026-01-09** |

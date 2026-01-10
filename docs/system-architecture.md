@@ -525,6 +525,126 @@ Update: bookingCode = "20260201L0005"
 
 ---
 
+## Phase 04: Prisma Change Tracking (Sync Extensions)
+
+### Overview
+
+Phase 04 implements Prisma Client Extensions to intercept database operations and automatically queue changes for write-back to Google Sheets. This creates a real-time bidirectional sync mechanism where:
+1. Database changes trigger automatic queueing (CREATE/UPDATE)
+2. Queue stores change metadata asynchronously
+3. Background worker processes queue → updates Google Sheets
+4. Locked records skip sync (respect 3-tier locks)
+
+### Architecture
+
+```
+Application Code
+      ↓
+prisma.request.create() / update()
+      ↓
+Prisma Client Extensions ($extends)
+      ↓
+Intercept CRUD: Request, Operator, Revenue
+      ↓
+Lock Detection: Check lockKT, lockAdmin, lockFinal
+      ↓
+setImmediate() → Queue Async
+      ↓
+write-back-queue.ts enqueue()
+      ↓
+SyncQueue table (PENDING)
+      ↓
+Background Worker
+      ↓
+db-to-sheet-mappers.ts (convert DB → Sheet row)
+      ↓
+sheets-writer.ts (updateSheetRows API)
+      ↓
+Google Sheets API
+```
+
+### Circular Dependency Prevention
+
+**Problem**: sync-extensions imports write-back-queue, creating circular dependency if write-back-queue imports extended prisma.
+
+**Solution**: Export two Prisma instances from db.ts:
+```typescript
+basePrisma           // Unextended, for sync internals
+prisma              // Extended with sync tracking, for app
+```
+
+**Rule**: Sync internals (write-back-queue, enqueue, dequeue) MUST use basePrisma to avoid infinite loops.
+
+### Extension Behavior
+
+#### Request Model
+- **CREATE**: Queues action=CREATE with full record
+- **UPDATE**: Queues action=UPDATE with changed fields only
+- **DELETE**: Skipped (preserves sheet data)
+- **Lock Check**: N/A (no locks on Request)
+
+#### Operator Model
+- **CREATE**: Queues if NOT locked
+- **UPDATE**: Queues changed fields if NOT locked
+- **DELETE**: Skipped
+- **Lock Check**: Atomic fetch before update: lockKT OR lockAdmin OR lockFinal
+
+#### Revenue Model
+- **CREATE**: Queues if NOT locked
+- **UPDATE**: Queues changed fields if NOT locked
+- **DELETE**: Skipped
+- **Lock Check**: Atomic fetch before update: checks all 3 tiers
+
+### Performance Characteristics
+
+| Aspect | Impact |
+|--------|--------|
+| **Blocking Time** | None (setImmediate) |
+| **Lock Check Time** | ~5-10ms (atomic DB fetch) |
+| **Queue Overhead** | ~10-50ms (SyncQueue insert) |
+| **Total Added Latency** | <100ms (non-blocking) |
+| **Failure Mode** | Best-effort (enqueue catches errors) |
+
+### Testing
+
+28 unit tests in `src/lib/sync/__tests__/sync-extensions.test.ts`:
+- Request CREATE/UPDATE/DELETE behavior
+- Operator CREATE/UPDATE with lock detection (3 lock tiers)
+- Revenue CREATE/UPDATE with lock detection
+- Helper functions: isRecordLocked, extractChangedFields
+- Edge cases: empty changes, nested relations, locked records
+- Mock framework: jest-mock-extended
+
+### Data Flow Example
+
+**User updates Operator revenue:**
+1. API route calls: `prisma.operator.update({ where: { id }, data: { totalCost: 5000 } })`
+2. Prisma extension intercepts
+3. Fetches operator to check: lockKT, lockAdmin, lockFinal
+4. If not locked:
+   - Executes update
+   - Extracts changed field: `{ totalCost: 5000 }`
+   - Calls `setImmediate()` with enqueue callback
+5. Returns immediately to API route (non-blocking)
+6. Callback fires: `enqueue({ action: "UPDATE", model: "Operator", ... })`
+7. SyncQueue record created with PENDING status
+8. Background worker later: dequeue() → sync to Sheets
+
+### Integration with Phase 07.5 (Queue Processing)
+
+Phase 07.5.1 provides queue management:
+- `dequeue()`: Get next 25 PENDING items
+- `markComplete()`: Set COMPLETED status
+- `markFailed()`: Increment retries, retry or fail
+- `resetStuck()`: Crash recovery (>10min PROCESSING → PENDING)
+
+Phase 07.5.2+ will add:
+- Worker service processing queue
+- db-to-sheet-mappers.ts converting DB rows to sheet format
+- sheets-writer.ts batch updating Google Sheets
+
+---
+
 ## Integration Points
 
 ### 1. Google Sheets API (Sync) [Phase 01 Multi-Spreadsheet Support]

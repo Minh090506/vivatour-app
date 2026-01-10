@@ -2,7 +2,7 @@
  * Tests for SyncQueue Management Utilities
  */
 
-import { prisma } from "@/lib/db";
+import { basePrisma } from "@/lib/db";
 import { mockReset, DeepMockProxy } from "jest-mock-extended";
 import { Prisma } from "@prisma/client";
 import {
@@ -20,14 +20,16 @@ import {
 } from "../write-back-queue";
 
 // Mock Prisma client - use require to lazy-load mockDeep
+// Note: write-back-queue imports basePrisma to avoid circular dependency
 jest.mock("@/lib/db", () => {
   const { mockDeep } = require("jest-mock-extended");
   return {
+    basePrisma: mockDeep(),
     prisma: mockDeep(),
   };
 });
 
-const mockPrisma = prisma as unknown as DeepMockProxy<typeof prisma>;
+const mockPrisma = basePrisma as unknown as DeepMockProxy<typeof basePrisma>;
 
 describe("SyncQueue Management Utilities", () => {
   beforeEach(() => {

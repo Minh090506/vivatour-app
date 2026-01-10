@@ -3,9 +3,13 @@
  *
  * Handles enqueue, dequeue, status updates for write-back queue.
  * Queue enables bidirectional sync: DB changes -> Google Sheets.
+ *
+ * NOTE: Uses basePrisma to avoid circular dependency with sync-extensions.
+ * The sync-extensions module imports this file, so we must not import
+ * the extended prisma client here.
  */
 
-import { prisma } from "@/lib/db";
+import { basePrisma as prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
 
 export type SyncAction = "CREATE" | "UPDATE" | "DELETE";
