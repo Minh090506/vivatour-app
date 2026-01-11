@@ -8,8 +8,8 @@
   "scripts": {
     "dev": "next dev",
     "dev:log": "next dev 2>&1 | tee logs.txt",
-    "build": "next build",
-    "build:log": "next build 2>&1 | tee logs.txt",
+    "build": "cross-env NODE_OPTIONS='--max-old-space-size=4096' next build",
+    "build:log": "cross-env NODE_OPTIONS='--max-old-space-size=4096' next build 2>&1 | tee logs.txt",
     "start": "next start",
     "lint": "eslint",
     "lint:log": "eslint . 2>&1 | tee logs.txt",
@@ -70,6 +70,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.1",
     "jest": "^30.2.0",
