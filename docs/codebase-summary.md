@@ -2,8 +2,8 @@
 
 MyVivaTour Platform - Comprehensive directory structure and implementation details.
 
-**Last Updated**: 2026-01-11 (Operator RTL Tests)
-**Total Files**: 107+ source files | **Pages**: 19 | **Components**: 71+ | **API Routes**: 37+ | **Database Models**: 18 | **Tests**: 114+ operator RTL tests
+**Last Updated**: 2026-01-11 (Revenue RTL Tests)
+**Total Files**: 107+ source files | **Pages**: 19 | **Components**: 71+ | **API Routes**: 37+ | **Database Models**: 18 | **Tests**: 177+ RTL tests (Operators 114 + Revenue 63)
 
 ---
 
@@ -249,6 +249,56 @@ loginSchema = z.object({
 - Custom render functions with providers
 - Mock data generators
 - Testing hooks setup
+
+### Revenue Component RTL Tests
+
+**src/components/revenues/__tests__/** (5 components, 63 tests, 921 lines)
+
+- **revenue-form.test.tsx** (219 lines, 13 tests)
+  - Form rendering with booking, payment, and amount sections
+  - Form submission and validation behavior
+  - Lock state handling (disabled fields at different tiers)
+  - Create vs edit mode button rendering
+  - Request dropdown loading and selection
+
+- **revenue-table.test.tsx** (217 lines, 17 tests)
+  - Table rendering with revenue data and columns
+  - Column sorting and sort indicators
+  - Pagination and row display limits
+  - Search, date range, and status filtering
+  - Role-based action visibility (ADMIN vs ACCOUNTANT)
+
+- **revenue-lock-dialog.test.tsx** (182 lines, 12 tests)
+  - 3-tier lock management (KT/Admin/Final) UI
+  - Lock progression rules (can't lock higher tier if lower unlocked)
+  - Permission-based tier access (role restrictions)
+  - Lock/unlock state transitions
+  - Locked by/at user information display
+
+- **revenue-history-panel.test.tsx** (140 lines, 7 tests)
+  - History timeline rendering in reverse chronological order
+  - Action type display (CREATE, UPDATE, LOCK_KT, etc.)
+  - Change tracking (before/after values)
+  - User attribution and timestamps
+  - Empty history state handling
+
+- **revenue-summary-card.test.tsx** (163 lines, 14 tests)
+  - Card metrics rendering (totals, counts, averages)
+  - Foreign currency conversion display
+  - Payment status and lock status badges
+  - Conditional sections based on data availability
+  - Responsive layout rendering
+
+**Test Utilities** (test-utils.ts, 415 lines)
+- Mock Revenue fixtures: base, locked variants (KT/Admin/Final), foreign currency, refund
+- Mock Request data for dropdowns (2 sample requests)
+- Mock history entries with proper timestamps and change tracking
+- Session mocks: Admin and Accountant roles
+- Permission mocks: Admin/Accountant/Seller with role-specific restrictions
+- Fetch mock setup with URL pattern matching and error simulation
+- Factory functions: createMockRevenue(), createMockHistoryEntry(), createMockRequest(), createPermissionMock()
+- Constants: PAYMENT_TYPE_LABELS, PAYMENT_SOURCE_LABELS (Vietnamese)
+- Currency formatting utility: formatVND()
 
 ### Security Features
 
