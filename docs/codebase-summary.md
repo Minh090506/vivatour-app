@@ -2,8 +2,8 @@
 
 MyVivaTour Platform - Comprehensive directory structure and implementation details.
 
-**Last Updated**: 2026-01-10 (Phase 04 Complete - Prisma Change Tracking)
-**Total Files**: 107+ source files | **Pages**: 19 | **Components**: 71+ | **API Routes**: 37+ | **Database Models**: 18
+**Last Updated**: 2026-01-11 (Operator RTL Tests)
+**Total Files**: 107+ source files | **Pages**: 19 | **Components**: 71+ | **API Routes**: 37+ | **Database Models**: 18 | **Tests**: 114+ operator RTL tests
 
 ---
 
@@ -210,6 +210,45 @@ loginSchema = z.object({
 - Zod schema validation
 - Email format validation
 - Error message accuracy
+
+### Operator Component RTL Tests
+
+**src/components/operators/__tests__/** (5 components, 114 tests, 2,187 lines)
+
+- **operator-form.test.tsx** (558 lines)
+  - Form rendering and input field validation
+  - Submit behavior and data persistence
+  - Error handling and field-level validation
+  - Dynamic field interactions
+
+- **operator-approval-table.test.tsx** (427 lines)
+  - Table rendering with approval data
+  - Row interactions and sorting
+  - Approval status display
+  - Bulk action testing
+
+- **operator-lock-dialog.test.tsx** (502 lines)
+  - Lock dialog UI and controls
+  - 3-tier lock management (KT/Admin/Final)
+  - Lock/unlock transitions
+  - Permission-based lock tier access
+
+- **operator-history-panel.test.tsx** (309 lines)
+  - History timeline rendering
+  - Action tracking and event display
+  - History entry filtering
+  - Timestamp display and formatting
+
+- **operator-list-filters.test.tsx** (391 lines)
+  - Filter UI and interactions
+  - Filter state management
+  - Multi-select and dropdown testing
+  - Filter reset functionality
+
+**Test Utilities** (test-utils.ts)
+- Custom render functions with providers
+- Mock data generators
+- Testing hooks setup
 
 ### Security Features
 
