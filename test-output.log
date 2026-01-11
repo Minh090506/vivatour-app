@@ -1,0 +1,1305 @@
+
+> vivatour-app@0.1.0 test
+> jest --coverage
+
+  console.error
+    Error fetching pending payments: Error: Database error
+        at Object.<anonymous> (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\src\__tests__\api\operator-approvals.test.ts:183:52)
+        at Promise.finally.completed (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:275:16)
+        at runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:343:7)
+        at Object.worker (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:497:12)
+
+    [0m [90m 92 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson({ success[33m:[39m [36mtrue[39m[33m,[39m data[33m,[39m summary })[33m;[39m
+     [90m 93 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 94 |[39m     console[33m.[39merror([32m'Error fetching pending payments:'[39m[33m,[39m error)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 95 |[39m     [36mconst[39m message [33m=[39m error [36minstanceof[39m [33mError[39m [33m?[39m error[33m.[39mmessage [33m:[39m [32m'Unknown error'[39m[33m;[39m
+     [90m 96 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson(
+     [90m 97 |[39m       { success[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m [32m`Lỗi tải danh sách: ${message}`[39m }[33m,[39m[0m
+
+      at error (src/app/api/operators/pending-payments/route.ts:94:13)
+      at Object.<anonymous> (src/__tests__/api/operator-approvals.test.ts:186:22)
+
+  console.error
+    Error generating cost report: Error: Database error
+        at Object.<anonymous> (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\src\__tests__\api\operator-reports.test.ts:149:52)
+        at Promise.finally.completed (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:275:16)
+        at runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:343:7)
+        at Object.worker (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:497:12)
+
+    [0m [90m 145 |[39m     })[33m;[39m
+     [90m 146 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 147 |[39m     console[33m.[39merror([32m'Error generating cost report:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 148 |[39m     [36mconst[39m message [33m=[39m error [36minstanceof[39m [33mError[39m [33m?[39m error[33m.[39mmessage [33m:[39m [32m'Unknown error'[39m[33m;[39m
+     [90m 149 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson(
+     [90m 150 |[39m       { success[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m [32m`Lỗi tạo báo cáo: ${message}`[39m }[33m,[39m[0m
+
+      at error (src/app/api/reports/operator-costs/route.ts:147:13)
+      at Object.<anonymous> (src/__tests__/api/operator-reports.test.ts:152:22)
+
+  console.error
+    Error generating payment report: Error: Database error
+        at Object.<anonymous> (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\src\__tests__\api\operator-reports.test.ts:232:53)
+        at Promise.finally.completed (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:275:16)
+        at runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:343:7)
+        at Object.worker (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:497:12)
+
+    [0m [90m 104 |[39m     })[33m;[39m
+     [90m 105 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 106 |[39m     console[33m.[39merror([32m'Error generating payment report:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 107 |[39m     [36mconst[39m message [33m=[39m error [36minstanceof[39m [33mError[39m [33m?[39m error[33m.[39mmessage [33m:[39m [32m'Unknown error'[39m[33m;[39m
+     [90m 108 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson(
+     [90m 109 |[39m       { success[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m [32m`Lỗi tạo báo cáo: ${message}`[39m }[33m,[39m[0m
+
+      at error (src/app/api/reports/operator-payments/route.ts:106:13)
+      at Object.<anonymous> (src/__tests__/api/operator-reports.test.ts:235:22)
+
+  console.error
+    Error fetching suppliers: Error: Database connection failed
+        at Object.<anonymous> (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\src\__tests__\api\suppliers.test.ts:204:52)
+        at Promise.finally.completed (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:275:16)
+        at runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:343:7)
+        at Object.worker (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:497:12)
+
+    [0m [90m 55 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson({ success[33m:[39m [36mtrue[39m[33m,[39m data[33m:[39m result })[33m;[39m
+     [90m 56 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 57 |[39m     console[33m.[39merror([32m'Error fetching suppliers:'[39m[33m,[39m error)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 58 |[39m     [36mconst[39m message [33m=[39m error [36minstanceof[39m [33mError[39m [33m?[39m error[33m.[39mmessage [33m:[39m [32m'Unknown error'[39m[33m;[39m
+     [90m 59 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson(
+     [90m 60 |[39m       { success[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m [32m`Failed to fetch suppliers: ${message}`[39m }[33m,[39m[0m
+
+      at error (src/app/api/suppliers/route.ts:57:13)
+      at Object.<anonymous> (src/__tests__/api/suppliers.test.ts:207:22)
+
+  console.error
+    Error fetching transactions: Error: Database connection failed
+        at Object.<anonymous> (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\src\__tests__\api\supplier-transactions.test.ts:247:7)
+        at Promise.finally.completed (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:275:16)
+        at runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:343:7)
+        at Object.worker (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:497:12)
+
+    [0m [90m 48 |[39m     })[33m;[39m
+     [90m 49 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 50 |[39m     console[33m.[39merror([32m'Error fetching transactions:'[39m[33m,[39m error)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 51 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson(
+     [90m 52 |[39m       { success[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m [32m'Failed to fetch transactions'[39m }[33m,[39m
+     [90m 53 |[39m       { status[33m:[39m [35m500[39m }[0m
+
+      at error (src/app/api/supplier-transactions/route.ts:50:13)
+      at Object.<anonymous> (src/__tests__/api/supplier-transactions.test.ts:251:22)
+
+PASS src/__tests__/api/operator-reports.test.ts
+  GET /api/reports/operator-costs
+    √ should return cost report grouped by service type, supplier, and month (89 ms)
+    √ should filter by date range (16 ms)
+    √ should filter by service type (9 ms)
+    √ should handle empty data gracefully (9 ms)
+    √ should handle database errors (286 ms)
+    √ should reject invalid date format (8 ms)
+    √ should reject invalid service type (7 ms)
+  GET /api/reports/operator-payments
+    √ should return payment status summary (10 ms)
+    √ should handle null totals gracefully (9 ms)
+    √ should handle database errors (48 ms)
+    √ should reject invalid month format (10 ms)
+
+PASS src/__tests__/api/sync-write-back.test.ts
+  POST /api/sync/write-back
+    Authentication
+      √ accepts cron secret in Authorization header (89 ms)
+      √ rejects invalid cron secret (6 ms)
+      √ accepts admin user session when no cron secret (8 ms)
+      √ rejects non-admin user session (6 ms)
+      √ rejects missing session (6 ms)
+    Queue Processing
+      √ processes queue items successfully (12 ms)
+      √ handles failed queue items (36 ms)
+      √ processes multiple batches (21 ms)
+      √ skips DELETE action items (22 ms)
+    Logging
+      √ creates SyncLog on success (36 ms)
+      √ creates SyncLog on failure (48 ms)
+    Error Handling
+      √ handles unexpected errors gracefully (22 ms)
+      √ resets stuck items on start (139 ms)
+
+PASS src/__tests__/lib/request-utils.test.ts
+  generateRQID
+    √ should generate RQID with correct format RQ-YYMMDD-XXXX (34 ms)
+    √ should pad sequence number with zeros (21 ms)
+    √ should pad sequence to 4 digits for count 999 (12 ms)
+    √ should query requests created today (8 ms)
+  generateBookingCode - Phase 1 Schema Changes
+    with explicit sellerCode
+      √ should use sellerCode when available (8 ms)
+      √ should accept single char sellerCode (13 ms)
+      √ should handle multi-char sellerCode (edge case) (11 ms)
+    fallback to sellerName first letter
+      √ should use first letter of name when sellerCode is null (10 ms)
+      √ should uppercase first letter of name (10 ms)
+      √ should handle single character name (14 ms)
+    ultimate fallback to X
+      √ should use X when no sellerCode and no name (14 ms)
+      √ should use X when config user not found (14 ms)
+      √ should use X when user object is missing (11 ms)
+    sequence numbering
+      √ should increment sequence for same date and code (15 ms)
+      √ should start at 0001 when no existing codes (13 ms)
+      √ should pad sequence with zeros (38 ms)
+      √ should handle max 4-digit sequence (9999) (12 ms)
+    date formatting
+      √ should format date as YYYYMMDD (13 ms)
+      √ should pad month and day with zeros (12 ms)
+      √ should handle December dates (16 ms)
+    existing booking codes preservation
+      √ should not modify existing booking codes (16 ms)
+      √ should query correctly with startsWith filter (12 ms)
+  calculateEndDate
+    √ should calculate end date as startDate + tourDays - 1 (15 ms)
+    √ should handle single day tour (15 ms)
+    √ should handle two day tour (49 ms)
+    √ should handle long tour (cross month) (12 ms)
+    √ should not mutate original date (20 ms)
+  calculateNextFollowUp
+    √ should calculate next follow-up date based on config (14 ms)
+    √ should return null when config is not found (15 ms)
+    √ should return null when config is inactive (12 ms)
+    √ should handle 0 days to wait (16 ms)
+    √ should handle large days to wait (16 ms)
+  getSellerCode
+    √ should return seller code when available (14 ms)
+    √ should return null when seller code is null (22 ms)
+    √ should return null when config not found (13 ms)
+    √ should call findUnique with correct userId (18 ms)
+  canUserViewAll
+    √ should return true when canViewAll is true (16 ms)
+    √ should return false when canViewAll is false (13 ms)
+    √ should return false when config not found (18 ms)
+  getFollowUpDateBoundaries
+    √ should return today start and end dates (14 ms)
+    √ todayStart should be at 00:00:00 (14 ms)
+    √ todayEnd should be at 23:59:59.999 (17 ms)
+    √ threeDaysLater should be 3 days after todayStart (14 ms)
+    √ should have same date for todayStart and todayEnd (46 ms)
+
+PASS src/__tests__/api/operator-approvals.test.ts
+  GET /api/operators/pending-payments
+    √ should return pending payments with success (55 ms)
+    √ should filter by overdue (20 ms)
+    √ should filter by today (20 ms)
+    √ should filter by week (7 ms)
+    √ should filter by serviceType (13 ms)
+    √ should calculate daysOverdue correctly (7 ms)
+    √ should return correct summary (9 ms)
+    √ should return 500 on database error (284 ms)
+  POST /api/operators/approve (batch)
+    √ should batch approve operators successfully (14 ms)
+    √ should return 400 when no operatorIds provided (14 ms)
+    √ should return 400 when paymentDate is missing (11 ms)
+    √ should return 404 when some operators not found (14 ms)
+    √ should return 403 when trying to approve locked operators (32 ms)
+  POST /api/operators/[id]/approve (single)
+    √ should approve single operator successfully (13 ms)
+    √ should return 404 when operator not found (20 ms)
+    √ should return 403 when operator is locked (16 ms)
+    √ should return 400 when already paid (14 ms)
+    √ should use current date when paymentDate not provided (18 ms)
+
+PASS src/__tests__/api/operator-lock.test.ts
+  GET /api/operators/lock-period
+    √ should return tier breakdown for a month (50 ms)
+    √ should return isFullyLocked=true when all at Final tier (9 ms)
+    √ should return operators eligible for specific tier (16 ms)
+    √ should return 400 for invalid month format (27 ms)
+    √ should return 400 when month is missing (12 ms)
+  POST /api/operators/lock-period
+    √ should lock operators at KT tier (default) (14 ms)
+    √ should lock operators at Admin tier (17 ms)
+    √ should return count=0 when no operators to lock (15 ms)
+    √ should return 400 for invalid month format (13 ms)
+    √ should return 400 when month is missing (11 ms)
+    √ should return 400 for invalid tier (15 ms)
+  POST /api/operators/[id]/lock
+    √ should lock at KT tier successfully (12 ms)
+    √ should return 404 when operator not found (18 ms)
+    √ should return 400 when tier already locked (105 ms)
+    √ should return 400 when trying to skip tier progression (18 ms)
+  POST /api/operators/[id]/unlock
+    √ should unlock KT tier successfully (29 ms)
+    √ should return 404 when operator not found (45 ms)
+    √ should return 400 when tier not locked (58 ms)
+    √ should return 400 when trying to unlock out of order (13 ms)
+  Lock protection in existing APIs
+    √ PUT should reject editing locked operator (38 ms)
+    √ DELETE should reject deleting locked operator (20 ms)
+    √ APPROVE should reject approving locked operator (17 ms)
+
+  console.error
+    Error creating supplier: Error: Database write failed
+        at Object.<anonymous> (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\src\__tests__\api\suppliers.test.ts:577:50)
+        at Promise.finally.completed (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:275:16)
+        at runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:343:7)
+        at Object.worker (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:497:12)
+
+    [0m [90m 148 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson({ success[33m:[39m [36mtrue[39m[33m,[39m data[33m:[39m supplier }[33m,[39m { status[33m:[39m [35m201[39m })[33m;[39m
+     [90m 149 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 150 |[39m     console[33m.[39merror([32m'Error creating supplier:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 151 |[39m     [36mconst[39m message [33m=[39m error [36minstanceof[39m [33mError[39m [33m?[39m error[33m.[39mmessage [33m:[39m [32m'Unknown error'[39m[33m;[39m
+     [90m 152 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson(
+     [90m 153 |[39m       { success[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m [32m`Lỗi tạo NCC: ${message}`[39m }[33m,[39m[0m
+
+      at error (src/app/api/suppliers/route.ts:150:13)
+      at Object.<anonymous> (src/__tests__/api/suppliers.test.ts:587:22)
+
+PASS src/__tests__/api/suppliers.test.ts
+  GET /api/suppliers
+    √ should return all suppliers with success response (40 ms)
+    √ should filter by search term (code or name) (30 ms)
+    √ should filter by type (29 ms)
+    √ should filter by location (8 ms)
+    √ should filter by paymentModel (16 ms)
+    √ should filter by isActive=true (7 ms)
+    √ should filter by isActive=false (20 ms)
+    √ should handle multiple filters combined (13 ms)
+    √ should include balance when includeBalance=true (9 ms)
+    √ should return 500 on database error (349 ms)
+    √ should return empty array when no suppliers found (29 ms)
+  POST /api/suppliers
+    √ should create supplier with valid data (34 ms)
+    √ should return 400 when name is missing (15 ms)
+    √ should return 400 when type is missing (72 ms)
+    √ should return 400 for invalid supplier type (9 ms)
+    √ should return 400 when code already exists (11 ms)
+    √ should auto-generate code when not provided (22 ms)
+    √ should increment sequence for existing prefix (16 ms)
+    √ should default paymentModel to PREPAID (11 ms)
+    √ should default isActive to true (10 ms)
+    √ should trim text fields (14 ms)
+    √ should convert creditLimit to number (11 ms)
+    √ should return 500 on database error (24 ms)
+
+  console.error
+    Error creating transaction: Error: Database write failed
+        at Object.<anonymous> (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\src\__tests__\api\supplier-transactions.test.ts:618:61)
+        at Promise.finally.completed (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1557:28)
+        at new Promise (<anonymous>)
+        at callAsyncCircusFn (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1497:10)
+        at _callCircusTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1007:40)
+        at processTicksAndRejections (node:internal/process/task_queues:103:5)
+        at _runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:947:3)
+        at C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:849:7
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:862:11)
+        at _runTestsForDescribeBlock (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:857:11)
+        at run (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:761:3)
+        at runAndTransformResultsToJestFormat (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\jestAdapterInit.js:1918:21)
+        at jestAdapter (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-circus\build\runner.js:101:19)
+        at runTestInternal (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:275:16)
+        at runTest (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:343:7)
+        at Object.worker (C:\Users\Admin\Projects\company-workflow-app\vivatour-app\node_modules\jest-runner\build\testWorker.js:497:12)
+
+    [0m [90m 125 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson({ success[33m:[39m [36mtrue[39m[33m,[39m data[33m:[39m transaction }[33m,[39m { status[33m:[39m [35m201[39m })[33m;[39m
+     [90m 126 |[39m   } [36mcatch[39m (error) {
+    [31m[1m>[22m[39m[90m 127 |[39m     console[33m.[39merror([32m'Error creating transaction:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m             [31m[1m^[22m[39m
+     [90m 128 |[39m     [36mreturn[39m [33mNextResponse[39m[33m.[39mjson(
+     [90m 129 |[39m       { success[33m:[39m [36mfalse[39m[33m,[39m error[33m:[39m [32m'Failed to create transaction'[39m }[33m,[39m
+     [90m 130 |[39m       { status[33m:[39m [35m500[39m }[0m
+
+      at error (src/app/api/supplier-transactions/route.ts:127:13)
+      at Object.<anonymous> (src/__tests__/api/supplier-transactions.test.ts:625:22)
+
+PASS src/__tests__/api/supplier-transactions.test.ts
+  GET /api/supplier-transactions
+    √ should return all transactions with success response (56 ms)
+    √ should filter by supplierId (16 ms)
+    √ should filter by transaction type (15 ms)
+    √ should filter by date range (fromDate only) (18 ms)
+    √ should filter by date range (toDate only) (9 ms)
+    √ should filter by date range (both fromDate and toDate) (9 ms)
+    √ should paginate with limit and offset (10 ms)
+    √ should default limit to 50 (10 ms)
+    √ should return hasMore=true when more records exist (13 ms)
+    √ should include supplier details in response (17 ms)
+    √ should order by transactionDate desc (12 ms)
+    √ should return 500 on database error (345 ms)
+  POST /api/supplier-transactions
+    √ should create transaction with valid data (19 ms)
+    √ should return 400 when supplierId is missing (32 ms)
+    √ should return 400 when type is missing (57 ms)
+    √ should return 400 when amount is missing (35 ms)
+    √ should return 400 when transactionDate is missing (13 ms)
+    √ should return 400 when amount is zero (36 ms)
+    √ should return 400 when amount is negative (27 ms)
+    √ should return 404 when supplier not found (12 ms)
+    √ should convert amount to number (20 ms)
+    √ should parse transactionDate as Date (37 ms)
+    √ should use authenticated user ID as createdBy (14 ms)
+    √ should ignore body createdBy and use authenticated user (13 ms)
+    √ should include optional fields when provided (43 ms)
+    √ should return 500 on database error (28 ms)
+    transaction type validation
+      √ should accept valid type: DEPOSIT (29 ms)
+      √ should accept valid type: REFUND (14 ms)
+      √ should accept valid type: ADJUSTMENT (18 ms)
+      √ should accept valid type: FEE (36 ms)
+      √ should return 400 for invalid type (40 ms)
+
+PASS src/__tests__/api/reports.test.ts
+  GET /api/reports/dashboard
+    Authentication & Authorization
+      √ should return 401 when unauthenticated (51 ms)
+      √ should return 403 for SELLER role (no revenue:view) (4 ms)
+      √ should return 403 for OPERATOR role (no revenue:view) (3 ms)
+    Query Validation
+      √ should return 400 for invalid range parameter (7 ms)
+      √ should accept valid thisMonth range (9 ms)
+      √ should accept valid lastMonth range (43 ms)
+    Response Structure
+      √ should return valid dashboard response with all required fields (37 ms)
+      √ should include all KPI card metrics (22 ms)
+      √ should calculate profit as revenue minus cost (19 ms)
+      √ should include comparison metrics with changePercent (17 ms)
+      √ should include dateRange with startDate, endDate and label (15 ms)
+  GET /api/reports/revenue-trend
+    √ should return 401 when unauthenticated (43 ms)
+    √ should return 403 for SELLER role (17 ms)
+    √ should return 400 for invalid range parameter (16 ms)
+    √ should return valid response with summary and data array (30 ms)
+    √ should group data points by period (31 ms)
+  GET /api/reports/cost-breakdown
+    √ should return 401 when unauthenticated (27 ms)
+    √ should return 403 for OPERATOR role (19 ms)
+    √ should return 400 for invalid range parameter (40 ms)
+    √ should return valid cost breakdown response (22 ms)
+    √ should aggregate payment status correctly (34 ms)
+    √ should calculate percentage by service type (16 ms)
+  GET /api/reports/funnel
+    √ should return 401 when unauthenticated (31 ms)
+    √ should return 403 for SELLER role (49 ms)
+    √ should return 400 for invalid range parameter (16 ms)
+    √ should return valid funnel response with all stages (33 ms)
+    √ should include all funnel stages in correct order (21 ms)
+    √ should include count and percentage for each stage (22 ms)
+    √ should calculate conversion rate correctly (18 ms)
+    √ should handle stages with zero count (21 ms)
+
+PASS src/__tests__/api/sync-queue.test.ts
+  GET /api/sync/queue
+    Authentication
+      √ rejects unauthorized requests (5 ms)
+      √ accepts authenticated user session (3 ms)
+      √ rejects missing user ID in session (45 ms)
+    Queue Statistics
+      √ returns queue stats for all users (15 ms)
+      √ returns zero stats for empty queue (14 ms)
+    Admin-Only Data
+      √ returns empty arrays for non-admin users (13 ms)
+      √ returns failed items for admin users (14 ms)
+      √ returns recent write-back logs for admin users (31 ms)
+      √ returns last processed timestamp from most recent log (15 ms)
+      √ returns null for lastProcessed when no logs exist (55 ms)
+    Response Format
+      √ returns consistent response structure (18 ms)
+    Error Handling
+      √ handles database errors gracefully (17 ms)
+      √ handles auth errors gracefully (11 ms)
+
+PASS src/__tests__/lib/report-validation.test.ts
+  reportQuerySchema
+    √ should validate valid range options (8 ms)
+    √ should reject invalid range options (4 ms)
+    √ should default to thisMonth when range is not provided (2 ms)
+    √ should handle empty object (1 ms)
+    √ should accept null range and use default (3 ms)
+    √ should return correct type (1 ms)
+    √ should validate with extra properties (ignored) (1 ms)
+    √ should reject empty string range (1 ms)
+    √ should reject null range
+    √ should be case-sensitive for range values
+  extractReportZodErrors
+    √ should extract single field error (1 ms)
+    √ should extract multiple field errors (9 ms)
+    √ should return empty object for valid data (1 ms)
+    √ should handle nested field errors with dot notation (3 ms)
+    √ should not duplicate errors for same field (20 ms)
+    √ should extract error message (4 ms)
+  DATE_RANGE_OPTIONS constant
+    √ should have all expected date range options (3 ms)
+    √ should be readonly array (1 ms)
+    √ should have at least 5 options (1 ms)
+
+PASS src/__tests__/config/supplier-config.test.ts
+  SUPPLIER_TYPES configuration
+    √ should have 9 supplier types (2 ms)
+    √ should have 3-character prefixes for all types (3 ms)
+    √ should include all expected types (30 ms)
+    √ should have correct prefix mappings (3 ms)
+  SUPPLIER_LOCATIONS configuration
+    √ should have 18 locations (1 ms)
+    √ should have 2-3 character prefixes for all locations (10 ms)
+    √ should include key Vietnam locations (1 ms)
+    √ should include international locations (4 ms)
+  PAYMENT_MODELS configuration
+    √ should have 3 payment models (1 ms)
+    √ should include all expected models (1 ms)
+    √ should have labels and descriptions (2 ms)
+  removeDiacritics
+    √ should remove Vietnamese diacritics from A variants (2 ms)
+    √ should remove Vietnamese diacritics from E variants (1 ms)
+    √ should remove Vietnamese diacritics from I variants (1 ms)
+    √ should remove Vietnamese diacritics from O variants (6 ms)
+    √ should remove Vietnamese diacritics from U variants (1 ms)
+    √ should remove Vietnamese diacritics from Y variants (1 ms)
+    √ should convert Đ to D (2 ms)
+    √ should preserve non-diacritic characters (1 ms)
+    √ should handle mixed strings (2 ms)
+    √ should handle empty string (1 ms)
+  getNamePrefix
+    √ should extract first 3 characters from simple name (3 ms)
+    √ should use first word only (1 ms)
+    √ should handle Vietnamese names with diacritics (2 ms)
+    √ should pad short names with X (1 ms)
+    √ should return XXX for empty name (1 ms)
+    √ should return XXX for null/undefined (1 ms)
+    √ should trim whitespace (1 ms)
+    √ should convert to uppercase (2 ms)
+  generateSupplierCode
+    √ should generate correct code format: TYPE-LOCATION-NAME-SEQUENCE (1 ms)
+    √ should use XX for missing location
+    √ should use XX for undefined location (1 ms)
+    √ should pad sequence to 4 digits (1 ms)
+    √ should default sequence to 1 (1 ms)
+    √ should handle Vietnamese names correctly
+    √ should handle single character name
+    √ should handle empty name (1 ms)
+    √ should handle name with only spaces (16 ms)
+    √ should handle multi-word names (use first word only) (1 ms)
+    for each supplier type
+      √ should use HOT for HOTEL (1 ms)
+      √ should use RES for RESTAURANT (1 ms)
+      √ should use TRA for TRANSPORT
+      √ should use GUI for GUIDE (1 ms)
+      √ should use VIS for VISA (1 ms)
+      √ should use VMB for VMB (1 ms)
+      √ should use CRU for CRUISE
+      √ should use ACT for ACTIVITY
+      √ should use OTH for OTHER (1 ms)
+    for each location
+      √ should use HN for HA_NOI (1 ms)
+      √ should use DN for DA_NANG
+      √ should use HCM for HO_CHI_MINH
+      √ should use HL for HA_LONG (1 ms)
+      √ should use PQ for PHU_QUOC
+      √ should use TL for THAI_LAN
+      √ should use CB for CAMBODIA (1 ms)
+
+PASS src/__tests__/lib/supplier-balance.test.ts
+  calculateSupplierBalance
+    √ should calculate balance correctly with all transaction types (4 ms)
+    √ should handle zero transactions (new supplier) (16 ms)
+    √ should handle deposits only (10 ms)
+    √ should calculate negative balance when costs exceed deposits (23 ms)
+    √ should handle large numeric values (8 ms)
+    √ should call Prisma with correct supplier ID (9 ms)
+  getSupplierBalanceSummary
+    √ should return balance summary for all active suppliers (11 ms)
+    √ should filter by supplier type when provided (12 ms)
+    √ should return empty results for no active suppliers (9 ms)
+    √ should count positive and negative balances correctly (12 ms)
+
+PASS src/__tests__/config/operator-config.test.ts
+  SERVICE_TYPES configuration
+    √ should have 9 service types (2 ms)
+    √ should include all expected types (3 ms)
+    √ should have labels and icons for all types (4 ms)
+    √ should have correct Vietnamese labels (2 ms)
+    √ should have valid Lucide icon names (2 ms)
+  PAYMENT_STATUSES configuration
+    √ should have 3 payment statuses (1 ms)
+    √ should include all expected statuses (1 ms)
+    √ should have labels and colors for all statuses (2 ms)
+    √ should have correct Vietnamese labels (1 ms)
+    √ should have appropriate colors (1 ms)
+  HISTORY_ACTIONS configuration
+    √ should have 12 history action types (including 3-tier locks) (1 ms)
+    √ should include all expected base action types (3 ms)
+    √ should include 3-tier lock action types (2 ms)
+    √ should have labels and colors for all actions (4 ms)
+    √ should have correct Vietnamese labels for base actions (3 ms)
+    √ should have correct Vietnamese labels for 3-tier lock actions (4 ms)
+    √ should have appropriate colors for base actions (2 ms)
+    √ should have appropriate colors for 3-tier lock actions (2 ms)
+  DEFAULT_VAT_RATE constant
+    √ should be 10 (percent) (1 ms)
+    √ should be a positive number (1 ms)
+    √ should be less than 100 (reasonable VAT rate) (1 ms)
+  Service types alignment with Supplier types
+    √ should have matching service types with supplier types (3 ms)
+
+PASS src/__tests__/lib/sheet-mappers.test.ts
+  sheet-mappers.ts - Request Row Mapping
+    mapRequestRow - Basic Structure
+      √ should extract all required and optional fields from row (18 ms)
+      √ should include bookingCode in output (3 ms)
+      √ should handle null bookingCode when not provided (3 ms)
+    mapRequestRow - Vietnamese Status Mapping to Enum Keys
+      √ should map 'Đã báo giá' to DA_BAO_GIA enum key (2 ms)
+      √ should map 'Đang xây Tour' to DANG_XAY_TOUR enum key (1 ms)
+      √ should map 'F1' to F1 enum key (1 ms)
+      √ should map 'F2' to F2 enum key (1 ms)
+      √ should map 'F3' to F3 enum key (1 ms)
+      √ should map 'F4' variations to F4 enum key (3 ms)
+      √ should map 'Booking' to BOOKING enum key (1 ms)
+      √ should map 'Khách hoãn' to KHACH_HOAN enum key (2 ms)
+      √ should map 'Đang suy nghĩ' to KHACH_SUY_NGHI enum key (1 ms)
+      √ should map 'Không đủ TC' to KHONG_DU_TC enum key (1 ms)
+      √ should map 'Đã kết thúc' to DA_KET_THUC enum key (1 ms)
+      √ should map 'Cancel' to CANCEL enum key (1 ms)
+      √ should map 'Đang LL - khách chưa trả lời' to DANG_LL_CHUA_TL enum key (1 ms)
+      √ should map 'Đang LL - khách đã trả lời' to DANG_LL_DA_TL enum key (1 ms)
+      √ should default to DANG_LL_CHUA_TL for unknown status (1 ms)
+      √ should default to DANG_LL_CHUA_TL for empty status (1 ms)
+      √ should always return string enum key (not Vietnamese label) (2 ms)
+    mapRequestRow - Decimal Fields
+      √ should convert expectedRevenue to Prisma.Decimal (4 ms)
+      √ should convert expectedCost to Prisma.Decimal (1 ms)
+      √ should handle Vietnamese decimal format (comma as decimal separator) (2 ms)
+      √ should handle empty Decimal fields as null (1 ms)
+    mapRequestRow - Validation & Filtering
+      √ should return null when Request ID (AR) is empty (2 ms)
+      √ should return null when Seller (A) is empty (1 ms)
+      √ should return null when customer name (B) is empty (1 ms)
+      √ should return null for header rows (1 ms)
+      √ should throw error when no SELLER user found (80 ms)
+    mapRequestRow - Data Types & Conversions
+      √ should convert pax string to number (1 ms)
+      √ should default pax to 1 if empty (1 ms)
+      √ should parse tourDays as number (1 ms)
+      √ should handle null tourDays when empty (1 ms)
+      √ should parse dates in DD/MM/YYYY format (2 ms)
+      √ should trim whitespace from text fields (1 ms)
+    mapRequestRow - Stage Mapping
+      √ should map quote statuses to QUOTE stage (2 ms)
+      √ should map F1-F4 statuses to FOLLOWUP stage (1 ms)
+      √ should map booking/cancel statuses to OUTCOME stage (1 ms)
+      √ should default to LEAD stage for unknown status (2 ms)
+    mapRequestRow - Real-world Integration
+      √ should handle complete real-world request row (3 ms)
+
+PASS src/__tests__/lib/report-utils.test.ts
+  getDateRange
+    √ should return thisMonth range with correct structure (5 ms)
+    √ should return lastMonth range with correct structure (2 ms)
+    √ should return last3Months range (2 ms)
+    √ should return last6Months range (3 ms)
+    √ should return thisYear range (1 ms)
+    √ should return consistent label for known ranges (4 ms)
+  getComparisonRange
+    √ should return previous period with same duration as current (1 ms)
+    √ should have label "Ky truoc" (1 ms)
+    √ should return dates before current range (1 ms)
+    √ should return valid DateRange objects for all range types (6 ms)
+    √ should return comparison period ending before current period starts (2 ms)
+  formatPeriodKey
+    √ should format date as YYYY-MM with zero-padded month (2 ms)
+    √ should handle double-digit months (1 ms)
+    √ should pad single-digit months with zero (1 ms)
+    √ should handle different years (1 ms)
+  calcChangePercent
+    √ should calculate positive change correctly (1 ms)
+    √ should calculate negative change correctly (1 ms)
+    √ should handle zero previous value with positive current (1 ms)
+    √ should handle zero previous value with zero current (1 ms)
+    √ should return 0 for identical values (1 ms)
+    √ should round to 2 decimal places (1 ms)
+    √ should handle decimal results with rounding
+    √ should handle fractional percentages
+    √ should handle large numbers (1 ms)
+    √ should handle very small percentages (1 ms)
+
+PASS src/__tests__/lib/lock-utils.test.ts
+  Lock System Utilities
+    canLock - Role permissions for locking
+      √ ACCOUNTANT can lock KT tier (4 ms)
+      √ ADMIN can lock KT tier (4 ms)
+      √ SELLER cannot lock KT tier (1 ms)
+      √ OPERATOR cannot lock KT tier (3 ms)
+      √ ADMIN can lock Admin tier (1 ms)
+      √ ACCOUNTANT cannot lock Admin tier (1 ms)
+      √ ADMIN can lock Final tier (1 ms)
+    canUnlock - Role permissions for unlocking
+      √ ACCOUNTANT can unlock KT tier (1 ms)
+      √ ADMIN can unlock all tiers (1 ms)
+      √ SELLER cannot unlock any tier (2 ms)
+    canLockTier - Sequential lock progression
+      √ Can lock KT when no locks exist (6 ms)
+      √ Cannot lock KT when already locked (1 ms)
+      √ Cannot lock Admin without KT lock first (1 ms)
+      √ Can lock Admin when KT is locked (1 ms)
+      √ Cannot lock Final without Admin lock first
+      √ Can lock Final when both KT and Admin are locked
+      √ Cannot lock Final when already locked
+    canUnlockTier - Reverse unlock progression
+      √ Cannot unlock any tier when none are locked (1 ms)
+      √ Can unlock Final when Final is locked
+      √ Cannot unlock Admin when Final is locked
+      √ Can unlock Admin when Final is unlocked
+      √ Cannot unlock KT when Admin is locked
+      √ Can unlock KT when Admin is unlocked (1 ms)
+    isEditable - Check if record is editable
+      √ Record is editable with no locks (1 ms)
+      √ Record is not editable with KT lock
+      √ Record is not editable with Admin lock (1 ms)
+      √ Record is not editable with Final lock (1 ms)
+      √ Record is not editable with any combination of locks (1 ms)
+    getLockFields - Generate DB update fields
+      √ generates lock fields for KT tier (2 ms)
+      √ generates lock fields for Admin tier (1 ms)
+      √ generates lock fields for Final tier (2 ms)
+      √ generates unlock fields (sets to false/null) (2 ms)
+      √ sets correct timestamp for lock operations (2 ms)
+    getCurrentLockTier - Get highest active lock tier
+      √ returns null when no locks (1 ms)
+      √ returns KT when only KT is locked
+      √ returns Admin when KT and Admin are locked
+      √ returns Final when all are locked (1 ms)
+      √ prioritizes higher tiers (Final > Admin > KT) (1 ms)
+    getActiveLockTiers - Get all active lock tiers
+      √ returns empty array when no locks (1 ms)
+      √ returns [KT] when only KT is locked (1 ms)
+      √ returns [KT, Admin] when both are locked (1 ms)
+      √ returns all tiers when all are locked (1 ms)
+    hasAnyLock - Check if any lock is active
+      √ returns false when no locks (2 ms)
+      √ returns true when KT is locked (1 ms)
+      √ returns true when Admin is locked (1 ms)
+      √ returns true when Final is locked (1 ms)
+      √ returns true when any combination of locks exist (1 ms)
+    Lock configuration constants
+      √ LOCK_TIERS has 3 tiers (1 ms)
+      √ LOCK_TIER_ORDER has correct progression (1 ms)
+      √ LOCK_PERMISSIONS configured for all tiers (1 ms)
+      √ KT tier allows ACCOUNTANT and ADMIN to lock/unlock (2 ms)
+      √ Admin and Final tiers allow only ADMIN (1 ms)
+
+PASS src/lib/sync/__tests__/sync-extensions.test.ts
+  Sync Extensions
+    isRecordLocked helper
+      √ detects lockKT (2 ms)
+      √ detects lockAdmin (1 ms)
+      √ detects lockFinal
+      √ detects legacy isLocked
+    extractChangedFields helper
+      √ filters Prisma-specific fields (1 ms)
+      √ skips nested relations (1 ms)
+    Request model tracking
+      create
+        √ queues CREATE action with full record (5 ms)
+      update
+        √ queues UPDATE action with changed fields only (2 ms)
+        √ skips queuing when no fields changed (5 ms)
+      delete
+        √ does NOT queue DELETE action (per plan decision) (1 ms)
+    Operator model tracking
+      create
+        √ queues CREATE when not locked (2 ms)
+        √ skips queue when lockKT is true (1 ms)
+        √ skips queue when lockAdmin is true (1 ms)
+        √ skips queue when lockFinal is true (2 ms)
+        √ skips queue when isLocked is true (legacy) (1 ms)
+      update
+        √ queues UPDATE when not locked (1 ms)
+        √ skips queue when locked (any lock) (3 ms)
+      delete
+        √ does NOT queue DELETE action (2 ms)
+    Revenue model tracking
+      create
+        √ queues CREATE when not locked (4 ms)
+        √ skips queue when locked (2 ms)
+      update
+        √ queues UPDATE when not locked (1 ms)
+        √ skips queue when locked (1 ms)
+      delete
+        √ does NOT queue DELETE action (1 ms)
+    Error handling
+      √ logs error but does not throw when enqueue fails (2 ms)
+    Async behavior
+      √ uses setImmediate for non-blocking queue (1 ms)
+    withSyncExtensions function
+      √ is a valid function (2 ms)
+      √ has correct function signature (1 ms)
+  PrismaClientWithSync type
+    √ exports type for extended client (1 ms)
+
+PASS src/lib/sync/__tests__/db-to-sheet-mappers.test.ts
+  DB to Sheet Mappers
+    mapRequestToRow
+      √ maps all fields to correct column indices (104 ms)
+      √ converts status to Vietnamese label (5 ms)
+      √ handles null/undefined optional fields (2 ms)
+      √ returns array with 52 elements (1 ms)
+    mapOperatorToRow
+      √ maps all fields to correct column indices (3 ms)
+      √ leaves formula columns as null (2 ms)
+      √ handles null optional fields (2 ms)
+    mapRevenueToRow
+      √ maps all fields to correct column indices (3 ms)
+      √ handles null optional fields (2 ms)
+    FORMULA_COLUMNS
+      √ has correct formula columns for each sheet (2 ms)
+    getWritableColumns
+      √ returns all columns for Request (no formulas) (2 ms)
+      √ excludes formula columns for Operator (1 ms)
+      √ handles unknown sheet name
+    filterWritableValues
+      √ sets formula columns to null for Operator (1 ms)
+      √ preserves all values for Request (no formulas) (1 ms)
+    statusKeyToVietnamese
+      √ converts known status keys (1 ms)
+      √ returns original for unknown status
+    Date Formatting
+      √ formats dates as DD/MM/YYYY (1 ms)
+    Number Formatting
+      √ formats numbers with Vietnamese locale (dots as separators) (2 ms)
+      √ formats decimals with 2 decimal places (2 ms)
+
+PASS src/lib/sync/__tests__/sheets-writer.test.ts
+  SheetsWriter
+    updateSheetRows
+      √ returns 0 when updates array is empty (5 ms)
+      √ throws when no spreadsheet ID configured (57 ms)
+      √ calls batchUpdate with correct parameters (3 ms)
+      √ converts null values to empty strings (3 ms)
+      √ retries on 429 rate limit error (4 ms)
+      √ throws non-429 errors immediately (2 ms)
+      √ throws after max retries on 429 (4 ms)
+    appendSheetRow
+      √ throws when no spreadsheet ID configured (5 ms)
+      √ calls append with correct parameters (2 ms)
+      √ returns 0 when updatedRange not parseable (1 ms)
+      √ converts null values to empty strings (1 ms)
+    updateSheetRowsBatched
+      √ returns 0 for empty updates (2 ms)
+      √ processes small batches in single call (2 ms)
+      √ splits large batches into chunks of 25 (223 ms)
+    Rate Limit Manager
+      shouldThrottle
+        √ returns false when under limit (1 ms)
+        √ returns true when at limit (2 ms)
+        √ resets after window expires (1 ms)
+      recordRequest
+        √ increments request count (2 ms)
+        √ resets count after window expires (2 ms)
+      getRateLimitStatus
+        √ returns correct status (3 ms)
+        √ shows shouldThrottle when at limit (1 ms)
+      resetRateLimiter
+        √ resets all counters (2 ms)
+
+PASS src/__tests__/lib/id-utils.test.ts
+  ID Utilities
+    removeDiacritics - Remove Vietnamese diacritics
+      √ removes A diacritics (4 ms)
+      √ removes E diacritics (2 ms)
+      √ removes I diacritics (1 ms)
+      √ removes O diacritics (2 ms)
+      √ removes all U variants (1 ms)
+      √ removes all Y variants (2 ms)
+      √ converts D with stroke (Đ/đ) (1 ms)
+      √ preserves non-diacritic characters (2 ms)
+      √ handles mixed strings with diacritics and plain text (1 ms)
+      √ handles empty string (1 ms)
+      √ handles whitespace (1 ms)
+    formatTimestamp - Format as yyyyMMddHHmmssSSS
+      √ formats date correctly (17 chars) (2 ms)
+      √ pads single digit month correctly (1 ms)
+      √ pads single digit date correctly
+      √ pads single digit hours/minutes/seconds
+      √ handles midnight (00:00:00) (2 ms)
+      √ handles milliseconds with 3 digits padding (2 ms)
+      √ uses current date/time when not provided (2 ms)
+    formatDatePart - Format as yyyyMMdd
+      √ formats date correctly (2 ms)
+      √ pads single digit month (2 ms)
+      √ pads single digit date (1 ms)
+      √ ignores time component
+      √ uses current date when not provided (1 ms)
+    generateRequestId - Generate {SellerCode}{yyyyMMddHHmmssSSS}
+      √ generates valid requestId format (1 ms)
+      √ converts seller code to uppercase (1 ms)
+      √ removes diacritics from seller code (1 ms)
+      √ removes whitespace from seller code (1 ms)
+      √ checks uniqueness in database (1 ms)
+      √ retries with new timestamp on collision (2 ms)
+    generateServiceId - Generate {bookingCode}-{yyyyMMddHHmmssSSS}
+      √ generates valid serviceId format
+      √ includes booking code in serviceId
+      √ includes timestamp after hyphen (1 ms)
+      √ checks uniqueness in database (1 ms)
+      √ retries on collision (25 ms)
+    generateRevenueId - Generate {bookingCode}-{yyyyMMddHHmmss}-{rowNum}
+      √ generates valid revenueId format
+      √ includes booking code
+      √ formats timestamp without milliseconds
+      √ increments row number for same prefix (1 ms)
+      √ starts with row 1 for new prefix (1 ms)
+      √ filters by prefix correctly (2 ms)
+    ID generation flow
+      √ generates unique IDs for multiple calls (2 ms)
+      √ handles concurrent ID generation (1 ms)
+
+PASS src/lib/sync/__tests__/write-back-queue.test.ts
+  SyncQueue Management Utilities
+    enqueue
+      √ creates a queue entry with correct data (4 ms)
+      √ handles null sheetRowIndex for CREATE action (6 ms)
+      √ logs error but does not throw on failure (18 ms)
+    dequeue
+      √ returns pending items and marks them as processing (6 ms)
+      √ returns empty array when no pending items (7 ms)
+      √ respects batch size parameter (8 ms)
+    markComplete
+      √ updates status to COMPLETED with timestamp (9 ms)
+    markFailed
+      √ sets status to PENDING when retries remaining (9 ms)
+      √ sets status to FAILED when max retries reached (10 ms)
+      √ does nothing when item not found (12 ms)
+    resetStuck
+      √ resets PROCESSING items older than threshold (13 ms)
+      √ uses default 10 minutes threshold (10 ms)
+    cleanupCompleted
+      √ deletes COMPLETED items older than threshold (12 ms)
+      √ uses default 7 days threshold (10 ms)
+    getQueueStats
+      √ returns counts by status (23 ms)
+      √ returns 0 for missing statuses (16 ms)
+      √ handles empty queue (14 ms)
+    getFailedItems
+      √ returns failed items with error details (17 ms)
+    retryFailed
+      √ resets status and retries for failed item (21 ms)
+    deleteQueueItem
+      √ deletes queue item by id (18 ms)
+
+PASS src/app/login/__tests__/login-validation.test.ts
+  Login Form Validation Schema
+    Email Validation
+      √ accepts valid email addresses (5 ms)
+      √ rejects invalid email format (6 ms)
+      √ rejects empty email (2 ms)
+      √ rejects missing email field (1 ms)
+    Password Validation
+      √ accepts non-empty password (1 ms)
+      √ rejects empty password (1 ms)
+      √ rejects missing password field (1 ms)
+    Combined Validation
+      √ accepts valid credentials (1 ms)
+      √ rejects both invalid email and empty password (1 ms)
+      √ rejects extra fields in data (43 ms)
+      √ maintains type safety of parsed data (1 ms)
+    Edge Cases
+      √ handles very long email (1 ms)
+      √ handles very long password (1 ms)
+      √ handles unicode characters in password (2 ms)
+      √ handles whitespace in email (should fail) (1 ms)
+      √ trims whitespace from inputs (1 ms)
+
+PASS src/app/login/__tests__/page.test.tsx
+  LoginPage
+    Rendering
+      √ renders login page without errors (92 ms)
+      √ displays page title (16 ms)
+      √ displays subtitle (10 ms)
+      √ renders LoginForm component (13 ms)
+      √ applies correct styling classes (12 ms)
+      √ renders form container with max-width (11 ms)
+    Layout Structure
+      √ renders header section before form (10 ms)
+      √ centers header text (6 ms)
+      √ renders text-based UI elements in correct order (11 ms)
+    Responsive Design
+      √ applies responsive padding (7 ms)
+      √ limits form width on larger screens (35 ms)
+    Integration with LoginForm
+      √ passes no props to LoginForm (5 ms)
+      √ mounts LoginForm as a child component (8 ms)
+    Accessibility
+      √ maintains semantic HTML structure (12 ms)
+      √ uses proper heading hierarchy (11 ms)
+
+PASS src/app/login/__tests__/login-form.test.tsx
+  LoginForm Component
+    Rendering
+      √ renders login form without errors (162 ms)
+      √ renders email and password inputs with correct attributes (13 ms)
+      √ renders submit button in initial state (16 ms)
+      √ renders form labels (10 ms)
+    Form Validation - Email
+      √ validates empty email field on submit (38 ms)
+      √ allows typing invalid email format into field (16 ms)
+      √ accepts valid email format (12 ms)
+    Form Validation - Password
+      √ validates empty password field on submit (27 ms)
+      √ accepts non-empty password (21 ms)
+    Form Structure
+      √ renders form with proper structure (16 ms)
+      √ groups form inputs in container divs (39 ms)
+      √ renders input elements within form (13 ms)
+    User Interaction Handling
+      √ allows user to type in email field (10 ms)
+      √ allows user to type in password field (7 ms)
+      √ handles form submission event (41 ms)
+    Accessibility
+      √ associates labels with input fields (14 ms)
+      √ submit button is accessible via keyboard (17 ms)
+      √ uses proper ARIA attributes on inputs (20 ms)
+    Error Display
+      √ displays validation errors below fields (38 ms)
+      √ displays errors in red text (18 ms)
+    Button State Management
+      √ button is clickable in initial state (16 ms)
+      √ button text is Dang nhap in initial state (18 ms)
+
+-----------------------------------------------|---------|----------|---------|---------|-----------------------------------------------
+File                                           | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s                             
+-----------------------------------------------|---------|----------|---------|---------|-----------------------------------------------
+All files                                      |   20.51 |    15.44 |   16.42 |   20.52 |                                               
+ src                                           |       0 |        0 |       0 |       0 |                                               
+  auth.config.ts                               |       0 |        0 |       0 |       0 | 11-115                                        
+  auth.ts                                      |       0 |        0 |       0 |       0 | 11-63                                         
+  proxy.ts                                     |       0 |      100 |     100 |       0 | 10-16                                         
+ src/app/(dashboard)                           |       0 |        0 |       0 |       0 |                                               
+  layout.tsx                                   |       0 |      100 |       0 |       0 | 1-5                                           
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-381                                         
+ src/app/(dashboard)/operators                 |       0 |        0 |       0 |       0 |                                               
+  error.tsx                                    |       0 |      100 |       0 |       0 | 3-17                                          
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-223                                         
+ src/app/(dashboard)/operators/[id]            |       0 |        0 |       0 |       0 |                                               
+  error.tsx                                    |       0 |        0 |       0 |       0 | 3-29                                          
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-472                                         
+ src/app/(dashboard)/operators/approvals       |       0 |        0 |       0 |       0 |                                               
+  error.tsx                                    |       0 |      100 |       0 |       0 | 3-24                                          
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-79                                          
+ src/app/(dashboard)/operators/create          |       0 |        0 |       0 |       0 |                                               
+  error.tsx                                    |       0 |      100 |       0 |       0 | 3-24                                          
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-40                                          
+ src/app/(dashboard)/operators/reports         |       0 |        0 |       0 |       0 |                                               
+  error.tsx                                    |       0 |      100 |       0 |       0 | 3-24                                          
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-129                                         
+ src/app/(dashboard)/reports                   |       0 |        0 |       0 |       0 |                                               
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-34                                          
+ src/app/(dashboard)/requests                  |       0 |        0 |       0 |       0 |                                               
+  error.tsx                                    |       0 |      100 |       0 |       0 | 3-18                                          
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-290                                         
+ src/app/(dashboard)/requests/[id]             |       0 |        0 |       0 |       0 |                                               
+  error.tsx                                    |       0 |        0 |       0 |       0 | 3-30                                          
+  page.tsx                                     |       0 |        0 |       0 |       0 | 1-19                                          
+ src/app/(dashboard)/requests/[id]/edit        |       0 |        0 |       0 |       0 |                                               
+  error.tsx                                    |       0 |        0 |       0 |       0 | 3-36                                          
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-108                                         
+ src/app/(dashboard)/requests/create           |       0 |        0 |       0 |       0 |                                               
+  error.tsx                                    |       0 |      100 |       0 |       0 | 3-25                                          
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-90                                          
+ src/app/(dashboard)/revenues                  |       0 |        0 |       0 |       0 |                                               
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-437                                         
+ src/app/(dashboard)/settings                  |       0 |        0 |       0 |       0 |                                               
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-82                                          
+ src/app/(dashboard)/suppliers                 |       0 |        0 |       0 |       0 |                                               
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-152                                         
+ src/app/(dashboard)/suppliers/[id]            |       0 |        0 |       0 |       0 |                                               
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-214                                         
+ src/app/(dashboard)/suppliers/create          |       0 |      100 |       0 |       0 |                                               
+  page.tsx                                     |       0 |      100 |       0 |       0 | 1-4                                           
+ src/app/(dashboard)/suppliers/reports         |       0 |        0 |       0 |       0 |                                               
+  page.tsx                                     |       0 |        0 |       0 |       0 | 3-183                                         
+ src/app/api/auth/[...nextauth]                |       0 |      100 |     100 |       0 |                                               
+  route.ts                                     |       0 |      100 |     100 |       0 | 1-3                                           
+ src/app/api/config/follow-up                  |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-61                                          
+ src/app/api/config/follow-up-statuses         |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-91                                          
+ src/app/api/config/follow-up-statuses/[id]    |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-130                                         
+ src/app/api/config/follow-up-statuses/reorder |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-50                                          
+ src/app/api/config/sellers                    |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-121                                         
+ src/app/api/config/sellers/[id]               |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-137                                         
+ src/app/api/config/user                       |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-144                                         
+ src/app/api/config/user/me                    |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-38                                          
+ src/app/api/operators                         |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-245                                         
+ src/app/api/operators/[id]                    |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-217                                         
+ src/app/api/operators/[id]/approve            |   86.36 |    83.33 |     100 |   86.36 |                                               
+  route.ts                                     |   86.36 |    83.33 |     100 |   86.36 | 60-62                                         
+ src/app/api/operators/[id]/lock               |      80 |    57.14 |     100 |      80 |                                               
+  route.ts                                     |      80 |    57.14 |     100 |      80 | 22,31,39,104-106                              
+ src/app/api/operators/[id]/unlock             |   81.25 |    54.16 |     100 |   81.25 |                                               
+  route.ts                                     |   81.25 |    54.16 |     100 |   81.25 | 23,32,40,116-118                              
+ src/app/api/operators/approve                 |   88.23 |    76.47 |     100 |   90.32 |                                               
+  route.ts                                     |   88.23 |    76.47 |     100 |   90.32 | 94-96                                         
+ src/app/api/operators/archive                 |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-122                                         
+ src/app/api/operators/lock-period             |   75.67 |    64.28 |     100 |   75.67 |                                               
+  route.ts                                     |   75.67 |    64.28 |     100 |   75.67 | 17,41,63-65,118-120,132,159-164,211-213       
+ src/app/api/operators/pending-payments        |   97.95 |    82.14 |     100 |     100 |                                               
+  route.ts                                     |   97.95 |    82.14 |     100 |     100 | 39-61,71,95                                   
+ src/app/api/operators/unarchive               |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-70                                          
+ src/app/api/reports/cost-breakdown            |   93.33 |    82.35 |     100 |   93.33 |                                               
+  route.ts                                     |   93.33 |    82.35 |     100 |   93.33 | 98-100                                        
+ src/app/api/reports/dashboard                 |    90.9 |    66.66 |     100 |    90.9 |                                               
+  route.ts                                     |    90.9 |    66.66 |     100 |    90.9 | 135-137                                       
+ src/app/api/reports/funnel                    |   91.89 |    77.77 |     100 |   91.66 |                                               
+  route.ts                                     |   91.89 |    77.77 |     100 |   91.66 | 94-96                                         
+ src/app/api/reports/operator-costs            |   97.14 |    78.04 |     100 |   98.41 |                                               
+  route.ts                                     |   97.14 |    78.04 |     100 |   98.41 | 32                                            
+ src/app/api/reports/operator-payments         |   86.66 |       80 |     100 |   86.66 |                                               
+  route.ts                                     |   86.66 |       80 |     100 |   86.66 | 31-33,45                                      
+ src/app/api/reports/profit                    |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-147                                         
+ src/app/api/reports/revenue-trend             |   93.18 |       80 |     100 |   92.85 |                                               
+  route.ts                                     |   93.18 |       80 |     100 |   92.85 | 111-113                                       
+ src/app/api/reports/supplier-balance          |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-18                                          
+ src/app/api/requests                          |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-192                                         
+ src/app/api/requests/[id]                     |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-274                                         
+ src/app/api/revenues                          |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-197                                         
+ src/app/api/revenues/[id]                     |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-225                                         
+ src/app/api/revenues/[id]/history             |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-56                                          
+ src/app/api/revenues/[id]/lock                |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-108                                         
+ src/app/api/revenues/[id]/unlock              |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-108                                         
+ src/app/api/revenues/sales                    |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-156                                         
+ src/app/api/supplier-transactions             |   97.87 |    95.45 |     100 |   97.67 |                                               
+  route.ts                                     |   97.87 |    95.45 |     100 |   97.67 | 64                                            
+ src/app/api/supplier-transactions/[id]        |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-129                                         
+ src/app/api/suppliers                         |   86.11 |     87.5 |      75 |    85.5 |                                               
+  route.ts                                     |   86.11 |     87.5 |      75 |    85.5 | 160-183                                       
+ src/app/api/suppliers/[id]                    |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-156                                         
+ src/app/api/suppliers/generate-code           |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-67                                          
+ src/app/api/sync/queue                        |     100 |      100 |     100 |     100 |                                               
+  route.ts                                     |     100 |      100 |     100 |     100 |                                               
+ src/app/api/sync/sheets                       |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 10-403                                        
+ src/app/api/sync/write-back                   |   81.18 |     74.5 |     100 |   80.41 |                                               
+  route.ts                                     |   81.18 |     74.5 |     100 |   80.41 | 79-85,100-104,124-134,157,179-192,215,301-302 
+ src/app/api/users                             |       0 |        0 |       0 |       0 |                                               
+  route.ts                                     |       0 |        0 |       0 |       0 | 1-35                                          
+ src/app/forbidden                             |       0 |      100 |       0 |       0 |                                               
+  page.tsx                                     |       0 |      100 |       0 |       0 | 1-5                                           
+ src/app/login                                 |   81.57 |    41.66 |     100 |   83.33 |                                               
+  login-form.tsx                               |   80.55 |    41.66 |     100 |   82.35 | 28-29,61-64,71-72                             
+  page.tsx                                     |     100 |      100 |     100 |     100 |                                               
+ src/components/dashboard                      |       0 |        0 |       0 |       0 |                                               
+  follow-up-widget.tsx                         |       0 |        0 |       0 |       0 | 3-159                                         
+ src/components/layout                         |       0 |        0 |       0 |       0 |                                               
+  AIAssistant.tsx                              |       0 |        0 |       0 |       0 | 3-190                                         
+  Header.tsx                                   |       0 |        0 |       0 |       0 | 3-69                                          
+ src/components/layouts                        |       0 |        0 |       0 |       0 |                                               
+  index.ts                                     |       0 |      100 |     100 |       0 | 7-8                                           
+  master-detail-layout.tsx                     |       0 |        0 |       0 |       0 | 23-59                                         
+  slide-in-panel.tsx                           |       0 |        0 |       0 |       0 | 25-48                                         
+ src/components/operators                      |       0 |        0 |       0 |       0 |                                               
+  approval-summary-cards.tsx                   |       0 |        0 |       0 |       0 | 3-60                                          
+  index.ts                                     |       0 |      100 |     100 |       0 | 2-9                                           
+  lock-indicator.tsx                           |       0 |        0 |       0 |       0 | 1-25                                          
+  operator-approval-table.tsx                  |       0 |        0 |       0 |       0 | 3-187                                         
+  operator-form.tsx                            |       0 |        0 |       0 |       0 | 3-523                                         
+  operator-history-panel.tsx                   |       0 |        0 |       0 |       0 | 3-219                                         
+  operator-list-filters.tsx                    |       0 |        0 |       0 |       0 | 3-131                                         
+  operator-lock-dialog.tsx                     |       0 |        0 |       0 |       0 | 3-236                                         
+  operator-lock-tier-badge.tsx                 |       0 |        0 |       0 |       0 | 3-159                                         
+ src/components/operators/reports              |       0 |        0 |       0 |       0 |                                               
+  cost-by-service-chart.tsx                    |       0 |        0 |       0 |       0 | 3-24                                          
+  cost-by-supplier-table.tsx                   |       0 |        0 |       0 |       0 | 10-40                                         
+  monthly-trend.tsx                            |       0 |        0 |       0 |       0 | 10-50                                         
+  payment-status-cards.tsx                     |       0 |      100 |       0 |       0 | 3-51                                          
+  profit-chart.tsx                             |       0 |        0 |       0 |       0 | 3-117                                         
+  profit-report-table.tsx                      |       0 |        0 |       0 |       0 | 3-194                                         
+ src/components/providers                      |       0 |      100 |       0 |       0 |                                               
+  index.ts                                     |       0 |      100 |     100 |       0 | 5                                             
+  session-provider-wrapper.tsx                 |       0 |      100 |       0 |       0 | 11-17                                         
+ src/components/reports                        |       0 |        0 |       0 |       0 |                                               
+  cost-breakdown-chart.tsx                     |       0 |        0 |       0 |       0 | 3-149                                         
+  date-range-selector.tsx                      |       0 |      100 |       0 |       0 | 9-33                                          
+  funnel-chart.tsx                             |       0 |        0 |       0 |       0 | 3-126                                         
+  kpi-cards.tsx                                |       0 |        0 |       0 |       0 | 3-73                                          
+  revenue-trend-chart.tsx                      |       0 |        0 |       0 |       0 | 3-97                                          
+ src/components/requests                       |       0 |        0 |       0 |       0 |                                               
+  index.ts                                     |       0 |      100 |     100 |       0 | 4-15                                          
+  request-detail-panel.tsx                     |       0 |        0 |       0 |       0 | 3-313                                         
+  request-filters.tsx                          |       0 |        0 |       0 |       0 | 3-132                                         
+  request-form.tsx                             |       0 |        0 |       0 |       0 | 3-369                                         
+  request-list-item.tsx                        |       0 |        0 |       0 |       0 | 3-23                                          
+  request-list-panel.tsx                       |       0 |        0 |       0 |       0 | 3-119                                         
+  request-services-table.tsx                   |       0 |        0 |       0 |       0 | 3-303                                         
+  request-status-badge.tsx                     |       0 |        0 |       0 |       0 | 3-58                                          
+  request-table.tsx                            |       0 |        0 |       0 |       0 | 10-94                                         
+ src/components/revenues                       |       0 |        0 |       0 |       0 |                                               
+  index.ts                                     |       0 |      100 |     100 |       0 | 1-6                                           
+  revenue-form.tsx                             |       0 |        0 |       0 |       0 | 3-305                                         
+  revenue-history-panel.tsx                    |       0 |        0 |       0 |       0 | 3-155                                         
+  revenue-lock-dialog.tsx                      |       0 |        0 |       0 |       0 | 3-133                                         
+  revenue-summary-card.tsx                     |       0 |        0 |       0 |       0 | 3-104                                         
+  revenue-table.tsx                            |       0 |        0 |       0 |       0 | 3-362                                         
+  sales-summary-table.tsx                      |       0 |        0 |       0 |       0 | 3-59                                          
+ src/components/settings                       |       0 |        0 |       0 |       0 |                                               
+  followup-status-form-modal.tsx               |       0 |        0 |       0 |       0 | 3-227                                         
+  followup-status-table.tsx                    |       0 |        0 |       0 |       0 | 3-298                                         
+  google-sheets-sync.tsx                       |       0 |        0 |       0 |       0 | 3-169                                         
+  index.ts                                     |       0 |      100 |     100 |       0 | 1-5                                           
+  seller-form-modal.tsx                        |       0 |        0 |       0 |       0 | 3-276                                         
+  seller-table.tsx                             |       0 |        0 |       0 |       0 | 3-270                                         
+ src/components/shared                         |       0 |        0 |       0 |       0 |                                               
+  lock-tier-badge.tsx                          |       0 |        0 |       0 |       0 | 3-94                                          
+ src/components/suppliers                      |       0 |        0 |       0 |       0 |                                               
+  edit-supplier-modal.tsx                      |       0 |        0 |       0 |       0 | 3-314                                         
+  supplier-form.tsx                            |       0 |        0 |       0 |       0 | 3-411                                         
+  supplier-selector.tsx                        |       0 |        0 |       0 |       0 | 3-72                                          
+  transaction-form.tsx                         |       0 |        0 |       0 |       0 | 3-178                                         
+ src/config                                    |   38.61 |    44.44 |   23.52 |   37.31 |                                               
+  lock-config.ts                               |       0 |        0 |       0 |       0 | 7-89                                          
+  operator-config.ts                           |     100 |      100 |     100 |     100 |                                               
+  request-config.ts                            |       0 |        0 |       0 |       0 | 7-88                                          
+  revenue-config.ts                            |       0 |      100 |     100 |       0 | 4-43                                          
+  supplier-config.ts                           |   96.42 |     92.3 |     100 |     100 | 71                                            
+ src/hooks                                     |       0 |        0 |       0 |       0 |                                               
+  index.ts                                     |       0 |      100 |     100 |       0 | 7                                             
+  use-permission.ts                            |       0 |        0 |       0 |       0 | 15-48                                         
+  use-reports.ts                               |       0 |        0 |       0 |       0 | 3-93                                          
+ src/lib                                       |   54.72 |    49.54 |    55.2 |   54.49 |                                               
+  auth-utils.ts                                |       0 |        0 |       0 |       0 | 20-109                                        
+  db.ts                                        |       0 |        0 |       0 |       0 | 1-38                                          
+  google-sheets.ts                             |       0 |        0 |       0 |       0 | 18-239                                        
+  id-utils.ts                                  |     100 |       75 |     100 |     100 | 87,115,141                                    
+  lock-utils.ts                                |   96.49 |    95.23 |     100 |   95.91 | 92,116                                        
+  logger.ts                                    |       0 |        0 |       0 |       0 | 32-162                                        
+  operator-history.ts                          |       0 |        0 |       0 |       0 | 2-81                                          
+  operator-validation.ts                       |       0 |        0 |       0 |       0 | 2-38                                          
+  permissions.ts                               |   63.63 |       50 |      50 |      70 | 92,109-110                                    
+  report-utils.ts                              |   90.32 |     87.5 |     100 |   90.16 | 61-63,115-117                                 
+  request-utils.ts                             |     100 |      100 |     100 |     100 |                                               
+  revenue-history.ts                           |       0 |        0 |       0 |       0 | 6-66                                          
+  sheet-mappers.ts                             |   49.16 |    53.54 |   71.42 |   47.86 | 75-98,219,305-434                             
+  supplier-balance.ts                          |     100 |      100 |     100 |     100 |                                               
+  utils.ts                                     |      50 |      100 |   33.33 |      50 | 9-15                                          
+ src/lib/api                                   |       0 |        0 |       0 |       0 |                                               
+  fetch-utils.ts                               |       0 |        0 |       0 |       0 | 15-188                                        
+ src/lib/sync                                  |   76.83 |    66.66 |   76.66 |   76.09 |                                               
+  db-to-sheet-mappers.ts                       |   97.29 |    86.95 |     100 |     100 | 50-51,61-62,112,227                           
+  sheets-writer.ts                             |   94.89 |    88.88 |     100 |   94.31 | 20,35,91,273-274                              
+  sync-extensions.ts                           |    3.44 |        0 |       0 |     3.5 | 36-98,113-295                                 
+  write-back-queue.ts                          |     100 |       90 |     100 |     100 | 71,193                                        
+ src/lib/utils                                 |       0 |        0 |       0 |       0 |                                               
+  parse-utils.ts                               |       0 |        0 |       0 |       0 | 12-94                                         
+ src/lib/validations                           |    5.33 |     1.78 |    2.22 |    4.92 |                                               
+  config-validation.ts                         |       0 |        0 |       0 |       0 | 1-47                                          
+  operator-validation.ts                       |       0 |        0 |       0 |       0 | 1-386                                         
+  report-validation.ts                         |     100 |       75 |     100 |     100 | 28                                            
+  request-validation.ts                        |       0 |        0 |       0 |       0 | 1-433                                         
+  revenue-validation.ts                        |       0 |        0 |       0 |       0 | 1-204                                         
+  seller-validation.ts                         |       0 |        0 |       0 |       0 | 1-23                                          
+ src/types                                     |       0 |      100 |     100 |       0 |                                               
+  index.ts                                     |       0 |      100 |     100 |       0 | 47-483                                        
+-----------------------------------------------|---------|----------|---------|---------|-----------------------------------------------
+Jest: "global" coverage threshold for statements (70%) not met: 20.51%
+Jest: "global" coverage threshold for branches (70%) not met: 15.44%
+Jest: "global" coverage threshold for lines (70%) not met: 20.52%
+Jest: "global" coverage threshold for functions (70%) not met: 16.42%
+Test Suites: 24 passed, 24 total
+Tests:       613 passed, 613 total
+Snapshots:   0 total
+Time:        21.43 s
+Ran all test suites.

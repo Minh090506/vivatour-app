@@ -1,0 +1,31 @@
+
+> vivatour-app@0.1.0 build
+> next build
+
+▲ Next.js 16.1.1 (Turbopack)
+- Environments: .env
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 22.9s
+  Running TypeScript ...
+
+<--- Last few GCs --->
+
+[18740:00000203932B7000]    33020 ms: Scavenge (interleaved) 2043.3 (2050.0) -> 2042.4 (2054.5) MB, pooled: 0 MB, 8.28 / 0.00 ms  (average mu = 0.339, current mu = 0.313) allocation failure; 
+[18740:00000203932B7000]    33560 ms: Mark-Compact (reduce) 2046.2 (2054.7) -> 2043.2 (2049.0) MB, pooled: 0 MB, 342.88 / 0.00 ms  (+ 70.3 ms in 56 steps since start of marking, biggest step 5.0 ms, walltime since start of marking 439 ms) (average mu = 0.
+FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory
+----- Native stack trace -----
+
+ 1: 00007FF7BA9CAD5F node::OnFatalError+1343
+ 2: 00007FF7BB6132D7 v8::Function::NewInstance+423
+ 3: 00007FF7BB413997 v8::base::AddressSpaceReservation::AddressSpaceReservation+322071
+ 4: 00007FF7BB4176A4 v8::base::AddressSpaceReservation::AddressSpaceReservation+337700
+ 5: 00007FF7BB42663C v8::internal::StrongRootAllocatorBase::deallocate_impl+16604
+ 6: 00007FF7BB425E7B v8::internal::StrongRootAllocatorBase::deallocate_impl+14619
+ 7: 00007FF7BC88E7ED v8::base::UnsignedDivisionByConstant<unsigned __int64>+2791357
+ 8: 00007FF7BB411460 v8::base::AddressSpaceReservation::AddressSpaceReservation+312544
+ 9: 00007FF7BB42BCEA X509_STORE_set_cleanup+5098
+10: 00007FF7BB438186 uv_timer_set_repeat+20694
+11: 00007FF7BB00B1E7 v8::String::Utf8Value::~Utf8Value+143495
+12: 00000203CBA3733A 
+Next.js build worker exited with code: 134 and signal: null
