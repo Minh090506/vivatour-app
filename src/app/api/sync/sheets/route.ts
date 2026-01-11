@@ -8,6 +8,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { auth } from "@/auth";
 import { hasPermission, type Role } from "@/lib/permissions";
 import { prisma } from "@/lib/db";
@@ -23,9 +24,17 @@ import {
   mapRevenueRow,
 } from "@/lib/sheet-mappers";
 import { logError, logInfo } from "@/lib/logger";
+import { extractZodErrors } from "@/lib/validations/request-validation";
 
 const VALID_SHEETS = ["Request", "Operator", "Revenue"] as const;
 type SheetName = (typeof VALID_SHEETS)[number];
+
+// Zod schema for POST body validation
+const syncSheetsBodySchema = z.object({
+  sheetName: z.enum(VALID_SHEETS, {
+    message: "Sheet không hợp lệ. Sử dụng: Request, Operator, Revenue",
+  }),
+});
 
 interface SyncResult {
   success: boolean;
@@ -274,14 +283,21 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const sheetName = body.sheetName as SheetName;
 
-    if (!VALID_SHEETS.includes(sheetName)) {
+    // Validate with Zod schema
+    const validation = syncSheetsBodySchema.safeParse(body);
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: `Invalid sheet. Use: ${VALID_SHEETS.join(", ")}` },
+        {
+          success: false,
+          error: "Dữ liệu không hợp lệ",
+          details: extractZodErrors(validation.error),
+        },
         { status: 400 }
       );
     }
+
+    const { sheetName } = validation.data;
 
     // Check if this specific sheet is configured
     const sheetConfig = getSheetConfigStatus();

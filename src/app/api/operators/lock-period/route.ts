@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { getSessionUser, unauthorizedResponse, forbiddenResponse } from '@/lib/auth-utils';
 import {
@@ -8,6 +9,26 @@ import {
   type LockTier,
   LOCK_TIERS,
 } from '@/lib/lock-utils';
+import { extractZodErrors } from '@/lib/validations/request-validation';
+
+// Month format regex
+const monthRegex = /^\d{4}-\d{2}$/;
+
+// Zod schema for POST body validation
+const lockPeriodPostSchema = z.object({
+  month: z.string().regex(monthRegex, 'Định dạng tháng không hợp lệ (YYYY-MM)'),
+  tier: z.enum(['KT', 'Admin', 'Final'] as const, {
+    message: 'Tier không hợp lệ',
+  }).default('KT'),
+});
+
+// Zod schema for GET query validation
+const lockPeriodGetSchema = z.object({
+  month: z.string().regex(monthRegex, 'Định dạng tháng không hợp lệ'),
+  tier: z.enum(['KT', 'Admin', 'Final'] as const, {
+    message: 'Tier không hợp lệ',
+  }).optional(),
+});
 
 // POST /api/operators/lock-period - Lock operators in a period at specific tier
 export async function POST(request: NextRequest) {
@@ -18,23 +39,21 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const tier = (body.tier as LockTier) || 'KT';
 
-    // Validate month format YYYY-MM
-    if (!body.month || !/^\d{4}-\d{2}$/.test(body.month)) {
+    // Validate with Zod schema
+    const validation = lockPeriodPostSchema.safeParse(body);
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'Định dạng tháng không hợp lệ (YYYY-MM)' },
+        {
+          success: false,
+          error: 'Dữ liệu không hợp lệ',
+          details: extractZodErrors(validation.error),
+        },
         { status: 400 }
       );
     }
 
-    // Validate tier
-    if (!LOCK_TIERS.includes(tier)) {
-      return NextResponse.json(
-        { success: false, error: `Tier không hợp lệ: ${tier}` },
-        { status: 400 }
-      );
-    }
+    const { month, tier } = validation.data;
 
     // Check permission for this tier
     if (!canLock(user.role, tier)) {
@@ -42,9 +61,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse month range
-    const [year, month] = body.month.split('-').map(Number);
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+    const [yearNum, monthNum] = month.split('-').map(Number);
+    const startDate = new Date(yearNum, monthNum - 1, 1);
+    const endDate = new Date(yearNum, monthNum, 0, 23, 59, 59, 999);
 
     // Build where clause based on tier progression
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -99,7 +118,7 @@ export async function POST(request: NextRequest) {
         data: operators.map((op) => ({
           operatorId: op.id,
           action: getLockHistoryAction(tier, true),
-          changes: { tier, batch: true, month: body.month },
+          changes: { tier, batch: true, month },
           userId: user.id,
         })),
       });
@@ -110,7 +129,7 @@ export async function POST(request: NextRequest) {
       data: {
         count: operators.length,
         tier,
-        period: body.month,
+        period: month,
         lockedAt,
       },
     });
@@ -133,24 +152,33 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const month = searchParams.get('month');
-    const tier = searchParams.get('tier') as LockTier | null;
 
-    if (!month || !/^\d{4}-\d{2}$/.test(month)) {
+    // Validate with Zod schema
+    const validation = lockPeriodGetSchema.safeParse({
+      month: searchParams.get('month'),
+      tier: searchParams.get('tier') || undefined,
+    });
+
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'Định dạng tháng không hợp lệ' },
+        {
+          success: false,
+          error: 'Dữ liệu không hợp lệ',
+          details: extractZodErrors(validation.error),
+        },
         { status: 400 }
       );
     }
 
-    const [year, m] = month.split('-').map(Number);
-    const startDate = new Date(year, m - 1, 1);
-    const endDate = new Date(year, m, 0, 23, 59, 59, 999);
+    const { month, tier } = validation.data;
+    const [yearNum, monthNum] = month.split('-').map(Number);
+    const startDate = new Date(yearNum, monthNum - 1, 1);
+    const endDate = new Date(yearNum, monthNum, 0, 23, 59, 59, 999);
 
     const baseWhere = { serviceDate: { gte: startDate, lte: endDate } };
 
     // If specific tier requested, return operators eligible for that tier
-    if (tier && LOCK_TIERS.includes(tier)) {
+    if (tier) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const whereClause: Record<string, any> = { ...baseWhere };
 

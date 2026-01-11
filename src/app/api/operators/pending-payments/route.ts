@@ -1,13 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
+import { extractZodErrors } from '@/lib/validations/request-validation';
+
+// Zod schema for query params validation
+const pendingPaymentsQuerySchema = z.object({
+  filter: z.enum(['all', 'today', 'week', 'overdue']).default('all'),
+  serviceType: z.string().optional(),
+  supplierId: z.string().uuid('ID NCC không hợp lệ').optional(),
+});
 
 // GET /api/operators/pending-payments
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const filter = searchParams.get('filter') || 'all'; // all, today, week, overdue
-    const serviceType = searchParams.get('serviceType') || '';
-    const supplierId = searchParams.get('supplierId') || '';
+
+    // Validate with Zod schema
+    const validation = pendingPaymentsQuerySchema.safeParse({
+      filter: searchParams.get('filter') || undefined,
+      serviceType: searchParams.get('serviceType') || undefined,
+      supplierId: searchParams.get('supplierId') || undefined,
+    });
+
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Dữ liệu không hợp lệ',
+          details: extractZodErrors(validation.error),
+        },
+        { status: 400 }
+      );
+    }
+
+    const { filter, serviceType, supplierId } = validation.data;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);

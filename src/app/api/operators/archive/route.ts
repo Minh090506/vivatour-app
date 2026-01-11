@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { createOperatorHistory } from '@/lib/operator-history';
 import { getSessionUser, unauthorizedResponse } from '@/lib/auth-utils';
+import { extractZodErrors } from '@/lib/validations/request-validation';
+
+// Zod schema for archive body validation
+const archiveBodySchema = z
+  .object({
+    ids: z.array(z.string().uuid('ID không hợp lệ')).min(1, 'Cần ít nhất 1 ID').optional(),
+    autoArchive: z.boolean().optional(),
+  })
+  .refine((data) => data.ids || data.autoArchive, {
+    message: 'Thiếu tham số: ids hoặc autoArchive',
+  });
 
 /**
  * POST /api/operators/archive
@@ -23,15 +35,21 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { ids, autoArchive } = body;
 
-    // Validate input
-    if (!ids && !autoArchive) {
+    // Validate with Zod schema
+    const validation = archiveBodySchema.safeParse(body);
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'Thiếu tham số: ids hoặc autoArchive' },
+        {
+          success: false,
+          error: 'Dữ liệu không hợp lệ',
+          details: extractZodErrors(validation.error),
+        },
         { status: 400 }
       );
     }
+
+    const { ids, autoArchive } = validation.data;
 
     const now = new Date();
     let operatorIds: string[] = [];
@@ -71,14 +89,8 @@ export async function POST(request: NextRequest) {
         });
       }
     } else {
-      // Manual archive by IDs
-      if (!Array.isArray(ids) || ids.length === 0) {
-        return NextResponse.json(
-          { success: false, error: 'Danh sách IDs không hợp lệ' },
-          { status: 400 }
-        );
-      }
-      operatorIds = ids;
+      // Manual archive by IDs (validated by Zod)
+      operatorIds = ids!;
     }
 
     // Archive operators
