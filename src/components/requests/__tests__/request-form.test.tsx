@@ -157,8 +157,12 @@ describe('RequestForm', () => {
     });
 
     it('shows loading state during submission', async () => {
-      // Make onSubmit take time
-      mockOnSubmit.mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 100)));
+      // Use a longer delay and a promise we can control
+      let resolveSubmit: () => void;
+      const submitPromise = new Promise<void>((resolve) => {
+        resolveSubmit = resolve;
+      });
+      mockOnSubmit.mockImplementation(() => submitPromise);
 
       render(<RequestForm onSubmit={mockOnSubmit} />);
 
@@ -180,13 +184,17 @@ describe('RequestForm', () => {
 
       const submitButton = screen.getByRole('button', { name: /tạo mới/i });
 
-      await act(async () => {
-        fireEvent.click(submitButton);
-      });
+      // Click submit but don't wait for it to complete
+      fireEvent.click(submitButton);
 
-      // Check for loading text
+      // Check for loading text - should appear while submission is pending
       await waitFor(() => {
         expect(screen.getByText(/đang lưu/i)).toBeInTheDocument();
+      });
+
+      // Resolve the submission to cleanup
+      await act(async () => {
+        resolveSubmit!();
       });
     });
 
