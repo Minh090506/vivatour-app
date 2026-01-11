@@ -1,0 +1,156 @@
+================================================================================
+                   REVENUE COMPONENTS - TEST EXECUTION SUMMARY
+================================================================================
+
+TEST RUN COMMAND:
+  npm test -- --testPathPatterns="src/components/revenues/__tests__" \
+    --passWithNoTests --no-coverage
+
+DATE: 2026-01-11 | TIME: 11:50
+
+================================================================================
+                              TEST STATISTICS
+================================================================================
+
+Total Tests Run:        73
+  ✓ Passed:             24 (33%)
+  ✗ Failed:             49 (67%)
+  - Skipped:             0
+
+Total Execution Time:   18.05 seconds
+Slowest Test:           revenue-form.test.tsx (6.98s)
+
+================================================================================
+                          TEST SUITE BREAKDOWN
+================================================================================
+
+1. revenue-summary-card.test.tsx
+   Status: FAIL
+   Tests:  14 total (3 passed, 11 failed)
+   Issue:  DOM query failures - cannot locate formatted currency values
+   Root:   Tests expect values in element.textContent but they're separated
+   
+2. revenue-lock-dialog.test.tsx
+   Status: FAIL
+   Tests:  13 total (0 passed, 13 failed)
+   Issue:  Dialog rendering / Radix UI mock issues
+   Root:   Dialog component not rendering or mock not working
+   
+3. revenue-history-panel.test.tsx
+   Status: FAIL
+   Tests:  2+ total (partial failure)
+   Issue:  Async loading state / empty state detection
+   Root:   setupFetchMock() not configured correctly
+   
+4. revenue-form.test.tsx
+   Status: FAIL
+   Tests:  14 total (0 passed, 14 failed)
+   Issue:  Form rendering / state management
+   Root:   Form fields not rendering, async requests timing out
+   
+5. revenue-table.test.tsx
+   Status: FAIL
+   Tests:  9+ total (partial failure)
+   Issue:  DOM event handling / menu interactions
+   Root:   Dropdown menu not opening, waitFor timeouts
+
+================================================================================
+                         ROOT CAUSE ANALYSIS
+================================================================================
+
+COMMON FAILURE PATTERNS:
+
+1. DOM Query Strategy Failed (revenue-summary-card, revenue-lock-dialog)
+   - Tests navigate DOM with .closest() and .parentElement
+   - Element structure doesn't match test assumptions
+   - FIX: Use data-testid attributes for stable queries
+
+2. Async Mock Setup Incomplete (revenue-form, revenue-history-panel)
+   - setupFetchMock() not properly configured
+   - Fetch responses not returned in expected format
+   - FIX: Review mock setup, verify API contract
+
+3. Radix UI Component Mocks Broken (revenue-lock-dialog, revenue-table)
+   - Dialog, Select, Menu components not mocking correctly
+   - State updates not triggering re-renders
+   - FIX: Review mock implementation for Radix components
+
+================================================================================
+                        CRITICAL BLOCKING ISSUES
+================================================================================
+
+1. CANNOT VERIFY COMPONENT FUNCTIONALITY
+   - All 5 test suites failing
+   - Coverage at 33% passing tests
+   - Blocks CI/CD pipeline
+
+2. DOM QUERY STRATEGY BROKEN
+   - Element traversal not finding expected values
+   - Manual DOM navigation fragile and brittle
+   - Needs refactor to use test IDs
+
+3. ASYNC OPERATIONS TIMING OUT
+   - 1000ms+ execution times per test
+   - Multiple waitFor() calls not resolving
+   - Indicates incomplete mock setup
+
+================================================================================
+                      RECOMMENDED ACTIONS
+================================================================================
+
+PRIORITY 1 - UNBLOCK TESTING:
+  [ ] Add data-testid attributes to RevenueSummaryCard component
+  [ ] Update revenue-summary-card.test.tsx to use getByTestId()
+  [ ] Run single test file to verify fix works
+  
+PRIORITY 2 - FIX ASYNC MOCKS:
+  [ ] Review src/components/revenues/__tests__/test-utils.ts
+  [ ] Verify setupFetchMock() response format
+  [ ] Test lock API endpoint configuration
+  
+PRIORITY 3 - FIX COMPONENT MOCKS:
+  [ ] Verify Radix Dialog mock opens/closes properly
+  [ ] Check Select dropdown mock rendering
+  [ ] Ensure Menu dropdown interactions work
+  
+PRIORITY 4 - COMPREHENSIVE FIXES:
+  [ ] Apply fixes systematically to all 5 test files
+  [ ] Target 95%+ passing test rate
+  [ ] Add edge case coverage for lock tier logic
+
+================================================================================
+                        DETAILED TEST RESULTS
+================================================================================
+
+revenue-summary-card.test.tsx (14 tests)
+  ✓ renders all 4 summary cards
+  ✓ renders correct transaction count
+  ✓ applies className prop to container
+  ✗ calculates total VND correctly with refunds subtracted
+  ✗ calculates deposit total correctly
+  ✗ calculates total locked amount correctly
+  ✗ handles empty revenues array
+  ✗ handles refund correctly (negative in total)
+  ✗ displays correct count for each tier
+  ✗ includes legacy isLocked in total locked
+  ✗ formats amounts using Vietnamese number format
+  ✗ shows currency suffix d for VND
+  ✗ shows correct deposit transaction count
+  ✗ shows correct locked transaction count
+
+revenue-lock-dialog.test.tsx (13 tests)
+  All 13 tests failed
+
+revenue-history-panel.test.tsx (2+ tests)
+  ✗ renders skeleton loaders while fetching
+  ✗ displays empty state when no history
+
+revenue-form.test.tsx (14 tests)
+  All 14 tests failed
+
+revenue-table.test.tsx (9+ tests)
+  ✗ Multiple interaction and state tests failing
+
+================================================================================
+                           TOTAL: 24 PASSED, 49 FAILED
+================================================================================
