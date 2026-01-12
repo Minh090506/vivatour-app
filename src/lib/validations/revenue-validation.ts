@@ -15,21 +15,21 @@ import {
 
 // Enum validators from config
 const paymentTypeEnum = z.enum(PAYMENT_TYPE_KEYS as [PaymentTypeKey, ...PaymentTypeKey[]], {
-  message: 'Loai thanh toan khong hop le',
+  message: 'Loại thanh toán không hợp lệ',
 });
 
 const paymentSourceEnum = z.enum(PAYMENT_SOURCE_KEYS as [PaymentSourceKey, ...PaymentSourceKey[]], {
-  message: 'Nguon thanh toan khong hop le',
+  message: 'Nguồn thanh toán không hợp lệ',
 });
 
 const currencyEnum = z.enum(CURRENCY_KEYS as [CurrencyKey, ...CurrencyKey[]], {
-  message: 'Loai tien te khong hop le',
+  message: 'Loại tiền tệ không hợp lệ',
 });
 
 // Date string validator
 const dateStringRequired = z
-  .string({ message: 'Ngay la bat buoc' })
-  .refine((val) => val && !isNaN(Date.parse(val)), { message: 'Ngay khong hop le' });
+  .string({ message: 'Ngày là bắt buộc' })
+  .refine((val) => val && !isNaN(Date.parse(val)), { message: 'Ngày không hợp lệ' });
 
 // ============================================
 // API Schemas
@@ -39,29 +39,29 @@ const dateStringRequired = z
 export const createRevenueApiSchema = z
   .object({
     requestId: z
-      .string({ message: 'Booking la bat buoc' })
-      .min(1, 'Vui long chon Booking'),
+      .string({ message: 'Booking là bắt buộc' })
+      .min(1, 'Vui lòng chọn Booking'),
     paymentDate: dateStringRequired,
     paymentType: paymentTypeEnum,
     paymentSource: paymentSourceEnum,
     currency: currencyEnum.default('VND'),
     foreignAmount: z
-      .number({ message: 'So tien ngoai te phai la so' })
-      .positive('So tien ngoai te phai > 0')
+      .number({ message: 'Số tiền ngoại tệ phải là số' })
+      .positive('Số tiền ngoại tệ phải > 0')
       .optional()
       .nullable(),
     exchangeRate: z
-      .number({ message: 'Ty gia phai la so' })
-      .positive('Ty gia phai > 0')
+      .number({ message: 'Tỷ giá phải là số' })
+      .positive('Tỷ giá phải > 0')
       .optional()
       .nullable(),
     amountVND: z
-      .number({ message: 'So tien VND phai la so' })
-      .positive('So tien VND phai > 0')
+      .number({ message: 'Số tiền VND phải là số' })
+      .positive('Số tiền VND phải > 0')
       .optional(),
     notes: z
       .string()
-      .max(1000, 'Ghi chu khong duoc qua 1000 ky tu')
+      .max(1000, 'Ghi chú không được quá 1000 ký tự')
       .optional()
       .nullable(),
   })
@@ -74,7 +74,7 @@ export const createRevenueApiSchema = z
       return true;
     },
     {
-      message: 'So tien ngoai te la bat buoc khi dung ngoai te',
+      message: 'Số tiền ngoại tệ là bắt buộc khi dùng ngoại tệ',
       path: ['foreignAmount'],
     }
   )
@@ -86,7 +86,7 @@ export const createRevenueApiSchema = z
       return true;
     },
     {
-      message: 'Ty gia la bat buoc khi dung ngoai te',
+      message: 'Tỷ giá là bắt buộc khi dùng ngoại tệ',
       path: ['exchangeRate'],
     }
   )
@@ -99,7 +99,7 @@ export const createRevenueApiSchema = z
       return true;
     },
     {
-      message: 'So tien VND phai > 0',
+      message: 'Số tiền VND phải > 0',
       path: ['amountVND'],
     }
   );
@@ -109,28 +109,28 @@ export const updateRevenueApiSchema = z
   .object({
     paymentDate: z
       .string()
-      .refine((val) => !isNaN(Date.parse(val)), { message: 'Ngay khong hop le' })
+      .refine((val) => !isNaN(Date.parse(val)), { message: 'Ngày không hợp lệ' })
       .optional(),
     paymentType: paymentTypeEnum.optional(),
     paymentSource: paymentSourceEnum.optional(),
     currency: currencyEnum.optional(),
     foreignAmount: z
       .number()
-      .positive('So tien ngoai te phai > 0')
+      .positive('Số tiền ngoại tệ phải > 0')
       .optional()
       .nullable(),
     exchangeRate: z
       .number()
-      .positive('Ty gia phai > 0')
+      .positive('Tỷ giá phải > 0')
       .optional()
       .nullable(),
     amountVND: z
       .number()
-      .positive('So tien VND phai > 0')
+      .positive('Số tiền VND phải > 0')
       .optional(),
     notes: z
       .string()
-      .max(1000, 'Ghi chu khong duoc qua 1000 ky tu')
+      .max(1000, 'Ghi chú không được quá 1000 ký tự')
       .optional()
       .nullable(),
   });

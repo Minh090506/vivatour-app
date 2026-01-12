@@ -22,7 +22,14 @@ const requestStageEnum = z.enum(REQUEST_STAGE_KEYS as [RequestStage, ...RequestS
 });
 
 // Phone regex: international format or Vietnamese format
-const phoneRegex = /^(\+?[0-9]{8,15}|0[0-9]{9,10})$/;
+// Vietnamese: 0[0-9]{9} (10 digits total, starts with 0)
+// International: +[1-9][0-9]{7,14} (8-15 digits, country code must start with 1-9)
+const phoneRegex = /^(\+[1-9][0-9]{7,14}|0[0-9]{9})$/;
+
+// Email regex: simplified RFC 5322
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Phone format for contact field (more lenient, allows dashes/spaces/parens)
+const contactPhoneRegex = /^[\d\s\-+()]+$/;
 
 // Base object schema for request form data (without refinements)
 const requestFormBaseSchema = z.object({
@@ -37,6 +44,14 @@ const requestFormBaseSchema = z.object({
     .string()
     .min(1, 'Thông tin liên hệ không được trống')
     .max(255, 'Thông tin liên hệ không được quá 255 ký tự')
+    .refine(
+      (val) => {
+        const trimmed = val.trim();
+        // Accept email format or phone format
+        return emailRegex.test(trimmed) || contactPhoneRegex.test(trimmed);
+      },
+      { message: 'Thông tin liên hệ phải là email hoặc số điện thoại hợp lệ' }
+    )
     .transform((val) => val.trim()),
 
   country: z
@@ -82,7 +97,17 @@ const requestFormBaseSchema = z.object({
     .datetime({ message: 'Ngày bắt đầu không hợp lệ' })
     .optional()
     .nullable()
-    .or(z.literal('')),
+    .or(z.literal(''))
+    .refine(
+      (val) => {
+        if (!val) return true; // Allow empty
+        const date = new Date(val);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return date >= today;
+      },
+      { message: 'Ngày bắt đầu phải là ngày hiện tại hoặc tương lai' }
+    ),
 
   endDate: z
     .string()
@@ -373,6 +398,23 @@ const dateStringOptional = z
   .optional()
   .nullable();
 
+// Start date validator - must be today or future
+const startDateApiValidator = z
+  .string()
+  .refine((val) => !val || !isNaN(Date.parse(val)), { message: 'Ngày không hợp lệ' })
+  .refine(
+    (val) => {
+      if (!val) return true;
+      const date = new Date(val);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return date >= today;
+    },
+    { message: 'Ngày bắt đầu phải là ngày hiện tại hoặc tương lai' }
+  )
+  .optional()
+  .nullable();
+
 // API Create Request Schema
 export const createRequestApiSchema = z.object({
   customerName: z
@@ -383,7 +425,11 @@ export const createRequestApiSchema = z.object({
   contact: z
     .string({ message: 'Thông tin liên hệ là bắt buộc' })
     .min(1, 'Thông tin liên hệ không được trống')
-    .max(255, 'Thông tin liên hệ không được quá 255 ký tự'),
+    .max(255, 'Thông tin liên hệ không được quá 255 ký tự')
+    .refine(
+      (val) => emailRegex.test(val.trim()) || contactPhoneRegex.test(val.trim()),
+      { message: 'Thông tin liên hệ phải là email hoặc số điện thoại hợp lệ' }
+    ),
 
   country: z
     .string({ message: 'Quốc gia là bắt buộc' })
@@ -400,7 +446,7 @@ export const createRequestApiSchema = z.object({
   whatsapp: z.string().max(50).optional().nullable(),
   pax: z.number().int().min(1).max(100).optional().default(1),
   tourDays: z.number().int().min(1).max(365).optional().nullable(),
-  startDate: dateStringOptional,
+  startDate: startDateApiValidator,
   expectedDate: dateStringOptional,
   expectedRevenue: z.number().min(0).optional().nullable(),
   expectedCost: z.number().min(0).optional().nullable(),

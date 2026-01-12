@@ -97,7 +97,7 @@ export async function PUT(
     // Check if any lock tier is active (3-tier lock system)
     if (existing.lockKT || existing.lockAdmin || existing.lockFinal) {
       return NextResponse.json(
-        { success: false, error: 'Thu nhap da khoa, khong the sua' },
+        { success: false, error: 'Thu nhập đã khóa, không thể sửa' },
         { status: 403 }
       );
     }
@@ -108,7 +108,7 @@ export async function PUT(
       return NextResponse.json(
         {
           success: false,
-          error: 'Du lieu khong hop le',
+          error: 'Dữ liệu không hợp lệ',
           errors: extractRevenueZodErrors(validationResult.error)
         },
         { status: 400 }
@@ -136,7 +136,7 @@ export async function PUT(
 
       if (amountVND <= 0) {
         return NextResponse.json(
-          { success: false, error: 'So tien VND phai > 0' },
+          { success: false, error: 'Số tiền VND phải > 0' },
           { status: 400 }
         );
       }

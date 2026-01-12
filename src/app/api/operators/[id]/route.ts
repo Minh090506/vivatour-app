@@ -83,8 +83,8 @@ export async function PUT(
       );
     }
 
-    // Check if locked
-    if (existing.isLocked) {
+    // Check if any lock tier is active (3-tier lock system)
+    if (existing.isLocked || existing.lockKT || existing.lockAdmin || existing.lockFinal) {
       return NextResponse.json(
         { success: false, error: 'Dịch vụ đã khóa, không thể chỉnh sửa' },
         { status: 403 }
@@ -191,8 +191,8 @@ export async function DELETE(
       );
     }
 
-    // Check if locked
-    if (existing.isLocked) {
+    // Check if any lock tier is active (3-tier lock system)
+    if (existing.isLocked || existing.lockKT || existing.lockAdmin || existing.lockFinal) {
       return NextResponse.json(
         { success: false, error: 'Dịch vụ đã khóa, không thể xóa' },
         { status: 403 }

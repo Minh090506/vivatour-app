@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
     // Validate request exists and is F5
     const req = await prisma.request.findUnique({
       where: { id: validatedData.requestId },
-      select: { id: true, status: true, bookingCode: true, code: true },
+      select: { id: true, status: true, bookingCode: true, code: true, startDate: true, endDate: true },
     });
 
     if (!req) {
@@ -137,8 +137,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check duplicate service (same booking + serviceType + serviceDate)
+    // Validate serviceDate is within booking date range
     const serviceDate = new Date(validatedData.serviceDate);
+    if (req.startDate && req.endDate) {
+      const startDate = new Date(req.startDate);
+      const endDate = new Date(req.endDate);
+      startDate.setHours(0, 0, 0, 0);
+      endDate.setHours(23, 59, 59, 999);
+      serviceDate.setHours(12, 0, 0, 0); // Normalize to noon for comparison
+
+      if (serviceDate < startDate || serviceDate > endDate) {
+        const formatDate = (d: Date) => d.toLocaleDateString('vi-VN');
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Ngày dịch vụ phải nằm trong khoảng ${formatDate(startDate)} - ${formatDate(endDate)}`,
+            errors: { serviceDate: 'Ngày dịch vụ ngoài phạm vi tour' }
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Check duplicate service (same booking + serviceType + serviceDate)
     const startOfDay = new Date(serviceDate);
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(serviceDate);

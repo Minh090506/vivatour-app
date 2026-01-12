@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: 'Du lieu khong hop le',
+          error: 'Dữ liệu không hợp lệ',
           errors: extractRevenueZodErrors(validationResult.error)
         },
         { status: 400 }
@@ -125,16 +125,28 @@ export async function POST(request: NextRequest) {
     }
     const validatedData = validationResult.data;
 
-    // Validate request exists and get bookingCode for revenueId generation
+    // Validate request exists and has bookingCode
     const req = await prisma.request.findUnique({
       where: { id: validatedData.requestId },
-      select: { id: true, bookingCode: true },
+      select: { id: true, bookingCode: true, status: true, stage: true },
     });
 
     if (!req) {
       return NextResponse.json(
-        { success: false, error: 'Yeu cau khong ton tai' },
+        { success: false, error: 'Booking không tồn tại' },
         { status: 404 }
+      );
+    }
+
+    // Ensure booking has bookingCode (confirmed booking)
+    if (!req.bookingCode) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Chỉ có thể tạo thu nhập cho Booking đã có mã xác nhận',
+          errors: { requestId: 'Booking chưa có mã xác nhận' }
+        },
+        { status: 400 }
       );
     }
 

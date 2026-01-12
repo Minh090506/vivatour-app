@@ -59,10 +59,10 @@ const operatorFormBaseSchema = z.object({
     .nullable()
     .or(z.literal('')),
 
-  // Cost fields
+  // Cost fields - must be positive (no zero-cost services)
   costBeforeTax: z
     .number({ message: 'Chi phí trước thuế phải là số' })
-    .min(0, 'Chi phí trước thuế không được âm'),
+    .positive('Chi phí trước thuế phải lớn hơn 0'),
 
   vat: z
     .number({ message: 'Thuế VAT phải là số' })
@@ -72,7 +72,7 @@ const operatorFormBaseSchema = z.object({
 
   totalCost: z
     .number({ message: 'Tổng chi phí phải là số' })
-    .min(0, 'Tổng chi phí không được âm'),
+    .positive('Tổng chi phí phải lớn hơn 0'),
 
   // Payment fields
   paidAmount: z
@@ -242,9 +242,9 @@ export function validateOperatorField(
     serviceDate: dateStringRequired,
     serviceType: serviceTypeEnum,
     serviceName: z.string().min(1, 'Vui lòng nhập tên dịch vụ').max(255),
-    costBeforeTax: z.number().min(0, 'Chi phí trước thuế không được âm'),
+    costBeforeTax: z.number().positive('Chi phí trước thuế phải lớn hơn 0'),
     vat: z.number().min(0).optional().nullable(),
-    totalCost: z.number().min(0, 'Tổng chi phí không được âm'),
+    totalCost: z.number().positive('Tổng chi phí phải lớn hơn 0'),
     paidAmount: z.number().min(0, 'Số tiền thanh toán không được âm'),
   };
 
@@ -276,9 +276,9 @@ export const createOperatorApiSchema = z
       .max(255),
     supplierId: z.string().uuid().optional().nullable(),
     supplier: z.string().max(255).optional().nullable(),
-    costBeforeTax: z.number().min(0, 'Chi phí trước thuế không được âm'),
+    costBeforeTax: z.number().positive('Chi phí trước thuế phải lớn hơn 0'),
     vat: z.number().min(0).optional().nullable(),
-    totalCost: z.number().min(0, 'Tổng chi phí không được âm'),
+    totalCost: z.number().positive('Tổng chi phí phải lớn hơn 0'),
     paidAmount: z.number().min(0, 'Số tiền thanh toán không được âm').default(0),
     paymentDeadline: z
       .string()
@@ -321,9 +321,9 @@ export const updateOperatorApiSchema = z
       .optional(),
     serviceType: serviceTypeEnum.optional(),
     serviceName: z.string().min(1).max(255).optional(),
-    costBeforeTax: z.number().min(0, 'Chi phí trước thuế không được âm').optional(),
+    costBeforeTax: z.number().positive('Chi phí trước thuế phải lớn hơn 0').optional(),
     vat: z.number().min(0).optional().nullable(),
-    totalCost: z.number().min(0, 'Tổng chi phí không được âm').optional(),
+    totalCost: z.number().positive('Tổng chi phí phải lớn hơn 0').optional(),
     paidAmount: z.number().min(0, 'Số tiền thanh toán không được âm').optional(),
     paymentDeadline: z
       .string()
