@@ -17,6 +17,7 @@
  * const user = adminCheck.user;
  */
 
+import { timingSafeEqual } from "crypto";
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import { hasPermission, type Role, type Permission } from "./permissions";
@@ -107,4 +108,25 @@ export async function requireAdmin(): Promise<{
   }
 
   return { user, error: null };
+}
+
+/**
+ * Timing-safe comparison for cron secret
+ * Prevents timing attacks on secret validation
+ *
+ * @param provided - Secret from Authorization header
+ * @returns true if secret matches CRON_SECRET env var
+ */
+export function verifyCronSecret(provided: string | undefined): boolean {
+  const expected = process.env.CRON_SECRET;
+  if (!provided || !expected) return false;
+  if (provided.length !== expected.length) return false;
+
+  try {
+    const providedBuffer = Buffer.from(provided, "utf8");
+    const expectedBuffer = Buffer.from(expected, "utf8");
+    return timingSafeEqual(providedBuffer, expectedBuffer);
+  } catch {
+    return false;
+  }
 }

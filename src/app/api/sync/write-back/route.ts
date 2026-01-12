@@ -9,9 +9,9 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { timingSafeEqual } from "crypto";
 import { auth } from "@/auth";
 import { hasPermission, type Role } from "@/lib/permissions";
+import { verifyCronSecret } from "@/lib/auth-utils";
 import { basePrisma } from "@/lib/db";
 import { logError, logInfo } from "@/lib/logger";
 import {
@@ -199,23 +199,6 @@ async function processQueueItem(
 /**
  * POST - Process write-back queue
  */
-/**
- * Timing-safe comparison to prevent timing attacks on cron secret
- */
-function verifyCronSecret(provided: string | undefined): boolean {
-  const expected = process.env.CRON_SECRET;
-  if (!provided || !expected) return false;
-  if (provided.length !== expected.length) return false;
-
-  try {
-    const providedBuffer = Buffer.from(provided, "utf8");
-    const expectedBuffer = Buffer.from(expected, "utf8");
-    return timingSafeEqual(providedBuffer, expectedBuffer);
-  } catch {
-    return false;
-  }
-}
-
 export async function POST(request: NextRequest) {
   try {
     // Auth: Either admin user or cron secret (timing-safe)

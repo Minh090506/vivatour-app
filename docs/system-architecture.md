@@ -1476,6 +1476,73 @@ Response {
 
 ---
 
+### Queue Retry API
+
+**Endpoint**: `POST /api/sync/retry`
+
+**Purpose**: Manually reset failed queue items to PENDING for automatic retry (Phase 07.5.5)
+
+**Authentication**:
+- ADMIN role, OR
+- CRON_SECRET verification (timing-safe)
+
+**Request Body**:
+```typescript
+{
+  ids?: string[]  // Optional: specific queue item IDs to retry.
+                  // If omitted/empty: resets ALL failed items.
+}
+```
+
+**Response**:
+```typescript
+{
+  success: true,
+  count: number  // Number of items reset to PENDING
+}
+```
+
+**Examples**:
+
+Retry specific items:
+```bash
+curl -X POST http://localhost:3000/api/sync/retry \
+  -H "Authorization: Bearer {token}" \
+  -H "Content-Type: application/json" \
+  -d '{ "ids": ["item-id-1", "item-id-2"] }'
+```
+
+Retry all failed items:
+```bash
+curl -X POST http://localhost:3000/api/sync/retry \
+  -H "Authorization: Bearer {token}"
+```
+
+Cron trigger (timing-safe verification):
+```bash
+curl -X POST http://localhost:3000/api/sync/retry \
+  -H "Authorization: Bearer {CRON_SECRET}"
+```
+
+**Behavior**:
+- Resets matching FAILED items to PENDING status
+- Clears retry counter (retries: 0)
+- Clears lastError message
+- Background worker will process on next cycle
+
+**Response Codes**:
+- `200`: Success (even if count = 0)
+- `401`: Unauthorized (no session, no CRON_SECRET)
+- `403`: Forbidden (not ADMIN role and not cron)
+- `500`: Database error
+
+**Logging**:
+- Logs trigger type (cron vs manual)
+- Logs number of items reset
+- Logs specific IDs if filtering
+
+---
+
 ### Environment Configuration
 
 **Required for cron**:
@@ -1505,7 +1572,10 @@ CRON_SECRET="your-secure-random-string-here"
 ### Phase 07.5 (In Progress)
 - Database queue for write-sync (DB → Sheets, Phase 07.5.1)
 - Background worker for async processing (Phase 07.5.2)
+- Error classification & analytics (Phase 07.5.2)
 - Queue monitoring dashboard (Phase 07.5.3)
+- Reverse mappers for sync data (Phase 07.5.3)
+- Manual retry endpoint with cron support (Phase 07.5.5)
 
 ### Planned
 - Microservices for Google Sheets sync
