@@ -22,14 +22,21 @@ const requestStageEnum = z.enum(REQUEST_STAGE_KEYS as [RequestStage, ...RequestS
 });
 
 // Phone regex: international format or Vietnamese format
-// Vietnamese: 0[0-9]{9} (10 digits total, starts with 0)
+// Vietnamese local: 0[0-9]{9} (10 digits total, starts with 0)
+// Vietnamese +84: +84[0-9]{9} (country code + 9 digits)
 // International: +[1-9][0-9]{7,14} (8-15 digits, country code must start with 1-9)
-const phoneRegex = /^(\+[1-9][0-9]{7,14}|0[0-9]{9})$/;
+const phoneRegex = /^(\+84[0-9]{9}|\+[1-9][0-9]{7,14}|0[0-9]{9})$/;
 
-// Email regex: simplified RFC 5322
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-// Phone format for contact field (more lenient, allows dashes/spaces/parens)
-const contactPhoneRegex = /^[\d\s\-+()]+$/;
+// Phone regex with formatting allowed (for contact field)
+// Strips formatting before storing - allows spaces, dashes, dots, parentheses
+const phoneWithFormattingRegex = /^[\d\s\-+().]{8,20}$/;
+
+// Email regex: RFC 5322 compliant
+// Validates: local-part@domain.tld with proper character restrictions
+const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+
+// Helper to strip phone formatting (spaces, dashes, dots, parens)
+const stripPhoneFormatting = (phone: string) => phone.replace(/[\s\-().]/g, '');
 
 // Base object schema for request form data (without refinements)
 const requestFormBaseSchema = z.object({
@@ -47,8 +54,8 @@ const requestFormBaseSchema = z.object({
     .refine(
       (val) => {
         const trimmed = val.trim();
-        // Accept email format or phone format
-        return emailRegex.test(trimmed) || contactPhoneRegex.test(trimmed);
+        // Accept email format or phone format (with optional formatting)
+        return emailRegex.test(trimmed) || phoneWithFormattingRegex.test(trimmed);
       },
       { message: 'Thông tin liên hệ phải là email hoặc số điện thoại hợp lệ' }
     )
@@ -77,7 +84,16 @@ const requestFormBaseSchema = z.object({
   // Optional fields
   whatsapp: z
     .string()
-    .regex(phoneRegex, 'Số WhatsApp không hợp lệ (8-15 số)')
+    .refine(
+      (val) => {
+        if (!val) return true;
+        // Strip formatting and validate clean phone number
+        const clean = stripPhoneFormatting(val);
+        return phoneRegex.test(clean);
+      },
+      { message: 'Số WhatsApp không hợp lệ (+84xxxxxxxxx hoặc 0xxxxxxxxx)' }
+    )
+    .transform((val) => (val ? stripPhoneFormatting(val) : val))
     .optional()
     .nullable()
     .or(z.literal('')),
@@ -427,7 +443,7 @@ export const createRequestApiSchema = z.object({
     .min(1, 'Thông tin liên hệ không được trống')
     .max(255, 'Thông tin liên hệ không được quá 255 ký tự')
     .refine(
-      (val) => emailRegex.test(val.trim()) || contactPhoneRegex.test(val.trim()),
+      (val) => emailRegex.test(val.trim()) || phoneWithFormattingRegex.test(val.trim()),
       { message: 'Thông tin liên hệ phải là email hoặc số điện thoại hợp lệ' }
     ),
 
@@ -443,7 +459,20 @@ export const createRequestApiSchema = z.object({
 
   status: requestStatusEnum.optional().default('DANG_LL_CHUA_TL'),
 
-  whatsapp: z.string().max(50).optional().nullable(),
+  whatsapp: z
+    .string()
+    .max(50)
+    .refine(
+      (val) => {
+        if (!val) return true;
+        const clean = stripPhoneFormatting(val);
+        return phoneRegex.test(clean);
+      },
+      { message: 'Số WhatsApp không hợp lệ (+84xxxxxxxxx hoặc 0xxxxxxxxx)' }
+    )
+    .transform((val) => (val ? stripPhoneFormatting(val) : val))
+    .optional()
+    .nullable(),
   pax: z.number().int().min(1).max(100).optional().default(1),
   tourDays: z.number().int().min(1).max(365).optional().nullable(),
   startDate: startDateApiValidator,

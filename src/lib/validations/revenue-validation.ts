@@ -2,10 +2,8 @@ import { z } from 'zod';
 import {
   PAYMENT_TYPE_KEYS,
   PAYMENT_SOURCE_KEYS,
-  CURRENCY_KEYS,
   type PaymentTypeKey,
   type PaymentSourceKey,
-  type CurrencyKey,
 } from '@/config/revenue-config';
 
 // ============================================
@@ -22,8 +20,13 @@ const paymentSourceEnum = z.enum(PAYMENT_SOURCE_KEYS as [PaymentSourceKey, ...Pa
   message: 'Nguồn thanh toán không hợp lệ',
 });
 
-const currencyEnum = z.enum(CURRENCY_KEYS as [CurrencyKey, ...CurrencyKey[]], {
-  message: 'Loại tiền tệ không hợp lệ',
+// Allowed currencies - restricted to VND, USD, EUR per business requirement
+// Note: config/revenue-config.ts has more currencies for reference/display
+const ALLOWED_CURRENCIES = ['VND', 'USD', 'EUR'] as const;
+export type AllowedCurrencyKey = (typeof ALLOWED_CURRENCIES)[number];
+
+const currencyEnum = z.enum(ALLOWED_CURRENCIES, {
+  message: 'Chỉ hỗ trợ VND, USD, EUR',
 });
 
 // Date string validator
