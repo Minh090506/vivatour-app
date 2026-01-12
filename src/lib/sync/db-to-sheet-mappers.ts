@@ -126,6 +126,7 @@ export function mapRequestToRow(record: RequestRecord): (string | null)[] {
  * Operator DB record type (with request relation)
  */
 export interface OperatorRecord {
+  serviceId: string | null;
   serviceDate: Date;
   serviceType: string;
   serviceName: string;
@@ -143,7 +144,8 @@ export interface OperatorRecord {
  * Column mapping:
  * A(0)=BookingCode, J(9)=ServiceDate, K(10)=ServiceType,
  * O(14)=CostBeforeTax, P(15)=VAT, Q(16)=SKIP (formula),
- * S(18)=Supplier, T(19)=Notes, W(22)=SKIP (formula)
+ * S(18)=Supplier, T(19)=Notes, W(22)=SKIP (formula),
+ * AN(39)=ServiceID
  */
 export function mapOperatorToRow(record: OperatorRecord): (string | null)[] {
   const row = createEmptyRow();
@@ -157,6 +159,7 @@ export function mapOperatorToRow(record: OperatorRecord): (string | null)[] {
   row[18] = record.supplier || "";               // S: Supplier
   row[19] = record.notes || "";                  // T: Notes
   // row[22] = SKIP - debt is formula in sheet
+  row[39] = record.serviceId || "";              // AN: Service ID
 
   return row;
 }
@@ -165,6 +168,7 @@ export function mapOperatorToRow(record: OperatorRecord): (string | null)[] {
  * Revenue DB record type (with request relation)
  */
 export interface RevenueRecord {
+  revenueId: string | null;
   paymentDate: Date;
   paymentType: string;
   foreignAmount: Prisma.Decimal | null;
@@ -181,7 +185,7 @@ export interface RevenueRecord {
  * Column mapping:
  * A(0)=BookingCode, L(11)=PaymentType, M(12)=PaymentDate,
  * N(13)=PaymentSource, Q(16)=ForeignAmount, R(17)=ExchangeRate,
- * S(18)=Currency, T(19)=AmountVND
+ * S(18)=Currency, T(19)=AmountVND, AN(39)=RevenueID
  */
 export function mapRevenueToRow(record: RevenueRecord): (string | null)[] {
   const row = createEmptyRow();
@@ -194,6 +198,7 @@ export function mapRevenueToRow(record: RevenueRecord): (string | null)[] {
   row[17] = formatDecimal(record.exchangeRate);  // R: Exchange Rate
   row[18] = record.currency || "VND";            // S: Currency
   row[19] = formatNumber(record.amountVND);      // T: Amount VND
+  row[39] = record.revenueId || "";              // AN: Revenue ID
 
   return row;
 }

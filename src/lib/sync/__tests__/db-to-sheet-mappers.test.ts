@@ -104,6 +104,7 @@ describe("DB to Sheet Mappers", () => {
 
   describe("mapOperatorToRow", () => {
     const baseOperator: OperatorRecord = {
+      serviceId: "V240101001-1704067200000",
       serviceDate: new Date("2024-02-15"),
       serviceType: "Hotel",
       serviceName: "Grand Hotel",
@@ -125,6 +126,7 @@ describe("DB to Sheet Mappers", () => {
       expect(row[15]).toBe("1.000.000");        // P: VAT
       expect(row[18]).toBe("Hotel Group");      // S: Supplier
       expect(row[19]).toBe("Confirmed");        // T: Notes
+      expect(row[39]).toBe("V240101001-1704067200000"); // AN: Service ID
     });
 
     it("leaves formula columns as null", () => {
@@ -138,6 +140,7 @@ describe("DB to Sheet Mappers", () => {
     it("handles null optional fields", () => {
       const operator: OperatorRecord = {
         ...baseOperator,
+        serviceId: null,
         supplier: null,
         vat: null,
         notes: null,
@@ -150,11 +153,13 @@ describe("DB to Sheet Mappers", () => {
       expect(row[15]).toBe("");  // VAT
       expect(row[18]).toBe("");  // Supplier
       expect(row[19]).toBe("");  // Notes
+      expect(row[39]).toBe("");  // Service ID
     });
   });
 
   describe("mapRevenueToRow", () => {
     const baseRevenue: RevenueRecord = {
+      revenueId: "V240101001-1704067200000-1",
       paymentDate: new Date("2024-02-15"),
       paymentType: "Deposit",
       foreignAmount: new Prisma.Decimal(2000),
@@ -176,11 +181,13 @@ describe("DB to Sheet Mappers", () => {
       expect(row[17]).toBe("24.500,00");        // R: Exchange Rate
       expect(row[18]).toBe("USD");              // S: Currency
       expect(row[19]).toBe("49.000.000");       // T: Amount VND
+      expect(row[39]).toBe("V240101001-1704067200000-1"); // AN: Revenue ID
     });
 
     it("handles null optional fields", () => {
       const revenue: RevenueRecord = {
         ...baseRevenue,
+        revenueId: null,
         foreignAmount: null,
         currency: null,
         exchangeRate: null,
@@ -193,6 +200,7 @@ describe("DB to Sheet Mappers", () => {
       expect(row[16]).toBe("");    // Foreign Amount
       expect(row[17]).toBe("");    // Exchange Rate
       expect(row[18]).toBe("VND"); // Currency defaults to VND
+      expect(row[39]).toBe("");    // Revenue ID
     });
   });
 
@@ -311,6 +319,7 @@ describe("DB to Sheet Mappers", () => {
 
     it("formats decimals with 2 decimal places", () => {
       const revenue: RevenueRecord = {
+        revenueId: null,
         paymentDate: new Date(),
         paymentType: "Test",
         foreignAmount: new Prisma.Decimal(1234.5),
