@@ -1,5 +1,6 @@
 # Phase 02: KPI Cards Tests
 
+**Status**: DONE (2026-01-11)
 **Effort**: 45 minutes
 **Output**: `src/components/reports/__tests__/kpi-cards.test.tsx`
 **Target**: ~12 tests
@@ -172,9 +173,9 @@ describe('KPICards', () => {
 
 ## Verification
 
-- [ ] All 5 KPI labels render correctly
-- [ ] Currency formatting works (Vietnamese locale with ₫)
-- [ ] Percentage formatting works
-- [ ] Trend badges show correct direction (up/down)
-- [ ] Loading skeleton renders 5 cards
-- [ ] Null data returns null component
+- [x] All 5 KPI labels render correctly
+- [x] Currency formatting works (Vietnamese locale with ₫)
+- [x] Percentage formatting works
+- [x] Trend badges show correct direction (up/down)
+- [x] Loading skeleton renders 5 cards
+- [x] Null data returns null component

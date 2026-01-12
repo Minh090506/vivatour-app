@@ -1,5 +1,6 @@
 # Phase 04: Follow-Up Widget Tests
 
+**Status**: DONE (2026-01-11)
 **Effort**: 45 minutes
 **Output**: `src/components/dashboard/__tests__/follow-up-widget.test.tsx`
 **Target**: ~14 tests
@@ -219,10 +220,10 @@ src/components/dashboard/__tests__/
 
 ## Verification Checklist
 
-- [ ] All 3 API endpoints called correctly
-- [ ] Limit prop passed to API
-- [ ] 3 sections render with correct colors
-- [ ] Empty state renders when no data
-- [ ] Click handlers call router.push with correct paths
-- [ ] Loading state visible initially
-- [ ] Section counts match array lengths
+- [x] All 3 API endpoints called correctly
+- [x] Limit prop passed to API
+- [x] 3 sections render with correct colors
+- [x] Empty state renders when no data
+- [x] Click handlers call router.push with correct paths
+- [x] Loading state visible initially
+- [x] Section counts match array lengths

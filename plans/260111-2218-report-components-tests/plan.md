@@ -1,12 +1,13 @@
 ---
 title: "RTL Tests for Report/Dashboard Components with Recharts Mocking"
 description: "Implement React Testing Library tests for 5 report/dashboard components with Recharts mock strategy"
-status: pending
+status: completed
 priority: P2
 effort: 4h
 branch: master
 tags: [testing, rtl, recharts, reports, dashboard]
 created: 2026-01-11
+completed: 2026-01-11
 ---
 
 # RTL Tests for Report/Dashboard Components
@@ -98,9 +99,9 @@ src/components/dashboard/__tests__/
 
 ## Acceptance Criteria
 
-- [ ] All 5 components have test files with >80% coverage
-- [ ] Recharts components properly mocked (no ResizeObserver errors)
-- [ ] Data transformation logic tested independently
-- [ ] Loading and empty states covered
-- [ ] Vietnamese text assertions work correctly
-- [ ] Tests run without console errors/warnings
+- [x] All 5 components have test files with >80% coverage
+- [x] Recharts components properly mocked (no ResizeObserver errors)
+- [x] Data transformation logic tested independently
+- [x] Loading and empty states covered
+- [x] Vietnamese text assertions work correctly
+- [x] Tests run without console errors/warnings

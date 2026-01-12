@@ -6,6 +6,13 @@ if (typeof global.TextEncoder === 'undefined') {
   Object.assign(global, { TextEncoder, TextDecoder });
 }
 
+// Mock ResizeObserver
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+})) as any;
+
 // Mock console.error to reduce noise in tests (optional)
 // const originalError = console.error;
 // beforeAll(() => {

@@ -142,7 +142,7 @@ export function FollowUpStatusFormModal({
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
           {/* Status Name */}
           <div className="space-y-2">
             <Label htmlFor="status">Tên trạng thái *</Label>

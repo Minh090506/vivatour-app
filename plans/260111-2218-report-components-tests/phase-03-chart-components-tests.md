@@ -1,5 +1,6 @@
 # Phase 03: Chart Components Tests
 
+**Status**: DONE (2026-01-11)
 **Effort**: 90 minutes
 **Output**: 3 test files
 **Target**: ~32 tests total
@@ -228,9 +229,9 @@ describe('ComponentName', () => {
 
 ## Verification Checklist
 
-- [ ] All Recharts components mocked (no ResizeObserver errors)
-- [ ] Chart data length assertions via data-length attribute
-- [ ] Vietnamese labels render correctly (UTF-8)
-- [ ] Empty state messages visible
-- [ ] Loading skeletons render
-- [ ] Percentage calculations correct
+- [x] All Recharts components mocked (no ResizeObserver errors)
+- [x] Chart data length assertions via data-length attribute
+- [x] Vietnamese labels render correctly (UTF-8)
+- [x] Empty state messages visible
+- [x] Loading skeletons render
+- [x] Percentage calculations correct
