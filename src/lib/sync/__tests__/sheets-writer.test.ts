@@ -10,6 +10,8 @@ import {
   recordRequest,
   getRateLimitStatus,
   resetRateLimiter,
+  classifyError,
+  isRetryableError,
   type RowUpdate,
 } from "../sheets-writer";
 import { getSheetConfig } from "@/lib/google-sheets";
@@ -147,21 +149,98 @@ describe("SheetsWriter", () => {
 
       expect(result).toBe(1);
       expect(mockBatchUpdate).toHaveBeenCalledTimes(2);
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("rate limited"));
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("retryable"));
 
       consoleSpy.mockRestore();
       jest.restoreAllMocks();
     });
 
-    it("throws non-429 errors immediately", async () => {
-      const error500 = { code: 500, message: "Server error" };
-      mockBatchUpdate.mockRejectedValue(error500);
+    it("retries on 503 service unavailable error", async () => {
+      jest.spyOn(global, "setTimeout").mockImplementation((fn: TimerHandler) => {
+        if (typeof fn === "function") fn();
+        return 0 as unknown as NodeJS.Timeout;
+      });
+
+      const error503 = { code: 503, message: "Service Unavailable" };
+      mockBatchUpdate.mockRejectedValueOnce(error503).mockResolvedValueOnce({ data: {} });
+
+      const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
+
+      const result = await updateSheetRows("Request", [{ rowIndex: 5, values: ["test"] }]);
+
+      expect(result).toBe(1);
+      expect(mockBatchUpdate).toHaveBeenCalledTimes(2);
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("retryable"));
+
+      consoleSpy.mockRestore();
+      jest.restoreAllMocks();
+    });
+
+    it("retries on 500 server error", async () => {
+      jest.spyOn(global, "setTimeout").mockImplementation((fn: TimerHandler) => {
+        if (typeof fn === "function") fn();
+        return 0 as unknown as NodeJS.Timeout;
+      });
+
+      const error500 = { code: 500, message: "Internal Server Error" };
+      mockBatchUpdate.mockRejectedValueOnce(error500).mockResolvedValueOnce({ data: {} });
+
+      const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
+
+      const result = await updateSheetRows("Request", [{ rowIndex: 5, values: ["test"] }]);
+
+      expect(result).toBe(1);
+      expect(mockBatchUpdate).toHaveBeenCalledTimes(2);
+
+      consoleSpy.mockRestore();
+      jest.restoreAllMocks();
+    });
+
+    it("throws 400 bad request immediately without retry", async () => {
+      const error400 = { code: 400, message: "Bad Request" };
+      mockBatchUpdate.mockRejectedValue(error400);
+
+      const consoleSpy = jest.spyOn(console, "error").mockImplementation();
 
       await expect(updateSheetRows("Request", [{ rowIndex: 5, values: ["test"] }])).rejects.toEqual(
-        error500
+        error400
       );
 
       expect(mockBatchUpdate).toHaveBeenCalledTimes(1);
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("permanent error"));
+
+      consoleSpy.mockRestore();
+    });
+
+    it("throws 401 auth error immediately without retry", async () => {
+      const error401 = { code: 401, message: "Unauthorized" };
+      mockBatchUpdate.mockRejectedValue(error401);
+
+      const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+
+      await expect(updateSheetRows("Request", [{ rowIndex: 5, values: ["test"] }])).rejects.toEqual(
+        error401
+      );
+
+      expect(mockBatchUpdate).toHaveBeenCalledTimes(1);
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("permanent error"));
+
+      consoleSpy.mockRestore();
+    });
+
+    it("throws 403 forbidden error immediately without retry", async () => {
+      const error403 = { code: 403, message: "Forbidden" };
+      mockBatchUpdate.mockRejectedValue(error403);
+
+      const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+
+      await expect(updateSheetRows("Request", [{ rowIndex: 5, values: ["test"] }])).rejects.toEqual(
+        error403
+      );
+
+      expect(mockBatchUpdate).toHaveBeenCalledTimes(1);
+
+      consoleSpy.mockRestore();
     });
 
     it("throws after max retries on 429", async () => {
@@ -384,6 +463,131 @@ describe("SheetsWriter", () => {
         const status = getRateLimitStatus();
         expect(status.requestsInWindow).toBe(0);
         expect(status.shouldThrottle).toBe(false);
+      });
+    });
+  });
+
+  describe("Error Classification", () => {
+    describe("classifyError", () => {
+      it("classifies 429 as retryable", () => {
+        const result = classifyError({ code: 429, message: "Rate Limit Exceeded" });
+        expect(result.category).toBe("retryable");
+        expect(result.shouldRetry).toBe(true);
+        expect(result.code).toBe(429);
+      });
+
+      it("classifies 503 as retryable", () => {
+        const result = classifyError({ code: 503, message: "Service Unavailable" });
+        expect(result.category).toBe("retryable");
+        expect(result.shouldRetry).toBe(true);
+      });
+
+      it("classifies 500 as retryable", () => {
+        const result = classifyError({ code: 500, message: "Internal Server Error" });
+        expect(result.category).toBe("retryable");
+        expect(result.shouldRetry).toBe(true);
+      });
+
+      it("classifies 502 as retryable", () => {
+        const result = classifyError({ code: 502, message: "Bad Gateway" });
+        expect(result.category).toBe("retryable");
+        expect(result.shouldRetry).toBe(true);
+      });
+
+      it("classifies 504 as retryable", () => {
+        const result = classifyError({ code: 504, message: "Gateway Timeout" });
+        expect(result.category).toBe("retryable");
+        expect(result.shouldRetry).toBe(true);
+      });
+
+      it("classifies 400 as permanent", () => {
+        const result = classifyError({ code: 400, message: "Bad Request" });
+        expect(result.category).toBe("permanent");
+        expect(result.shouldRetry).toBe(false);
+      });
+
+      it("classifies 401 as auth error", () => {
+        const result = classifyError({ code: 401, message: "Unauthorized" });
+        expect(result.category).toBe("auth");
+        expect(result.shouldRetry).toBe(false);
+      });
+
+      it("classifies 403 as auth error", () => {
+        const result = classifyError({ code: 403, message: "Forbidden" });
+        expect(result.category).toBe("auth");
+        expect(result.shouldRetry).toBe(false);
+      });
+
+      it("classifies 404 as permanent", () => {
+        const result = classifyError({ code: 404, message: "Not Found" });
+        expect(result.category).toBe("permanent");
+        expect(result.shouldRetry).toBe(false);
+      });
+
+      it("handles errors with status instead of code", () => {
+        const result = classifyError({ status: 503, message: "Service Unavailable" });
+        expect(result.category).toBe("retryable");
+        expect(result.code).toBe(503);
+      });
+
+      it("treats unknown errors as retryable", () => {
+        const result = classifyError({ message: "Unknown error" });
+        expect(result.category).toBe("retryable");
+        expect(result.shouldRetry).toBe(true);
+      });
+
+      it("wraps non-Error objects in Error", () => {
+        const result = classifyError({ code: 400, message: "Bad Request" });
+        expect(result.error).toBeInstanceOf(Error);
+        expect(result.error.message).toBe("Bad Request");
+      });
+
+      it("preserves Error objects", () => {
+        const originalError = new Error("Original error");
+        const result = classifyError(originalError);
+        expect(result.error).toBe(originalError);
+      });
+    });
+
+    describe("isRetryableError", () => {
+      it("returns true for 429", () => {
+        expect(isRetryableError(429)).toBe(true);
+      });
+
+      it("returns true for 500", () => {
+        expect(isRetryableError(500)).toBe(true);
+      });
+
+      it("returns true for 502", () => {
+        expect(isRetryableError(502)).toBe(true);
+      });
+
+      it("returns true for 503", () => {
+        expect(isRetryableError(503)).toBe(true);
+      });
+
+      it("returns true for 504", () => {
+        expect(isRetryableError(504)).toBe(true);
+      });
+
+      it("returns false for 400", () => {
+        expect(isRetryableError(400)).toBe(false);
+      });
+
+      it("returns false for 401", () => {
+        expect(isRetryableError(401)).toBe(false);
+      });
+
+      it("returns false for 403", () => {
+        expect(isRetryableError(403)).toBe(false);
+      });
+
+      it("returns false for 404", () => {
+        expect(isRetryableError(404)).toBe(false);
+      });
+
+      it("returns false for null", () => {
+        expect(isRetryableError(null)).toBe(false);
       });
     });
   });

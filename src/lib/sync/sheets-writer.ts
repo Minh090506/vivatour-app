@@ -1,12 +1,23 @@
 /**
- * Google Sheets Write Operations
+ * Google Sheets Write Operations (Phase 07.5.2)
  *
- * Handles batch updates to Google Sheets with rate limit handling.
+ * Handles batch updates to Google Sheets with:
+ * - Exponential backoff retry (5 attempts)
+ * - Error classification (retryable vs permanent)
+ * - Rate limit handling (55 requests/minute)
+ *
  * Used by bidirectional sync to write DB changes back to Sheets.
  */
 
 import { google, sheets_v4 } from "googleapis";
 import { getSheetConfig } from "@/lib/google-sheets";
+import {
+  classifyError,
+  type WriteResult,
+  type RetryConfig,
+  type ClassifiedError,
+  RETRYABLE_STATUS_CODES,
+} from "@/types/sync";
 
 // Lazy initialization
 let sheetsClient: sheets_v4.Sheets | null = null;
@@ -50,45 +61,72 @@ function getWriteClient(): sheets_v4.Sheets {
 /**
  * Retry configuration
  */
-const RETRY_CONFIG = {
+const RETRY_CONFIG: RetryConfig = {
   maxAttempts: 5,
   baseDelayMs: 1000,
   maxDelayMs: 64000,
+  jitterMs: 1000,
 };
 
 /**
- * Execute with exponential backoff
+ * Check if error code is retryable
+ */
+function isRetryableError(code: number | null): boolean {
+  if (code === null) return false;
+  return RETRYABLE_STATUS_CODES.includes(code as typeof RETRYABLE_STATUS_CODES[number]);
+}
+
+/**
+ * Execute with exponential backoff and error classification
+ *
+ * Retries on: 429 (Rate Limit), 500, 502, 503, 504 (Server Errors)
+ * Throws on: 400 (Bad Request), 401/403 (Auth), 404 (Not Found)
  */
 async function withRetry<T>(
   fn: () => Promise<T>,
   context: string
 ): Promise<T> {
+  let lastError: ClassifiedError | null = null;
+
   for (let attempt = 0; attempt < RETRY_CONFIG.maxAttempts; attempt++) {
     try {
       return await fn();
     } catch (error: unknown) {
-      const err = error as { code?: number; message?: string };
+      const classified = classifyError(error);
+      lastError = classified;
 
-      // Only retry on rate limit (429)
-      if (err.code !== 429) throw error;
+      // Don't retry non-retryable errors (400, 401, 403, 404)
+      if (!classified.shouldRetry) {
+        console.error(
+          `[SheetsWriter] ${context} permanent error (${classified.code}): ${classified.message}`
+        );
+        throw error;
+      }
 
       // Don't retry on last attempt
-      if (attempt === RETRY_CONFIG.maxAttempts - 1) throw error;
+      if (attempt === RETRY_CONFIG.maxAttempts - 1) {
+        console.error(
+          `[SheetsWriter] ${context} max retries (${RETRY_CONFIG.maxAttempts}) exceeded`
+        );
+        throw error;
+      }
 
       // Calculate delay with jitter
       const exponentialDelay = RETRY_CONFIG.baseDelayMs * Math.pow(2, attempt);
-      const jitter = Math.random() * 1000;
+      const jitter = Math.random() * (RETRY_CONFIG.jitterMs ?? 1000);
       const waitMs = Math.min(exponentialDelay + jitter, RETRY_CONFIG.maxDelayMs);
 
       console.warn(
-        `[SheetsWriter] ${context} rate limited. Retry ${attempt + 1}/${RETRY_CONFIG.maxAttempts} in ${Math.round(waitMs)}ms`
+        `[SheetsWriter] ${context} ${classified.category} error (${classified.code}). ` +
+        `Retry ${attempt + 1}/${RETRY_CONFIG.maxAttempts} in ${Math.round(waitMs)}ms`
       );
 
       await new Promise((resolve) => setTimeout(resolve, waitMs));
     }
   }
 
-  throw new Error("Unreachable");
+  // Should not reach here, but handle gracefully
+  throw lastError?.error ?? new Error("Max retries exceeded");
 }
 
 /**
@@ -288,3 +326,7 @@ export function resetRateLimiter(): void {
   requestCount = 0;
   windowStart = Date.now();
 }
+
+// Re-export types and utilities from types/sync.ts
+export { classifyError, isRetryableError };
+export type { WriteResult, RetryConfig, ClassifiedError } from "@/types/sync";
