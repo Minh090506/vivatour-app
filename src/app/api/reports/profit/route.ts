@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/auth';
+import { hasPermission, type Role } from '@/lib/permissions';
 import { prisma } from '@/lib/db';
 
 // Date format validation regex (YYYY-MM-DD)
@@ -27,6 +29,22 @@ function isValidBookingCode(code: string): boolean {
 // Output: Array of profit per booking with summary
 export async function GET(request: NextRequest) {
   try {
+    // Auth check
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { success: false, error: 'Chua dang nhap' },
+        { status: 401 }
+      );
+    }
+    const role = session.user.role as Role;
+    if (!hasPermission(role, 'revenue:view')) {
+      return NextResponse.json(
+        { success: false, error: 'Khong co quyen xem bao cao' },
+        { status: 403 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');

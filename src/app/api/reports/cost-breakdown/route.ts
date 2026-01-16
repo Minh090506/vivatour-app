@@ -28,7 +28,14 @@ export async function GET(request: NextRequest) {
     // Parse query params
     const { searchParams } = new URL(request.url);
     const rangeParam = searchParams.get('range') || 'thisMonth';
-    const validation = reportQuerySchema.safeParse({ range: rangeParam });
+    const startDateParam = searchParams.get('startDate') || undefined;
+    const endDateParam = searchParams.get('endDate') || undefined;
+
+    const validation = reportQuerySchema.safeParse({
+      range: rangeParam,
+      startDate: startDateParam,
+      endDate: endDateParam,
+    });
 
     if (!validation.success) {
       return NextResponse.json(
@@ -37,8 +44,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { range } = validation.data;
-    const dateRange = getDateRange(range);
+    const { range, startDate, endDate } = validation.data;
+    const customDates = range === 'custom' && startDate && endDate
+      ? { startDate, endDate }
+      : undefined;
+    const dateRange = getDateRange(range, customDates);
 
     // Query operators grouped by service type (exclude archived)
     const operators = await prisma.operator.findMany({

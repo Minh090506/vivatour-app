@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/auth';
+import { hasPermission, type Role } from '@/lib/permissions';
 import { prisma } from '@/lib/db';
 
 // Month format validation regex (YYYY-MM)
@@ -7,6 +9,22 @@ const MONTH_REGEX = /^\d{4}-(0[1-9]|1[0-2])$/;
 // GET /api/reports/operator-payments
 export async function GET(request: NextRequest) {
   try {
+    // Auth check
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { success: false, error: 'Chua dang nhap' },
+        { status: 401 }
+      );
+    }
+    const role = session.user.role as Role;
+    if (!hasPermission(role, 'revenue:view')) {
+      return NextResponse.json(
+        { success: false, error: 'Khong co quyen xem bao cao' },
+        { status: 403 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const month = searchParams.get('month'); // YYYY-MM for filtering
 

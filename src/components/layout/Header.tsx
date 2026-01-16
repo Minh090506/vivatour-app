@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Bell, User, Settings, LogOut, Menu } from 'lucide-react';
+import { Bell, User, Settings, LogOut, Menu, BarChart3, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -18,11 +18,18 @@ import { cn } from '@/lib/utils';
 
 const navigation = [
   { name: 'Dashboard', href: '/' },
-  { name: 'Yêu cầu', href: '/requests' },
+  { name: 'Yeu cau', href: '/requests' },
   { name: 'Operator', href: '/operators' },
-  { name: 'Duyệt TT', href: '/operators/approvals', showBadge: true },
+  { name: 'Duyet TT', href: '/operators/approvals', showBadge: true },
   { name: 'NCC', href: '/suppliers' },
-  { name: 'Revenue', href: '/revenue' },
+  { name: 'Doanh thu', href: '/revenues' },
+];
+
+const reportLinks = [
+  { name: 'Tong quan', href: '/reports', description: 'Bao cao KPI va xu huong' },
+  { name: 'Doanh thu', href: '/revenues/reports', description: 'Phan tich theo loai va nguon' },
+  { name: 'Chi phi Operator', href: '/operators/reports', description: 'Bao cao loi nhuan' },
+  { name: 'Cong no NCC', href: '/suppliers/reports', description: 'So du nha cung cap' },
 ];
 
 export function Header() {
@@ -86,6 +93,33 @@ export function Header() {
                 </Link>
               );
             })}
+            {/* Reports Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={cn(
+                    'px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5',
+                    pathname.includes('/reports')
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  )}
+                >
+                  <BarChart3 className="h-4 w-4" />
+                  Bao cao
+                  <ChevronDown className="h-3 w-3" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                {reportLinks.map((link) => (
+                  <DropdownMenuItem key={link.href} asChild>
+                    <Link href={link.href} className="flex flex-col items-start">
+                      <span className="font-medium">{link.name}</span>
+                      <span className="text-xs text-muted-foreground">{link.description}</span>
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </nav>
         </div>
 

@@ -9,7 +9,12 @@ import type {
   FunnelResponse
 } from '@/lib/report-utils';
 
-export type DateRangeOption = 'thisMonth' | 'lastMonth' | 'last3Months' | 'last6Months' | 'thisYear';
+export type DateRangeOption = 'thisMonth' | 'lastMonth' | 'last3Months' | 'last6Months' | 'thisYear' | 'custom';
+
+export interface CustomDateRange {
+  startDate: string; // YYYY-MM-DD
+  endDate: string;
+}
 
 interface ReportsState {
   dashboard: DashboardResponse | null;
@@ -20,7 +25,7 @@ interface ReportsState {
   error: string | null;
 }
 
-export function useReports(dateRange: DateRangeOption) {
+export function useReports(dateRange: DateRangeOption, customDates?: CustomDateRange) {
   const [state, setState] = useState<ReportsState>({
     dashboard: null,
     trend: null,
@@ -35,7 +40,11 @@ export function useReports(dateRange: DateRangeOption) {
   const fetchAll = useCallback(async (signal: AbortSignal) => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
 
-    const params = `?range=${dateRange}`;
+    // Build query params
+    let params = `?range=${dateRange}`;
+    if (dateRange === 'custom' && customDates?.startDate && customDates?.endDate) {
+      params += `&startDate=${customDates.startDate}&endDate=${customDates.endDate}`;
+    }
 
     try {
       // Parallel fetch all 4 endpoints
@@ -72,9 +81,14 @@ export function useReports(dateRange: DateRangeOption) {
         }));
       }
     }
-  }, [dateRange]);
+  }, [dateRange, customDates?.startDate, customDates?.endDate]);
 
   useEffect(() => {
+    // Don't fetch if custom is selected but dates not provided yet
+    if (dateRange === 'custom' && (!customDates?.startDate || !customDates?.endDate)) {
+      return;
+    }
+
     abortRef.current?.abort();
     abortRef.current = new AbortController();
     fetchAll(abortRef.current.signal);

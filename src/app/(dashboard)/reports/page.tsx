@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { usePermission } from '@/hooks/use-permission';
-import { useReports, type DateRangeOption } from '@/hooks/use-reports';
+import { useReports, type DateRangeOption, type CustomDateRange } from '@/hooks/use-reports';
 import { ErrorFallback } from '@/components/ui/error-fallback';
 import { DateRangeSelector } from '@/components/reports/date-range-selector';
+import { ExportDropdown } from '@/components/reports/export-dropdown';
 import { KPICards } from '@/components/reports/kpi-cards';
 import { RevenueTrendChart } from '@/components/reports/revenue-trend-chart';
 import { CostBreakdownChart } from '@/components/reports/cost-breakdown-chart';
@@ -14,8 +15,9 @@ import { BarChart3 } from 'lucide-react';
 export default function ReportsPage() {
   const { isAdmin, isAccountant, isLoading: authLoading } = usePermission();
   const [dateRange, setDateRange] = useState<DateRangeOption>('last6Months');
+  const [customDates, setCustomDates] = useState<CustomDateRange | undefined>();
   const { dashboard, trend, costBreakdown, funnel, loading, error, refetch } =
-    useReports(dateRange);
+    useReports(dateRange, customDates);
 
   // Permission check
   if (authLoading) {
@@ -53,7 +55,21 @@ export default function ReportsPage() {
           </h1>
           <p className="text-muted-foreground">Phân tích hiệu suất kinh doanh</p>
         </div>
-        <DateRangeSelector value={dateRange} onChange={setDateRange} />
+        <div className="flex items-center gap-2">
+          <DateRangeSelector
+            value={dateRange}
+            onChange={setDateRange}
+            customDates={customDates}
+            onCustomDatesChange={setCustomDates}
+          />
+          <ExportDropdown
+            dashboard={dashboard}
+            trend={trend}
+            costBreakdown={costBreakdown}
+            funnel={funnel}
+            loading={loading}
+          />
+        </div>
       </div>
 
       {/* KPI Cards */}

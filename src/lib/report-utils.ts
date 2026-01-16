@@ -14,9 +14,26 @@ export interface DateRange {
 }
 
 /**
- * Get start/end dates for fixed range option
+ * Custom date range params
  */
-export function getDateRange(range: DateRangeOption): DateRange {
+export interface CustomDateParams {
+  startDate: string; // YYYY-MM-DD
+  endDate: string;   // YYYY-MM-DD
+}
+
+/**
+ * Format date as DD/MM/YYYY for display
+ */
+function formatDateVN(date: Date): string {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  return `${day}/${month}/${date.getFullYear()}`;
+}
+
+/**
+ * Get start/end dates for fixed range option or custom dates
+ */
+export function getDateRange(range: DateRangeOption, customDates?: CustomDateParams): DateRange {
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth();
@@ -54,6 +71,20 @@ export function getDateRange(range: DateRangeOption): DateRange {
       startDate = new Date(year, 0, 1);
       endDate = new Date(year, 11, 31, 23, 59, 59);
       label = `Nam ${year}`;
+      break;
+
+    case 'custom':
+      if (customDates?.startDate && customDates?.endDate) {
+        startDate = new Date(customDates.startDate);
+        endDate = new Date(customDates.endDate);
+        endDate.setHours(23, 59, 59, 999);
+        label = `${formatDateVN(startDate)} - ${formatDateVN(endDate)}`;
+      } else {
+        // Fallback to this month if custom dates not provided
+        startDate = new Date(year, month, 1);
+        endDate = new Date(year, month + 1, 0, 23, 59, 59);
+        label = `Thang ${month + 1}/${year}`;
+      }
       break;
 
     default:
