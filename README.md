@@ -132,8 +132,15 @@ src/
 - **Request Module**: List, create, detail, edit pages with filters
 - **Operator Module**: CRUD, approval workflow, accounting lock
 - **Revenue Module**: Multi-currency with exchange rates
-- 33 API endpoints across all modules
+- 40+ API endpoints across all modules
 - Google Sheets sync with per-spreadsheet IDs
+
+### ✅ Phase 07.5: Bidirectional Sync
+- Database queue for write-back operations (SyncQueue)
+- Google Sheets writer with retry logic and rate limiting
+- DB to Sheet mappers (Request, Operator, Revenue)
+- Prisma extensions for auto-tracking CRUD operations
+- Cron-triggered processing (every 5 min via Vercel)
 
 ### 🚧 Phase 07+: Analytics & Reports
 - Operator reports (revenue, cost analysis)
@@ -143,7 +150,7 @@ src/
 
 ---
 
-## API Endpoints (36 Total)
+## API Endpoints (40+ Total)
 
 | Category | Endpoints | Purpose |
 |----------|-----------|---------|
@@ -152,10 +159,10 @@ src/
 | **Suppliers** | 5 | CRUD + code generation |
 | **Transactions** | 5 | Supplier transaction tracking |
 | **Revenue** | 7 | CRUD + lock/unlock (3-tier) + history (audit trail) |
-| **Reports** | 3 | Supplier balance, operator costs, payments |
+| **Reports** | 7 | Dashboard KPIs, revenue trend, cost breakdown, funnel |
 | **Config** | 8 | Follow-ups, sellers, user prefs, sync trigger |
 | **Auth** | 5 | NextAuth.js v5 endpoints |
-| **Sync** | 2 | Google Sheets sync + status |
+| **Sync** | 5 | Sheets sync + write-back + queue status + retry |
 | **Users** | 5 | User management (admin) |
 
 See [docs/codebase-summary.md](./docs/codebase-summary.md) for full endpoint list.
