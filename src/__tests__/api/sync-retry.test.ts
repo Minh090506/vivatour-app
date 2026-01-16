@@ -45,21 +45,19 @@ function createMockRequest(
   body?: Record<string, unknown>,
   headers?: Record<string, string>
 ): NextRequest {
-  const init: RequestInit = {
+  const init = {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       ...headers,
     },
+    body: body ? JSON.stringify(body) : undefined,
   };
 
-  if (body) {
-    init.body = JSON.stringify(body);
-  }
-
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return new NextRequest(
     new URL("http://localhost:3000/api/sync/retry"),
-    init
+    init as any
   );
 }
 

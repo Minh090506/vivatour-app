@@ -188,7 +188,7 @@ describe('SellerTable', () => {
 
       await waitFor(() => {
         const deleteCalls = mockFetch.mock.calls.filter(
-          (call: string[]) => call[1]?.method === 'DELETE'
+          (call: [string, RequestInit?]) => call[1]?.method === 'DELETE'
         );
         expect(deleteCalls.length).toBeGreaterThan(0);
       });

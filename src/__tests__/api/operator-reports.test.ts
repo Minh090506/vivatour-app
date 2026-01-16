@@ -13,8 +13,23 @@ jest.mock('@/lib/db', () => ({
   prisma: prismaMock,
 }));
 
-import { GET as getCostReport } from '@/app/api/reports/operator-costs/route';
-import { GET as getPaymentReport } from '@/app/api/reports/operator-payments/route';
+// Mock auth - must be before importing routes that use auth
+const mockSession = {
+  user: {
+    id: 'user-123',
+    email: 'test@example.com',
+    role: 'ADMIN'
+  }
+};
+
+jest.mock('@/auth', () => ({
+  auth: jest.fn(() => Promise.resolve(mockSession)),
+}));
+
+import { auth } from '@/auth';
+
+// Type-safe auth mock for test manipulation
+const mockAuth = auth as jest.Mock;
 
 // Helper to create mock NextRequest
 function createMockRequest(url: string): NextRequest {
@@ -22,8 +37,17 @@ function createMockRequest(url: string): NextRequest {
 }
 
 describe('GET /api/reports/operator-costs', () => {
+  let getCostReport: (req: NextRequest) => Promise<Response>;
+
+  beforeAll(() => {
+    // Dynamic require after mocks are set up to avoid ESM import issues
+    const module = require('@/app/api/reports/operator-costs/route');
+    getCostReport = module.GET;
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
+    mockAuth.mockResolvedValue(mockSession);
   });
 
   it('should return cost report grouped by service type, supplier, and month', async () => {
@@ -183,8 +207,17 @@ describe('GET /api/reports/operator-costs', () => {
 });
 
 describe('GET /api/reports/operator-payments', () => {
+  let getPaymentReport: (req: NextRequest) => Promise<Response>;
+
+  beforeAll(() => {
+    // Dynamic require after mocks are set up to avoid ESM import issues
+    const module = require('@/app/api/reports/operator-payments/route');
+    getPaymentReport = module.GET;
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
+    mockAuth.mockResolvedValue(mockSession);
   });
 
   it('should return payment status summary', async () => {
