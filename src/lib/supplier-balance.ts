@@ -87,5 +87,100 @@ export async function getSupplierBalanceSummary(typeFilter?: string) {
     negativeBalance: results.filter(s => s.balance < 0).length,
   };
 
-  return { data: results, summary };
+  // Payment model distribution
+  const paymentModelMap = new Map<string, { count: number; totalBalance: number }>();
+  for (const s of results) {
+    const model = s.paymentModel || 'PREPAID';
+    const entry = paymentModelMap.get(model) || { count: 0, totalBalance: 0 };
+    entry.count += 1;
+    entry.totalBalance += s.balance;
+    paymentModelMap.set(model, entry);
+  }
+  const byPaymentModel = Array.from(paymentModelMap.entries()).map(([model, data]) => ({
+    model,
+    count: data.count,
+    totalBalance: data.totalBalance,
+  }));
+
+  return { data: results, summary, byPaymentModel };
+}
+
+/**
+ * Get balance trend by month (last 6 months)
+ */
+export async function getBalanceTrend() {
+  const now = new Date();
+  const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+
+  // Get transactions grouped by month
+  const transactions = await prisma.supplierTransaction.findMany({
+    where: {
+      createdAt: { gte: sixMonthsAgo },
+    },
+    select: {
+      type: true,
+      amount: true,
+      createdAt: true,
+    },
+  });
+
+  // Get operator costs grouped by month
+  const operators = await prisma.operator.findMany({
+    where: {
+      serviceDate: { gte: sixMonthsAgo },
+      supplierId: { not: null },
+    },
+    select: {
+      totalCost: true,
+      serviceDate: true,
+    },
+  });
+
+  // Group by month
+  const monthMap = new Map<string, { deposits: number; costs: number }>();
+
+  // Initialize 6 months
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    monthMap.set(key, { deposits: 0, costs: 0 });
+  }
+
+  // Add transaction deposits
+  for (const t of transactions) {
+    if (t.type === 'DEPOSIT') {
+      const d = new Date(t.createdAt);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const entry = monthMap.get(key);
+      if (entry) {
+        entry.deposits += Number(t.amount);
+      }
+    }
+  }
+
+  // Add operator costs
+  for (const op of operators) {
+    const d = new Date(op.serviceDate);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const entry = monthMap.get(key);
+    if (entry) {
+      entry.costs += Number(op.totalCost);
+    }
+  }
+
+  // Convert to array with running balance
+  let runningBalance = 0;
+  const trend = Array.from(monthMap.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([month, data]) => {
+      runningBalance += data.deposits - data.costs;
+      return {
+        month,
+        deposits: data.deposits,
+        costs: data.costs,
+        balance: runningBalance,
+      };
+    });
+
+  return trend;
 }

@@ -4,12 +4,16 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowUpCircle, ArrowDownCircle, Wallet, Building2 } from 'lucide-react';
+import { ArrowUpCircle, ArrowDownCircle, Wallet, Building2, Download } from 'lucide-react';
 import { SUPPLIER_TYPES, SUPPLIER_TYPE_KEYS } from '@/config/supplier-config';
+import { BalanceTrendChart } from '@/components/suppliers/reports/balance-trend-chart';
+import { PaymentModelChart } from '@/components/suppliers/reports/payment-model-chart';
+import { exportToCsv, formatVND as formatVNDExport } from '@/lib/export/csv-export';
 import Link from 'next/link';
 
-interface SupplierBalanceData {
+interface SupplierBalanceData extends Record<string, unknown> {
   id: string;
   code: string;
   name: string;
@@ -30,9 +34,24 @@ interface Summary {
   negativeBalance: number;
 }
 
+interface PaymentModelData {
+  model: string;
+  count: number;
+  totalBalance: number;
+}
+
+interface TrendData {
+  month: string;
+  deposits: number;
+  costs: number;
+  balance: number;
+}
+
 export default function SupplierReportsPage() {
   const [data, setData] = useState<SupplierBalanceData[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
+  const [byPaymentModel, setByPaymentModel] = useState<PaymentModelData[]>([]);
+  const [trend, setTrend] = useState<TrendData[]>([]);
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState('');
 
@@ -46,9 +65,26 @@ export default function SupplierReportsPage() {
     if (result.success) {
       setData(result.data);
       setSummary(result.summary);
+      setByPaymentModel(result.byPaymentModel || []);
+      setTrend(result.trend || []);
     }
     setLoading(false);
   }, [typeFilter]);
+
+  const handleExport = useCallback(() => {
+    if (!data.length) return;
+    const columns = [
+      { header: 'Ma NCC', accessor: 'code' as const },
+      { header: 'Ten NCC', accessor: 'name' as const },
+      { header: 'Loai', accessor: 'type' as const },
+      { header: 'Tong nap', accessor: (r: SupplierBalanceData) => formatVNDExport(r.deposits) },
+      { header: 'Da chi', accessor: (r: SupplierBalanceData) => formatVNDExport(r.costs) },
+      { header: 'Hoan tien', accessor: (r: SupplierBalanceData) => formatVNDExport(r.refunds) },
+      { header: 'So du', accessor: (r: SupplierBalanceData) => formatVNDExport(r.balance) },
+    ];
+    const filename = `bao-cao-cong-no-ncc-${new Date().toISOString().split('T')[0]}`;
+    exportToCsv(data, columns, filename);
+  }, [data]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -68,20 +104,26 @@ export default function SupplierReportsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Báo cáo Công nợ NCC</h1>
-          <p className="text-muted-foreground">Tổng hợp số dư các nhà cung cấp</p>
+          <h1 className="text-2xl font-bold">Bao cao Cong no NCC</h1>
+          <p className="text-muted-foreground">Tong hop so du cac nha cung cap</p>
         </div>
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Tất cả loại NCC" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tất cả</SelectItem>
-            {SUPPLIER_TYPE_KEYS.map((key) => (
-              <SelectItem key={key} value={key}>{SUPPLIER_TYPES[key].label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Tat ca loai NCC" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tat ca</SelectItem>
+              {SUPPLIER_TYPE_KEYS.map((key) => (
+                <SelectItem key={key} value={key}>{SUPPLIER_TYPES[key].label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button variant="outline" onClick={handleExport} disabled={!data.length}>
+            <Download className="h-4 w-4 mr-2" />
+            Xuat CSV
+          </Button>
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -160,10 +202,16 @@ export default function SupplierReportsPage() {
         </div>
       )}
 
+      {/* Charts */}
+      <div className="grid md:grid-cols-2 gap-6">
+        <BalanceTrendChart data={trend} loading={loading} />
+        <PaymentModelChart data={byPaymentModel} loading={loading} />
+      </div>
+
       {/* Detail Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Chi tiết theo NCC</CardTitle>
+          <CardTitle>Chi tiet theo NCC</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
