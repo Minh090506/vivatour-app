@@ -178,3 +178,88 @@ export const defaultPermissionMock = {
 export function createPermissionMock(overrides?: Partial<typeof defaultPermissionMock>) {
   return { ...defaultPermissionMock, ...overrides };
 }
+
+// ============================================
+// ERROR MOCK HELPERS
+// ============================================
+
+/**
+ * Setup fetch mock to return error response
+ * @param status - HTTP status code
+ * @param message - Error message
+ */
+export function setupFetchErrorMock(status: number, message: string): jest.Mock {
+  const mockFetch = jest.fn(() =>
+    Promise.resolve({
+      ok: false,
+      status,
+      json: () => Promise.resolve({ success: false, error: message }),
+    })
+  );
+  global.fetch = mockFetch as unknown as typeof fetch;
+  return mockFetch;
+}
+
+/**
+ * Setup fetch mock to simulate network failure
+ */
+export function setupNetworkErrorMock(): jest.Mock {
+  const mockFetch = jest.fn(() => Promise.reject(new Error('Network error')));
+  global.fetch = mockFetch as unknown as typeof fetch;
+  return mockFetch;
+}
+
+/**
+ * Create mock request with overdue follow-up
+ */
+export function createMockRequestWithOverdueFollowUp(daysOverdue: number = 1): Request {
+  const overdueDate = new Date();
+  overdueDate.setDate(overdueDate.getDate() - daysOverdue);
+  return createMockRequest({
+    id: 'overdue-1',
+    nextFollowUp: overdueDate,
+  });
+}
+
+/**
+ * Create mock request with future follow-up
+ */
+export function createMockRequestWithFutureFollowUp(daysAhead: number = 1): Request {
+  const futureDate = new Date();
+  futureDate.setDate(futureDate.getDate() + daysAhead);
+  return createMockRequest({
+    id: 'future-1',
+    nextFollowUp: futureDate,
+  });
+}
+
+// ============================================
+// INTERSECTION OBSERVER MOCK
+// ============================================
+
+/**
+ * Mock IntersectionObserver for infinite scroll tests
+ */
+export function mockIntersectionObserver(): void {
+  const mockIntersectionObserver = jest.fn();
+  mockIntersectionObserver.mockReturnValue({
+    observe: jest.fn(),
+    unobserve: jest.fn(),
+    disconnect: jest.fn(),
+  });
+  window.IntersectionObserver = mockIntersectionObserver;
+}
+
+/**
+ * Trigger intersection observer callback
+ * @param isIntersecting - Whether element is visible
+ */
+export function triggerIntersection(isIntersecting: boolean): void {
+  const observer = (window.IntersectionObserver as jest.Mock).mock.results[0]?.value;
+  if (observer) {
+    const callback = (window.IntersectionObserver as jest.Mock).mock.calls[0]?.[0];
+    if (callback) {
+      callback([{ isIntersecting }]);
+    }
+  }
+}

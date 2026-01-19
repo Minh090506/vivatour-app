@@ -301,4 +301,455 @@ describe('RequestForm', () => {
       expect(disabledInputs.length).toBeGreaterThan(0);
     });
   });
+
+  // ============================================
+  // FORM VALIDATION EDGE CASES
+  // ============================================
+
+  describe('Form Validation Edge Cases', () => {
+    // Helper to fill minimum required fields
+    const fillRequiredFields = async () => {
+      await act(async () => {
+        fireEvent.change(screen.getByPlaceholderText('Nguyen Van A'), {
+          target: { value: 'Valid Customer Name' },
+        });
+        fireEvent.change(screen.getByPlaceholderText('email@example.com hoặc SĐT'), {
+          target: { value: 'valid@email.com' },
+        });
+        fireEvent.change(screen.getByPlaceholderText('USA, UK, France...'), {
+          target: { value: 'Vietnam' },
+        });
+        fireEvent.change(screen.getByPlaceholderText('TripAdvisor, Zalo, Email...'), {
+          target: { value: 'Direct' },
+        });
+      });
+    };
+
+    describe('Empty Fields Validation', () => {
+      it('shows error when customerName is only whitespace', async () => {
+        render(<RequestForm onSubmit={mockOnSubmit} />);
+
+        const customerInput = screen.getByPlaceholderText('Nguyen Van A');
+        await act(async () => {
+          fireEvent.change(customerInput, { target: { value: '   ' } });
+          fireEvent.blur(customerInput);
+        });
+
+        const submitButton = screen.getByRole('button', { name: /tạo mới/i });
+        await act(async () => {
+          fireEvent.click(submitButton);
+        });
+
+        await waitFor(() => {
+          expect(screen.getByText(/vui lòng kiểm tra lại thông tin/i)).toBeInTheDocument();
+        });
+        expect(mockOnSubmit).not.toHaveBeenCalled();
+      });
+
+      it('shows error when contact is empty', async () => {
+        render(<RequestForm onSubmit={mockOnSubmit} />);
+
+        // Fill other fields but leave contact empty
+        await act(async () => {
+          fireEvent.change(screen.getByPlaceholderText('Nguyen Van A'), {
+            target: { value: 'Valid Name' },
+          });
+          fireEvent.change(screen.getByPlaceholderText('USA, UK, France...'), {
+            target: { value: 'Vietnam' },
+          });
+          fireEvent.change(screen.getByPlaceholderText('TripAdvisor, Zalo, Email...'), {
+            target: { value: 'Direct' },
+          });
+        });
+
+        const submitButton = screen.getByRole('button', { name: /tạo mới/i });
+        await act(async () => {
+          fireEvent.click(submitButton);
+        });
+
+        await waitFor(() => {
+          expect(screen.getByText(/vui lòng kiểm tra lại thông tin/i)).toBeInTheDocument();
+        });
+        expect(mockOnSubmit).not.toHaveBeenCalled();
+      });
+
+      it('validates minimum length for customerName (2 chars)', async () => {
+        render(<RequestForm onSubmit={mockOnSubmit} />);
+
+        const customerInput = screen.getByPlaceholderText('Nguyen Van A');
+        await act(async () => {
+          fireEvent.change(customerInput, { target: { value: 'A' } });
+          fireEvent.blur(customerInput);
+        });
+
+        const submitButton = screen.getByRole('button', { name: /tạo mới/i });
+        await act(async () => {
+          fireEvent.click(submitButton);
+        });
+
+        await waitFor(() => {
+          expect(screen.getByText(/ít nhất 2 ký tự/i)).toBeInTheDocument();
+        });
+        expect(mockOnSubmit).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('Special Characters', () => {
+      it('accepts Vietnamese diacritics in customerName', async () => {
+        render(<RequestForm onSubmit={mockOnSubmit} />);
+
+        await fillRequiredFields();
+        const customerInput = screen.getByPlaceholderText('Nguyen Van A') as HTMLInputElement;
+        await act(async () => {
+          fireEvent.change(customerInput, { target: { value: 'Nguyễn Thị Hương Giang' } });
+        });
+
+        const submitButton = screen.getByRole('button', { name: /tạo mới/i });
+        await act(async () => {
+          fireEvent.click(submitButton);
+        });
+
+        await waitFor(() => {
+          expect(mockOnSubmit).toHaveBeenCalled();
+        });
+      });
+
+      it('accepts special characters in notes field', async () => {
+        render(<RequestForm onSubmit={mockOnSubmit} />);
+
+        await fillRequiredFields();
+        const notesInput = screen.getByPlaceholderText('Ghi chú thêm...');
+        await act(async () => {
+          fireEvent.change(notesInput, {
+            target: { value: 'Notes with special chars: @#$%^&*()_+-=[]{}|;:\'",.<>?/' },
+          });
+        });
+
+        const submitButton = screen.getByRole('button', { name: /tạo mới/i });
+        await act(async () => {
+          fireEvent.click(submitButton);
+        });
+
+        await waitFor(() => {
+          expect(mockOnSubmit).toHaveBeenCalled();
+        });
+      });
+
+      it('accepts international phone formats in contact', async () => {
+        render(<RequestForm onSubmit={mockOnSubmit} />);
+
+        // Fill other required fields
+        await act(async () => {
+          fireEvent.change(screen.getByPlaceholderText('Nguyen Van A'), {
+            target: { value: 'Valid Name' },
+          });
+          fireEvent.change(screen.getByPlaceholderText('USA, UK, France...'), {
+            target: { value: 'Vietnam' },
+          });
+          fireEvent.change(screen.getByPlaceholderText('TripAdvisor, Zalo, Email...'), {
+            target: { value: 'Direct' },
+          });
+        });
+
+        // Use international phone format
+        const contactInput = screen.getByPlaceholderText('email@example.com hoặc SĐT');
+        await act(async () => {
+          fireEvent.change(contactInput, { target: { value: '+1-555-123-4567' } });
+        });
+
+        const submitButton = screen.getByRole('button', { name: /tạo mới/i });
+        await act(async () => {
+          fireEvent.click(submitButton);
+        });
+
+        await waitFor(() => {
+          expect(mockOnSubmit).toHaveBeenCalled();
+        });
+      });
+    });
+
+    describe('Numeric Validation', () => {
+      it('validates pax minimum is 1', async () => {
+        render(<RequestForm onSubmit={mockOnSubmit} />);
+
+        await fillRequiredFields();
+        const paxInputs = screen.getAllByRole('spinbutton');
+        const paxInput = paxInputs[0] as HTMLInputElement;
+
+        await act(async () => {
+          fireEvent.change(paxInput, { target: { value: '0' } });
+          fireEvent.blur(paxInput);
+        });
+
+        // Pax should be normalized to 1 minimum
+        expect(paxInput.value).toBe('1');
+      });
+
+      it('accepts pax of 100', async () => {
+        render(<RequestForm onSubmit={mockOnSubmit} />);
+
+        await fillRequiredFields();
+        const paxInputs = screen.getAllByRole('spinbutton');
+        const paxInput = paxInputs[0] as HTMLInputElement;
+
+        await act(async () => {
+          fireEvent.change(paxInput, { target: { value: '100' } });
+        });
+
+        const submitButton = screen.getByRole('button', { name: /tạo mới/i });
+        await act(async () => {
+          fireEvent.click(submitButton);
+        });
+
+        await waitFor(() => {
+          expect(mockOnSubmit).toHaveBeenCalled();
+        });
+      });
+
+      it('validates tourDays maximum is 365', async () => {
+        render(<RequestForm onSubmit={mockOnSubmit} />);
+
+        const numberInputs = screen.getAllByRole('spinbutton');
+        const tourDaysInput = numberInputs.find(
+          (input) => (input as HTMLInputElement).max === '365'
+        ) as HTMLInputElement;
+
+        if (tourDaysInput) {
+          await act(async () => {
+            fireEvent.change(tourDaysInput, { target: { value: '400' } });
+            fireEvent.blur(tourDaysInput);
+          });
+
+          await fillRequiredFields();
+          const submitButton = screen.getByRole('button', { name: /tạo mới/i });
+          await act(async () => {
+            fireEvent.click(submitButton);
+          });
+
+          await waitFor(() => {
+            expect(screen.getByText(/không được quá 365/i)).toBeInTheDocument();
+          });
+        }
+      });
+    });
+
+    describe('Contact Validation', () => {
+      it('accepts valid email format', async () => {
+        render(<RequestForm onSubmit={mockOnSubmit} />);
+
+        // Fill other fields
+        await act(async () => {
+          fireEvent.change(screen.getByPlaceholderText('Nguyen Van A'), {
+            target: { value: 'Valid Name' },
+          });
+          fireEvent.change(screen.getByPlaceholderText('USA, UK, France...'), {
+            target: { value: 'Vietnam' },
+          });
+          fireEvent.change(screen.getByPlaceholderText('TripAdvisor, Zalo, Email...'), {
+            target: { value: 'Direct' },
+          });
+        });
+
+        const contactInput = screen.getByPlaceholderText('email@example.com hoặc SĐT');
+        await act(async () => {
+          fireEvent.change(contactInput, { target: { value: 'user@domain.com' } });
+        });
+
+        const submitButton = screen.getByRole('button', { name: /tạo mới/i });
+        await act(async () => {
+          fireEvent.click(submitButton);
+        });
+
+        await waitFor(() => {
+          expect(mockOnSubmit).toHaveBeenCalled();
+        });
+      });
+
+      it('accepts valid phone format with country code', async () => {
+        render(<RequestForm onSubmit={mockOnSubmit} />);
+
+        await act(async () => {
+          fireEvent.change(screen.getByPlaceholderText('Nguyen Van A'), {
+            target: { value: 'Valid Name' },
+          });
+          fireEvent.change(screen.getByPlaceholderText('USA, UK, France...'), {
+            target: { value: 'Vietnam' },
+          });
+          fireEvent.change(screen.getByPlaceholderText('TripAdvisor, Zalo, Email...'), {
+            target: { value: 'Direct' },
+          });
+        });
+
+        const contactInput = screen.getByPlaceholderText('email@example.com hoặc SĐT');
+        await act(async () => {
+          fireEvent.change(contactInput, { target: { value: '+84912345678' } });
+        });
+
+        const submitButton = screen.getByRole('button', { name: /tạo mới/i });
+        await act(async () => {
+          fireEvent.click(submitButton);
+        });
+
+        await waitFor(() => {
+          expect(mockOnSubmit).toHaveBeenCalled();
+        });
+      });
+
+      it('rejects invalid email format', async () => {
+        render(<RequestForm onSubmit={mockOnSubmit} />);
+
+        await act(async () => {
+          fireEvent.change(screen.getByPlaceholderText('Nguyen Van A'), {
+            target: { value: 'Valid Name' },
+          });
+          fireEvent.change(screen.getByPlaceholderText('USA, UK, France...'), {
+            target: { value: 'Vietnam' },
+          });
+          fireEvent.change(screen.getByPlaceholderText('TripAdvisor, Zalo, Email...'), {
+            target: { value: 'Direct' },
+          });
+        });
+
+        const contactInput = screen.getByPlaceholderText('email@example.com hoặc SĐT');
+        await act(async () => {
+          fireEvent.change(contactInput, { target: { value: 'invalid-email' } });
+          fireEvent.blur(contactInput);
+        });
+
+        const submitButton = screen.getByRole('button', { name: /tạo mới/i });
+        await act(async () => {
+          fireEvent.click(submitButton);
+        });
+
+        await waitFor(() => {
+          expect(screen.getByText(/email hoặc số điện thoại hợp lệ/i)).toBeInTheDocument();
+        });
+        expect(mockOnSubmit).not.toHaveBeenCalled();
+      });
+
+      it('accepts phone with formatting (spaces, dashes)', async () => {
+        render(<RequestForm onSubmit={mockOnSubmit} />);
+
+        await act(async () => {
+          fireEvent.change(screen.getByPlaceholderText('Nguyen Van A'), {
+            target: { value: 'Valid Name' },
+          });
+          fireEvent.change(screen.getByPlaceholderText('USA, UK, France...'), {
+            target: { value: 'Vietnam' },
+          });
+          fireEvent.change(screen.getByPlaceholderText('TripAdvisor, Zalo, Email...'), {
+            target: { value: 'Direct' },
+          });
+        });
+
+        const contactInput = screen.getByPlaceholderText('email@example.com hoặc SĐT');
+        await act(async () => {
+          fireEvent.change(contactInput, { target: { value: '091-234-5678' } });
+        });
+
+        const submitButton = screen.getByRole('button', { name: /tạo mới/i });
+        await act(async () => {
+          fireEvent.click(submitButton);
+        });
+
+        await waitFor(() => {
+          expect(mockOnSubmit).toHaveBeenCalled();
+        });
+      });
+    });
+
+    describe('WhatsApp Validation', () => {
+      it('accepts empty WhatsApp field', async () => {
+        render(<RequestForm onSubmit={mockOnSubmit} />);
+
+        await fillRequiredFields();
+        // WhatsApp field is optional - leave empty
+
+        const submitButton = screen.getByRole('button', { name: /tạo mới/i });
+        await act(async () => {
+          fireEvent.click(submitButton);
+        });
+
+        await waitFor(() => {
+          expect(mockOnSubmit).toHaveBeenCalled();
+        });
+      });
+
+      it('accepts valid +84 format in WhatsApp', async () => {
+        render(<RequestForm onSubmit={mockOnSubmit} />);
+
+        await fillRequiredFields();
+        const whatsappInput = screen.getByPlaceholderText('+84...');
+        await act(async () => {
+          fireEvent.change(whatsappInput, { target: { value: '+84912345678' } });
+        });
+
+        const submitButton = screen.getByRole('button', { name: /tạo mới/i });
+        await act(async () => {
+          fireEvent.click(submitButton);
+        });
+
+        await waitFor(() => {
+          expect(mockOnSubmit).toHaveBeenCalled();
+        });
+      });
+
+      it('rejects invalid WhatsApp number', async () => {
+        render(<RequestForm onSubmit={mockOnSubmit} />);
+
+        await fillRequiredFields();
+        const whatsappInput = screen.getByPlaceholderText('+84...');
+        await act(async () => {
+          fireEvent.change(whatsappInput, { target: { value: 'invalid' } });
+          fireEvent.blur(whatsappInput);
+        });
+
+        const submitButton = screen.getByRole('button', { name: /tạo mới/i });
+        await act(async () => {
+          fireEvent.click(submitButton);
+        });
+
+        // Check that form shows validation error (either specific or general)
+        await waitFor(() => {
+          // The validation shows field-level error - check input has error styling
+          const errorLabel = whatsappInput.closest('div')?.querySelector('.text-destructive');
+          expect(errorLabel).toBeInTheDocument();
+        });
+        expect(mockOnSubmit).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('Notes Field Validation', () => {
+      it('accepts notes up to 1000 characters', async () => {
+        render(<RequestForm onSubmit={mockOnSubmit} />);
+
+        await fillRequiredFields();
+        const notesInput = screen.getByPlaceholderText('Ghi chú thêm...');
+        const longNotes = 'A'.repeat(1000);
+        await act(async () => {
+          fireEvent.change(notesInput, { target: { value: longNotes } });
+        });
+
+        const submitButton = screen.getByRole('button', { name: /tạo mới/i });
+        await act(async () => {
+          fireEvent.click(submitButton);
+        });
+
+        await waitFor(() => {
+          expect(mockOnSubmit).toHaveBeenCalled();
+        });
+      });
+
+      it('updates character count as user types', async () => {
+        render(<RequestForm onSubmit={mockOnSubmit} />);
+
+        const notesInput = screen.getByPlaceholderText('Ghi chú thêm...');
+        await act(async () => {
+          fireEvent.change(notesInput, { target: { value: 'Hello World' } });
+        });
+
+        expect(screen.getByText('11/1000 ký tự')).toBeInTheDocument();
+      });
+    });
+  });
 });
