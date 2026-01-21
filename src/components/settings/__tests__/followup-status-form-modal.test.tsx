@@ -4,7 +4,8 @@
  */
 
 // Mock sonner toast - use var to ensure availability in jest.mock()
-var mockToastModule: any;
+// eslint-disable-next-line no-var
+var mockToastModule: Record<string, jest.Mock>;
 
 jest.mock('sonner', () => {
   // Create fresh mocks for each test suite
