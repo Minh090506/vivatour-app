@@ -81,7 +81,7 @@ export function useReports(dateRange: DateRangeOption, customDates?: CustomDateR
         }));
       }
     }
-  }, [dateRange, customDates?.startDate, customDates?.endDate]);
+  }, [dateRange, customDates]);
 
   useEffect(() => {
     // Don't fetch if custom is selected but dates not provided yet
@@ -96,7 +96,7 @@ export function useReports(dateRange: DateRangeOption, customDates?: CustomDateR
     return () => {
       abortRef.current?.abort();
     };
-  }, [fetchAll]);
+  }, [fetchAll, dateRange, customDates?.startDate, customDates?.endDate]);
 
   const refetch = useCallback(() => {
     abortRef.current?.abort();

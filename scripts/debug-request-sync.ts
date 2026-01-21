@@ -6,7 +6,7 @@
 
 import 'dotenv/config';
 import { prisma } from '../src/lib/db';
-import { getSheetData, getSheetConfig } from '../src/lib/google-sheets';
+import { getSheetData } from '../src/lib/google-sheets';
 
 async function main() {
   console.log('=== Debug Request Sync ===\n');

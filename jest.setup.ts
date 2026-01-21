@@ -2,6 +2,7 @@ import '@testing-library/jest-dom';
 
 // Polyfill TextEncoder/TextDecoder for Node.js test environment
 if (typeof global.TextEncoder === 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { TextEncoder, TextDecoder } = require('util');
   Object.assign(global, { TextEncoder, TextDecoder });
 }
@@ -11,7 +12,7 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
   observe: jest.fn(),
   unobserve: jest.fn(),
   disconnect: jest.fn(),
-})) as any;
+})) as unknown as typeof ResizeObserver;
 
 // Mock console.error to reduce noise in tests (optional)
 // const originalError = console.error;

@@ -98,7 +98,7 @@ export function useRevenueReports(
         }));
       }
     }
-  }, [dateRange, customDates?.startDate, customDates?.endDate]);
+  }, [dateRange, customDates]);
 
   useEffect(() => {
     // Don't fetch if custom is selected but dates not provided yet
@@ -113,7 +113,8 @@ export function useRevenueReports(
     return () => {
       abortRef.current?.abort();
     };
-  }, [fetchData, dateRange, customDates?.startDate, customDates?.endDate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchData]);
 
   const refetch = useCallback(() => {
     abortRef.current?.abort();
