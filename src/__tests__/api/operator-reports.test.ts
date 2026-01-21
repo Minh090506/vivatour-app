@@ -41,8 +41,9 @@ describe('GET /api/reports/operator-costs', () => {
 
   beforeAll(() => {
     // Dynamic require after mocks are set up to avoid ESM import issues
-    const module = require('@/app/api/reports/operator-costs/route');
-    getCostReport = module.GET;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const routeModule = require('@/app/api/reports/operator-costs/route');
+    getCostReport = routeModule.GET;
   });
 
   beforeEach(() => {
@@ -211,8 +212,9 @@ describe('GET /api/reports/operator-payments', () => {
 
   beforeAll(() => {
     // Dynamic require after mocks are set up to avoid ESM import issues
-    const module = require('@/app/api/reports/operator-payments/route');
-    getPaymentReport = module.GET;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const routeModule = require('@/app/api/reports/operator-payments/route');
+    getPaymentReport = routeModule.GET;
   });
 
   beforeEach(() => {

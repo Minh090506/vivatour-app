@@ -40,21 +40,22 @@ function createMockRequest(url: string): NextRequest {
 // ============================================
 
 describe('GET /api/reports/dashboard', () => {
-  let GET: any;
+  let GET: (req: NextRequest) => Promise<Response>;
 
   beforeAll(() => {
-    const module = require('@/app/api/reports/dashboard/route');
-    GET = module.GET;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const routeModule = require('@/app/api/reports/dashboard/route');
+    GET = routeModule.GET;
   });
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockAuth.mockResolvedValue(mockSession as any);
+    mockAuth.mockResolvedValue(mockSession);
   });
 
   describe('Authentication & Authorization', () => {
     it('should return 401 when unauthenticated', async () => {
-      mockAuth.mockResolvedValue(null as any);
+      mockAuth.mockResolvedValue(null);
 
       const request = createMockRequest('http://localhost:3000/api/reports/dashboard');
       const response = await GET(request);
@@ -67,7 +68,7 @@ describe('GET /api/reports/dashboard', () => {
     it('should return 403 for SELLER role (no revenue:view)', async () => {
       mockAuth.mockResolvedValue({
         user: { id: 'user-123', role: 'SELLER' }
-      } as any);
+      });
 
       const request = createMockRequest('http://localhost:3000/api/reports/dashboard');
       const response = await GET(request);
@@ -80,7 +81,7 @@ describe('GET /api/reports/dashboard', () => {
     it('should return 403 for OPERATOR role (no revenue:view)', async () => {
       mockAuth.mockResolvedValue({
         user: { id: 'user-123', role: 'OPERATOR' }
-      } as any);
+      });
 
       const request = createMockRequest('http://localhost:3000/api/reports/dashboard');
       const response = await GET(request);
@@ -221,20 +222,21 @@ describe('GET /api/reports/dashboard', () => {
 // ============================================
 
 describe('GET /api/reports/revenue-trend', () => {
-  let GET: any;
+  let GET: (req: NextRequest) => Promise<Response>;
 
   beforeAll(() => {
-    const module = require('@/app/api/reports/revenue-trend/route');
-    GET = module.GET;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const routeModule = require('@/app/api/reports/revenue-trend/route');
+    GET = routeModule.GET;
   });
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockAuth.mockResolvedValue(mockSession as any);
+    mockAuth.mockResolvedValue(mockSession);
   });
 
   it('should return 401 when unauthenticated', async () => {
-    mockAuth.mockResolvedValue(null as any);
+    mockAuth.mockResolvedValue(null);
 
     const request = createMockRequest('http://localhost:3000/api/reports/revenue-trend');
     const response = await GET(request);
@@ -245,7 +247,7 @@ describe('GET /api/reports/revenue-trend', () => {
   it('should return 403 for SELLER role', async () => {
     mockAuth.mockResolvedValue({
       user: { id: 'user-123', role: 'SELLER' }
-    } as any);
+    });
 
     const request = createMockRequest('http://localhost:3000/api/reports/revenue-trend');
     const response = await GET(request);
@@ -313,20 +315,21 @@ describe('GET /api/reports/revenue-trend', () => {
 // ============================================
 
 describe('GET /api/reports/cost-breakdown', () => {
-  let GET: any;
+  let GET: (req: NextRequest) => Promise<Response>;
 
   beforeAll(() => {
-    const module = require('@/app/api/reports/cost-breakdown/route');
-    GET = module.GET;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const routeModule = require('@/app/api/reports/cost-breakdown/route');
+    GET = routeModule.GET;
   });
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockAuth.mockResolvedValue(mockSession as any);
+    mockAuth.mockResolvedValue(mockSession);
   });
 
   it('should return 401 when unauthenticated', async () => {
-    mockAuth.mockResolvedValue(null as any);
+    mockAuth.mockResolvedValue(null);
 
     const request = createMockRequest('http://localhost:3000/api/reports/cost-breakdown');
     const response = await GET(request);
@@ -337,7 +340,7 @@ describe('GET /api/reports/cost-breakdown', () => {
   it('should return 403 for OPERATOR role', async () => {
     mockAuth.mockResolvedValue({
       user: { id: 'user-123', role: 'OPERATOR' }
-    } as any);
+    });
 
     const request = createMockRequest('http://localhost:3000/api/reports/cost-breakdown');
     const response = await GET(request);
@@ -415,20 +418,21 @@ describe('GET /api/reports/cost-breakdown', () => {
 // ============================================
 
 describe('GET /api/reports/funnel', () => {
-  let GET: any;
+  let GET: (req: NextRequest) => Promise<Response>;
 
   beforeAll(() => {
-    const module = require('@/app/api/reports/funnel/route');
-    GET = module.GET;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const routeModule = require('@/app/api/reports/funnel/route');
+    GET = routeModule.GET;
   });
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockAuth.mockResolvedValue(mockSession as any);
+    mockAuth.mockResolvedValue(mockSession);
   });
 
   it('should return 401 when unauthenticated', async () => {
-    mockAuth.mockResolvedValue(null as any);
+    mockAuth.mockResolvedValue(null);
 
     const request = createMockRequest('http://localhost:3000/api/reports/funnel');
     const response = await GET(request);
@@ -439,7 +443,7 @@ describe('GET /api/reports/funnel', () => {
   it('should return 403 for SELLER role', async () => {
     mockAuth.mockResolvedValue({
       user: { id: 'user-123', role: 'SELLER' }
-    } as any);
+    });
 
     const request = createMockRequest('http://localhost:3000/api/reports/funnel');
     const response = await GET(request);
@@ -490,7 +494,7 @@ describe('GET /api/reports/funnel', () => {
     const response = await GET(request);
     const data = await response.json();
 
-    const stageNames = data.data.stages.map((s: any) => s.stage);
+    const stageNames = data.data.stages.map((s: { stage: string }) => s.stage);
     expect(stageNames).toEqual(['LEAD', 'QUOTE', 'FOLLOWUP', 'OUTCOME']);
   });
 
@@ -506,8 +510,8 @@ describe('GET /api/reports/funnel', () => {
     const response = await GET(request);
     const data = await response.json();
 
-    const lead = data.data.stages.find((s: any) => s.stage === 'LEAD');
-    const quote = data.data.stages.find((s: any) => s.stage === 'QUOTE');
+    const lead = data.data.stages.find((s: { stage: string }) => s.stage === 'LEAD');
+    const quote = data.data.stages.find((s: { stage: string }) => s.stage === 'QUOTE');
 
     expect(lead).toHaveProperty('count', 100);
     expect(lead).toHaveProperty('percentage');
@@ -545,8 +549,8 @@ describe('GET /api/reports/funnel', () => {
     expect(data.data.stages.length).toBe(4);
 
     // QUOTE, FOLLOWUP, OUTCOME should have count 0
-    const empty = data.data.stages.filter((s: any) => ['QUOTE', 'FOLLOWUP', 'OUTCOME'].includes(s.stage));
-    empty.forEach((s: any) => {
+    const empty = data.data.stages.filter((s: { stage: string }) => ['QUOTE', 'FOLLOWUP', 'OUTCOME'].includes(s.stage));
+    empty.forEach((s: { count: number }) => {
       expect(s.count).toBe(0);
     });
   });

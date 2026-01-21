@@ -180,9 +180,9 @@ describe('DATE_RANGE_OPTIONS constant', () => {
 
   it('should be readonly array', () => {
     // This test verifies the constant is const by checking if we can modify it
-    // @ts-ignore - Intentionally trying to modify readonly
+    // @ts-expect-error - Intentionally trying to modify readonly
     expect(() => {
-      const arr = DATE_RANGE_OPTIONS as any;
+      const arr = DATE_RANGE_OPTIONS as string[];
       arr.push('newOption');
     }).not.toThrow(); // JS doesn't prevent modification, just TS
   });

@@ -54,10 +54,9 @@ function createMockRequest(
     body: body ? JSON.stringify(body) : undefined,
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return new NextRequest(
     new URL("http://localhost:3000/api/sync/retry"),
-    init as any
+    init as RequestInit
   );
 }
 

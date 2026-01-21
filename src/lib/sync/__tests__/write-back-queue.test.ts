@@ -22,6 +22,7 @@ import {
 // Mock Prisma client - use require to lazy-load mockDeep
 // Note: write-back-queue imports basePrisma to avoid circular dependency
 jest.mock("@/lib/db", () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { mockDeep } = require("jest-mock-extended");
   return {
     basePrisma: mockDeep(),

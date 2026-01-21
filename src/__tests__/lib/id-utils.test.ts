@@ -325,7 +325,7 @@ describe('ID Utilities', () => {
         { revenueId: 'BC-20260108143045-1' },
         { revenueId: 'BC-20260108143045-2' },
       ];
-      mockRevenueFindMany.mockResolvedValue(existingRevenue as any);
+      mockRevenueFindMany.mockResolvedValue(existingRevenue as { revenueId: string }[]);
 
       const date = new Date(2026, 0, 8, 14, 30, 45, 123);
       const result = await generateRevenueId('BC', date);

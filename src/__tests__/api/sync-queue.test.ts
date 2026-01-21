@@ -43,7 +43,7 @@ import { getQueueStats } from "@/lib/sync/write-back-queue";
 function createMockRequest(url: string): NextRequest {
   return new NextRequest(new URL(url, "http://localhost:3000"), {
     method: "GET",
-  } as any);
+  } as RequestInit);
 }
 
 describe("GET /api/sync/queue", () => {

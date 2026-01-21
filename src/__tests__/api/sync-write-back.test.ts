@@ -83,7 +83,7 @@ function createMockRequest(
     method: options?.method || "POST",
     headers,
     body: options?.body,
-  } as any);
+  } as RequestInit);
 }
 
 describe("POST /api/sync/write-back", () => {
