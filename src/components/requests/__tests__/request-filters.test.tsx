@@ -3,7 +3,8 @@
  * Covers: rendering, filter changes, conditional seller filter
  */
 
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { RequestFilters } from '../request-filters';
 import { mockSellers, defaultFilters } from './test-utils';
 import type { RequestFilters as FiltersType } from '@/types';
@@ -185,6 +186,47 @@ describe('RequestFilters', () => {
 
       expect(screen.getByText('Trạng thái')).toBeInTheDocument();
     });
+
+    it('stage select has correct initial state', () => {
+      render(<RequestFilters filters={defaultFilters} onChange={mockOnChange} />);
+
+      // Click the stage select trigger (first combobox)
+      const triggers = screen.getAllByRole('combobox');
+
+      // Verify it starts closed
+      expect(triggers[0]).toHaveAttribute('aria-expanded', 'false');
+      // Has aria-controls for accessibility
+      expect(triggers[0]).toHaveAttribute('aria-controls');
+    });
+
+    it('status select has correct initial state', () => {
+      render(<RequestFilters filters={defaultFilters} onChange={mockOnChange} />);
+
+      // Click the status select trigger (second combobox)
+      const triggers = screen.getAllByRole('combobox');
+
+      // Verify it starts closed
+      expect(triggers[1]).toHaveAttribute('aria-expanded', 'false');
+      expect(triggers[1]).toHaveAttribute('aria-controls');
+    });
+
+    it('displays selected stage value in trigger', () => {
+      const filtersWithStage = { ...defaultFilters, stage: 'LEAD' };
+      render(<RequestFilters filters={filtersWithStage} onChange={mockOnChange} />);
+
+      // The trigger should show the selected value
+      const triggers = screen.getAllByRole('combobox');
+      expect(triggers[0].textContent).toContain('Lead');
+    });
+
+    it('displays selected status value in trigger', () => {
+      const filtersWithStatus = { ...defaultFilters, status: 'BOOKING' };
+      render(<RequestFilters filters={filtersWithStatus} onChange={mockOnChange} />);
+
+      // The trigger should show the selected value
+      const triggers = screen.getAllByRole('combobox');
+      expect(triggers[1].textContent).toContain('Booking');
+    });
   });
 
   describe('Seller Filter', () => {
@@ -200,6 +242,56 @@ describe('RequestFilters', () => {
 
       // Seller section should be rendered
       expect(screen.getByText('Seller')).toBeInTheDocument();
+    });
+
+    it('renders seller combobox when showSellerFilter is true', () => {
+      render(
+        <RequestFilters
+          filters={defaultFilters}
+          onChange={mockOnChange}
+          showSellerFilter={true}
+          sellers={mockSellers}
+        />
+      );
+
+      // Should have 3 comboboxes: stage, status, seller
+      const triggers = screen.getAllByRole('combobox');
+      expect(triggers.length).toBe(3);
+    });
+
+    it('displays selected seller in trigger', () => {
+      const filtersWithSeller = { ...defaultFilters, seller: 's1' };
+      render(
+        <RequestFilters
+          filters={filtersWithSeller}
+          onChange={mockOnChange}
+          showSellerFilter={true}
+          sellers={mockSellers}
+        />
+      );
+
+      // The seller trigger should show the selected seller name
+      const triggers = screen.getAllByRole('combobox');
+      expect(triggers[2].textContent).toContain('Seller One');
+    });
+
+    it('seller combobox has proper aria attributes', () => {
+      render(
+        <RequestFilters
+          filters={defaultFilters}
+          onChange={mockOnChange}
+          showSellerFilter={true}
+          sellers={mockSellers}
+        />
+      );
+
+      // Find seller combobox
+      const triggers = screen.getAllByRole('combobox');
+      const sellerTrigger = triggers[2];
+
+      // Verify proper accessibility attributes
+      expect(sellerTrigger).toHaveAttribute('aria-autocomplete', 'none');
+      expect(sellerTrigger).toHaveAttribute('role', 'combobox');
     });
   });
 
