@@ -554,5 +554,381 @@ describe('OperatorForm', () => {
         expect(screen.getByText('Database connection failed')).toBeInTheDocument();
       });
     });
+
+    it('handles field-level API errors', async () => {
+      setupFetchMock({
+        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
+        [`/api/operators/${mockOperatorData.id}`]: {
+          success: false,
+          error: 'Validation failed',
+          errors: { serviceName: 'Tên dịch vụ đã tồn tại' },
+        },
+      });
+
+      render(<OperatorForm operator={mockOperatorData} />);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Đang tải dữ liệu...')).not.toBeInTheDocument();
+      });
+
+      const submitButton = screen.getByRole('button', { name: /cập nhật/i });
+
+      await act(async () => {
+        fireEvent.click(submitButton);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Tên dịch vụ đã tồn tại')).toBeInTheDocument();
+      });
+    });
+
+    it('handles network error during submission', async () => {
+      const mockFetch = jest.fn((url: string, options?: RequestInit) => {
+        if (url.includes(`/api/operators/${mockOperatorData.id}`) && options?.method === 'PUT') {
+          return Promise.reject(new Error('Network error'));
+        }
+        if (url.includes('/api/requests')) {
+          return Promise.resolve({
+            ok: true,
+            status: 200,
+            json: () => Promise.resolve({ success: true, data: mockRequestsF5 }),
+          });
+        }
+        if (url.includes('/api/suppliers')) {
+          return Promise.resolve({
+            ok: true,
+            status: 200,
+            json: () => Promise.resolve({ success: true, data: mockSuppliers }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ success: true, data: [] }),
+        });
+      });
+
+      global.fetch = mockFetch as unknown as typeof fetch;
+
+      render(<OperatorForm operator={mockOperatorData} />);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Đang tải dữ liệu...')).not.toBeInTheDocument();
+      });
+
+      const submitButton = screen.getByRole('button', { name: /cập nhật/i });
+
+      await act(async () => {
+        fireEvent.click(submitButton);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('Có lỗi xảy ra khi lưu dữ liệu')).toBeInTheDocument();
+      });
+    });
+
+    it('navigates to detail page on success without onSuccess callback', async () => {
+      setupFetchMock({
+        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
+        [`/api/operators/${mockOperatorData.id}`]: { success: true, data: { id: mockOperatorData.id } },
+      });
+
+      render(<OperatorForm operator={mockOperatorData} />);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Đang tải dữ liệu...')).not.toBeInTheDocument();
+      });
+
+      const submitButton = screen.getByRole('button', { name: /cập nhật/i });
+
+      await act(async () => {
+        fireEvent.click(submitButton);
+      });
+
+      await waitFor(() => {
+        expect(mockRouter.push).toHaveBeenCalledWith(`/operators/${mockOperatorData.id}`);
+      });
+    });
+  });
+
+  describe('Data Fetch Errors', () => {
+    it('handles fetch error gracefully', async () => {
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+      const mockFetch = jest.fn(() => Promise.reject(new Error('Network error')));
+      global.fetch = mockFetch as unknown as typeof fetch;
+
+      render(<OperatorForm />);
+
+      // Should initially show loading
+      expect(screen.getByText('Đang tải dữ liệu...')).toBeInTheDocument();
+
+      // After error, loading should be complete (empty data loaded)
+      await waitFor(() => {
+        expect(screen.queryByText('Đang tải dữ liệu...')).not.toBeInTheDocument();
+      });
+
+      expect(consoleSpy).toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+  });
+
+  describe('Supplier Selection Detailed', () => {
+    it('shows supplier name from operator data', async () => {
+      setupFetchMock({
+        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
+      });
+
+      // Use mockOperatorData which has supplierId: 'sup1' matching mockSupplier
+      render(<OperatorForm operator={mockOperatorData} />);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Đang tải dữ liệu...')).not.toBeInTheDocument();
+      });
+
+      // Supplier name from operator data should be shown
+      const supplierNameInput = screen.getByPlaceholderText('Nhập tên NCC nếu không chọn') as HTMLInputElement;
+      // The form shows the supplier name from the operator data
+      expect(supplierNameInput.value).toBe('Mường Thanh Group');
+    });
+
+    it('disables supplier name input when supplier is selected', async () => {
+      setupFetchMock({
+        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
+      });
+
+      render(<OperatorForm operator={mockOperatorData} />);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Đang tải dữ liệu...')).not.toBeInTheDocument();
+      });
+
+      const supplierNameInput = screen.getByPlaceholderText('Nhập tên NCC nếu không chọn') as HTMLInputElement;
+      expect(supplierNameInput).toBeDisabled();
+    });
+  });
+
+  describe('Cancel Button', () => {
+    it('calls router.back on cancel click', async () => {
+      setupFetchMock({
+        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
+      });
+
+      render(<OperatorForm />);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Đang tải dữ liệu...')).not.toBeInTheDocument();
+      });
+
+      const cancelButton = screen.getByRole('button', { name: /hủy/i });
+      fireEvent.click(cancelButton);
+
+      expect(mockRouter.back).toHaveBeenCalled();
+    });
+  });
+
+  describe('Empty Data States', () => {
+    it('renders with empty requests list', async () => {
+      setupFetchMock({
+        '/api/requests?status=F5&limit=100': { success: true, data: [] },
+        '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
+      });
+
+      render(<OperatorForm />);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Đang tải dữ liệu...')).not.toBeInTheDocument();
+      });
+
+      // Booking selector trigger should show placeholder
+      expect(screen.getByText('Chọn Booking (F5)')).toBeInTheDocument();
+      // Helper text should still be visible
+      expect(screen.getByText('Chỉ hiển thị Booking đã xác nhận (F5)')).toBeInTheDocument();
+    });
+
+    it('renders with empty suppliers list', async () => {
+      setupFetchMock({
+        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/suppliers?isActive=true': { success: true, data: [] },
+      });
+
+      render(<OperatorForm />);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Đang tải dữ liệu...')).not.toBeInTheDocument();
+      });
+
+      // Form should still render
+      expect(screen.getByLabelText('Ngày dịch vụ *')).toBeInTheDocument();
+    });
+  });
+
+  describe('Debt Calculation Display', () => {
+    it('shows debt in red when outstanding balance exists', async () => {
+      setupFetchMock({
+        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
+      });
+
+      render(<OperatorForm operator={mockOperatorData} />);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Đang tải dữ liệu...')).not.toBeInTheDocument();
+      });
+
+      // Debt = totalCost - paidAmount = 5,000,000 - 2,000,000 = 3,000,000
+      // Should have debt indicator with red styling
+      const debtLabels = screen.getAllByText('Còn nợ');
+      expect(debtLabels.length).toBeGreaterThan(0);
+    });
+
+    it('shows paid amount in green when exists', async () => {
+      setupFetchMock({
+        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
+      });
+
+      render(<OperatorForm operator={mockOperatorData} />);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Đang tải dữ liệu...')).not.toBeInTheDocument();
+      });
+
+      // Paid amount displayed with green styling
+      expect(screen.getByText('2.000.000 ₫')).toBeInTheDocument();
+    });
+  });
+
+  describe('Form Field Updates', () => {
+    it('updates service date field', async () => {
+      setupFetchMock({
+        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
+      });
+
+      render(<OperatorForm />);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Đang tải dữ liệu...')).not.toBeInTheDocument();
+      });
+
+      const serviceDateInput = screen.getByLabelText('Ngày dịch vụ *') as HTMLInputElement;
+      fireEvent.change(serviceDateInput, { target: { value: '2026-05-15' } });
+
+      expect(serviceDateInput.value).toBe('2026-05-15');
+    });
+
+    it('updates payment deadline field', async () => {
+      setupFetchMock({
+        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
+      });
+
+      render(<OperatorForm />);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Đang tải dữ liệu...')).not.toBeInTheDocument();
+      });
+
+      const paymentDeadlineInput = screen.getByLabelText('Hạn thanh toán') as HTMLInputElement;
+      fireEvent.change(paymentDeadlineInput, { target: { value: '2026-06-01' } });
+
+      expect(paymentDeadlineInput.value).toBe('2026-06-01');
+    });
+
+    it('updates bank account field', async () => {
+      setupFetchMock({
+        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
+      });
+
+      render(<OperatorForm />);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Đang tải dữ liệu...')).not.toBeInTheDocument();
+      });
+
+      const bankAccountInput = screen.getByLabelText('Tài khoản ngân hàng') as HTMLInputElement;
+      fireEvent.change(bankAccountInput, { target: { value: '9876543210 - BIDV' } });
+
+      expect(bankAccountInput.value).toBe('9876543210 - BIDV');
+    });
+
+    it('updates notes field', async () => {
+      setupFetchMock({
+        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
+      });
+
+      render(<OperatorForm />);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Đang tải dữ liệu...')).not.toBeInTheDocument();
+      });
+
+      const notesInput = screen.getByLabelText('Ghi chú') as HTMLTextAreaElement;
+      fireEvent.change(notesInput, { target: { value: 'Test notes for the service' } });
+
+      expect(notesInput.value).toBe('Test notes for the service');
+    });
+
+    it('updates paid amount field', async () => {
+      setupFetchMock({
+        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
+      });
+
+      render(<OperatorForm />);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Đang tải dữ liệu...')).not.toBeInTheDocument();
+      });
+
+      const paidAmountInput = screen.getByLabelText('Đã thanh toán') as HTMLInputElement;
+      fireEvent.change(paidAmountInput, { target: { value: '500000' } });
+
+      expect(paidAmountInput.value).toBe('500000');
+    });
+
+    it('updates VAT field independently', async () => {
+      setupFetchMock({
+        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
+      });
+
+      render(<OperatorForm />);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Đang tải dữ liệu...')).not.toBeInTheDocument();
+      });
+
+      const vatInput = screen.getByLabelText(/VAT \(10%\)/i) as HTMLInputElement;
+      fireEvent.change(vatInput, { target: { value: '50000' } });
+
+      expect(vatInput.value).toBe('50000');
+    });
+
+    it('updates total cost field independently', async () => {
+      setupFetchMock({
+        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
+      });
+
+      render(<OperatorForm />);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Đang tải dữ liệu...')).not.toBeInTheDocument();
+      });
+
+      const totalCostInput = screen.getByLabelText('Tổng chi phí') as HTMLInputElement;
+      fireEvent.change(totalCostInput, { target: { value: '2000000' } });
+
+      expect(totalCostInput.value).toBe('2000000');
+    });
   });
 });

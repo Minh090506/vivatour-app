@@ -305,5 +305,254 @@ describe('OperatorHistoryPanel', () => {
 
       expect(screen.getByText('Direct value')).toBeInTheDocument();
     });
+
+    it('handles empty changes object', () => {
+      const entry = createMockHistoryEntry({
+        action: 'UPDATE',
+        changes: {},
+      });
+      render(<OperatorHistoryPanel history={[entry]} />);
+
+      // Should still render the entry without crashing
+      expect(screen.getByText('Cập nhật')).toBeInTheDocument();
+    });
+
+    it('handles object values in changes', () => {
+      const entry = createMockHistoryEntry({
+        action: 'UPDATE',
+        changes: {
+          customField: { nested: 'value' },
+        },
+      });
+      render(<OperatorHistoryPanel history={[entry]} />);
+
+      // Should JSON stringify the object
+      expect(screen.getByText(/nested/)).toBeInTheDocument();
+    });
+  });
+
+  describe('All Action Types', () => {
+    it('displays UNLOCK_KT action correctly', () => {
+      const entry = createMockHistoryEntry({
+        action: 'UNLOCK_KT',
+        changes: {
+          lockKT: { before: true, after: false },
+          tier: 'KT',
+          month: '2026-01',
+        },
+      });
+      render(<OperatorHistoryPanel history={[entry]} />);
+
+      expect(screen.getByText('Mở khóa KT')).toBeInTheDocument();
+    });
+
+    it('displays UNLOCK_ADMIN action correctly', () => {
+      const entry = createMockHistoryEntry({
+        action: 'UNLOCK_ADMIN',
+        changes: {
+          lockAdmin: { before: true, after: false },
+          tier: 'ADMIN',
+          month: '2026-01',
+        },
+      });
+      render(<OperatorHistoryPanel history={[entry]} />);
+
+      expect(screen.getByText('Mở khóa Admin')).toBeInTheDocument();
+    });
+
+    it('displays LOCK_FINAL action correctly', () => {
+      const entry = createMockHistoryEntry({
+        action: 'LOCK_FINAL',
+        changes: {
+          lockFinal: { before: false, after: true },
+          tier: 'FINAL',
+          month: '2026-01',
+        },
+      });
+      render(<OperatorHistoryPanel history={[entry]} />);
+
+      expect(screen.getByText('Khóa Cuối')).toBeInTheDocument();
+    });
+
+    it('displays UNLOCK_FINAL action correctly', () => {
+      const entry = createMockHistoryEntry({
+        action: 'UNLOCK_FINAL',
+        changes: {
+          lockFinal: { before: true, after: false },
+          tier: 'FINAL',
+          month: '2026-01',
+        },
+      });
+      render(<OperatorHistoryPanel history={[entry]} />);
+
+      expect(screen.getByText('Mở khóa Cuối')).toBeInTheDocument();
+    });
+
+    it('displays legacy LOCK action correctly', () => {
+      const entry = createMockHistoryEntry({
+        action: 'LOCK',
+        changes: {
+          isLocked: { before: false, after: true },
+        },
+      });
+      render(<OperatorHistoryPanel history={[entry]} />);
+
+      expect(screen.getByText('Khóa')).toBeInTheDocument();
+    });
+
+    it('displays legacy UNLOCK action correctly', () => {
+      const entry = createMockHistoryEntry({
+        action: 'UNLOCK',
+        changes: {
+          isLocked: { before: true, after: false },
+        },
+      });
+      render(<OperatorHistoryPanel history={[entry]} />);
+
+      expect(screen.getByText('Mở khóa')).toBeInTheDocument();
+    });
+
+    it('handles unknown action gracefully', () => {
+      const entry = createMockHistoryEntry({
+        action: 'UNKNOWN_ACTION' as 'CREATE',
+        changes: {
+          someField: 'value',
+        },
+      });
+      render(<OperatorHistoryPanel history={[entry]} />);
+
+      // Should show the action name as-is
+      expect(screen.getByText('UNKNOWN_ACTION')).toBeInTheDocument();
+    });
+  });
+
+  describe('Color Coding', () => {
+    it('applies green border for CREATE action', () => {
+      render(<OperatorHistoryPanel history={[mockOperatorHistoryEntry]} />);
+
+      // Find badge with green styling
+      const badge = screen.getByText('Tạo mới').closest('[class*="border-green"]');
+      expect(badge).toBeInTheDocument();
+    });
+
+    it('applies blue border for UPDATE action', () => {
+      render(<OperatorHistoryPanel history={[mockUpdateHistoryEntry]} />);
+
+      // Find badge with blue styling
+      const badge = screen.getByText('Cập nhật').closest('[class*="border-blue"]');
+      expect(badge).toBeInTheDocument();
+    });
+
+    it('applies red border for DELETE action', () => {
+      const deleteEntry = createMockHistoryEntry({
+        action: 'DELETE',
+        changes: { deleted: true },
+      });
+      render(<OperatorHistoryPanel history={[deleteEntry]} />);
+
+      // Find badge with red styling
+      const badge = screen.getByText('Xóa').closest('[class*="border-red"]');
+      expect(badge).toBeInTheDocument();
+    });
+
+    it('applies amber border for LOCK_KT action', () => {
+      render(<OperatorHistoryPanel history={[mockLockKTHistoryEntry]} />);
+
+      // Find badge with amber styling
+      const badge = screen.getByText('Khóa KT').closest('[class*="border-amber"]');
+      expect(badge).toBeInTheDocument();
+    });
+
+    it('applies emerald border for APPROVE action', () => {
+      const approveEntry = createMockHistoryEntry({
+        action: 'APPROVE',
+        changes: { paymentStatus: { before: 'PENDING', after: 'PAID' } },
+      });
+      render(<OperatorHistoryPanel history={[approveEntry]} />);
+
+      // Find badge with emerald styling
+      const badge = screen.getByText('Duyệt TT').closest('[class*="border-emerald"]');
+      expect(badge).toBeInTheDocument();
+    });
+  });
+
+  describe('Tier Lock Field Labels', () => {
+    it('translates 3-tier lock field names correctly', () => {
+      const entry = createMockHistoryEntry({
+        action: 'UPDATE',
+        changes: {
+          lockKT: { before: false, after: true },
+          lockKTAt: { before: null, after: '2026-01-15T10:00:00' },
+          lockKTBy: { before: null, after: 'admin' },
+        },
+      });
+      render(<OperatorHistoryPanel history={[entry]} />);
+
+      expect(screen.getByText('Khóa KT:')).toBeInTheDocument();
+      expect(screen.getByText('Ngày khóa KT:')).toBeInTheDocument();
+      expect(screen.getByText('Người khóa KT:')).toBeInTheDocument();
+    });
+
+    it('translates lockAdmin field names correctly', () => {
+      const entry = createMockHistoryEntry({
+        action: 'UPDATE',
+        changes: {
+          lockAdmin: { before: false, after: true },
+          lockAdminAt: { before: null, after: '2026-01-16T10:00:00' },
+        },
+      });
+      render(<OperatorHistoryPanel history={[entry]} />);
+
+      expect(screen.getByText('Khóa Admin:')).toBeInTheDocument();
+      expect(screen.getByText('Ngày khóa Admin:')).toBeInTheDocument();
+    });
+
+    it('translates lockFinal field names correctly', () => {
+      const entry = createMockHistoryEntry({
+        action: 'UPDATE',
+        changes: {
+          lockFinal: { before: false, after: true },
+          lockFinalAt: { before: null, after: '2026-01-17T10:00:00' },
+        },
+      });
+      render(<OperatorHistoryPanel history={[entry]} />);
+
+      expect(screen.getByText('Khóa Cuối:')).toBeInTheDocument();
+      expect(screen.getByText('Ngày khóa Cuối:')).toBeInTheDocument();
+    });
+  });
+
+  describe('Scroll Area', () => {
+    it('renders scroll area when history has entries', () => {
+      const { container } = render(
+        <OperatorHistoryPanel history={mockOperatorHistoryEntries} />
+      );
+
+      // ScrollArea should be present
+      const scrollArea = container.querySelector('[data-radix-scroll-area-viewport]');
+      expect(scrollArea).toBeInTheDocument();
+    });
+  });
+
+  describe('Timeline Visual Elements', () => {
+    it('renders timeline dots for each entry', () => {
+      const { container } = render(
+        <OperatorHistoryPanel history={mockOperatorHistoryEntries} />
+      );
+
+      // Timeline dots should match entry count
+      const timelineDots = container.querySelectorAll('.rounded-full.bg-muted');
+      expect(timelineDots.length).toBe(mockOperatorHistoryEntries.length);
+    });
+
+    it('renders left border for timeline', () => {
+      const { container } = render(
+        <OperatorHistoryPanel history={mockOperatorHistoryEntries} />
+      );
+
+      // Timeline line (border-l-2)
+      const timelineLines = container.querySelectorAll('.border-l-2');
+      expect(timelineLines.length).toBe(mockOperatorHistoryEntries.length);
+    });
   });
 });

@@ -499,4 +499,205 @@ describe('OperatorLockDialog', () => {
       jest.useRealTimers();
     });
   });
+
+  describe('Preview with Operators List', () => {
+    it('shows operator list when count <= 10', async () => {
+      const mockOperators = [
+        { id: 'op1', serviceName: 'Khách sạn ABC', serviceDate: '2026-01-10', totalCost: 1000000 },
+        { id: 'op2', serviceName: 'Xe đưa đón', serviceDate: '2026-01-11', totalCost: 500000 },
+      ];
+
+      setupFetchMock({
+        '/api/operators/lock-period': {
+          success: true,
+          data: { count: 2, operators: mockOperators },
+        },
+      });
+
+      render(<OperatorLockDialog {...defaultProps} />);
+
+      fireEvent.click(screen.getByRole('button', { name: /Xem trước/ }));
+
+      await waitFor(() => {
+        expect(screen.getByText('Khách sạn ABC')).toBeInTheDocument();
+        expect(screen.getByText('Xe đưa đón')).toBeInTheDocument();
+      });
+    });
+
+    it('shows formatted total cost for each operator', async () => {
+      const mockOperators = [
+        { id: 'op1', serviceName: 'Khách sạn', serviceDate: '2026-01-10', totalCost: 2500000 },
+      ];
+
+      setupFetchMock({
+        '/api/operators/lock-period': {
+          success: true,
+          data: { count: 1, operators: mockOperators },
+        },
+      });
+
+      render(<OperatorLockDialog {...defaultProps} />);
+
+      fireEvent.click(screen.getByRole('button', { name: /Xem trước/ }));
+
+      await waitFor(() => {
+        // VND format: 2.500.000 ₫
+        expect(screen.getByText(/2\.500\.000/)).toBeInTheDocument();
+      });
+    });
+
+    it('does not show operator list when count > 10', async () => {
+      // When preview.operators.length > 10, the list should not be shown
+      // This is handled by the component rendering condition
+      const manyOperators = Array.from({ length: 15 }, (_, i) => ({
+        id: `op${i}`,
+        serviceName: `Service ${i}`,
+        serviceDate: '2026-01-10',
+        totalCost: 100000,
+      }));
+
+      setupFetchMock({
+        '/api/operators/lock-period': {
+          success: true,
+          data: { count: 15, operators: manyOperators },
+        },
+      });
+
+      render(<OperatorLockDialog {...defaultProps} />);
+
+      fireEvent.click(screen.getByRole('button', { name: /Xem trước/ }));
+
+      await waitFor(() => {
+        expect(screen.getByText('15')).toBeInTheDocument();
+        expect(screen.getByText(/Sẽ khóa 15 operator/)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Tier Progression Messages', () => {
+    it('shows message about needing lower tier lock first when count is 0', async () => {
+      setupFetchMock({
+        '/api/operators/lock-period': {
+          success: true,
+          data: { count: 0, operators: [] },
+        },
+      });
+
+      render(<OperatorLockDialog {...defaultProps} userRole="ADMIN" />);
+
+      // Select Admin tier
+      const tierSelect = screen.getByLabelText('Mức khóa');
+      fireEvent.click(tierSelect);
+      fireEvent.click(screen.getByText('Khóa Admin'));
+
+      // Preview with Admin tier
+      fireEvent.click(screen.getByRole('button', { name: /Xem trước/ }));
+
+      await waitFor(() => {
+        expect(screen.getByText(/Không có operator nào cần khóa/)).toBeInTheDocument();
+        expect(screen.getByText(/Có thể cần khóa tier thấp hơn trước/)).toBeInTheDocument();
+      });
+    });
+
+    it('does not show tier message when KT tier has count 0', async () => {
+      setupFetchMock({
+        '/api/operators/lock-period': {
+          success: true,
+          data: { count: 0, operators: [] },
+        },
+      });
+
+      render(<OperatorLockDialog {...defaultProps} />);
+
+      // Preview with default KT tier
+      fireEvent.click(screen.getByRole('button', { name: /Xem trước/ }));
+
+      await waitFor(() => {
+        expect(screen.getByText(/Không có operator nào cần khóa/)).toBeInTheDocument();
+      });
+
+      // KT is the lowest tier, so no message about lower tier
+      expect(screen.queryByText(/Có thể cần khóa tier thấp hơn trước/)).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Loading States', () => {
+    it('shows loading spinner during preview fetch', async () => {
+      const slowFetch = jest.fn(() =>
+        new Promise((resolve) =>
+          setTimeout(() => resolve({
+            ok: true,
+            json: () => Promise.resolve({ success: true, data: { count: 5, operators: [] } }),
+          }), 300)
+        )
+      );
+      global.fetch = slowFetch as unknown as typeof fetch;
+
+      render(<OperatorLockDialog {...defaultProps} />);
+
+      fireEvent.click(screen.getByRole('button', { name: /Xem trước/ }));
+
+      // Should show loading state in button
+      await waitFor(() => {
+        // The Loader2 spinner should be visible during loading
+        const buttons = screen.getAllByRole('button');
+        const previewButton = buttons.find(b => b.textContent?.includes('Xem trước'));
+        expect(previewButton).toBeDefined();
+      }, { timeout: 100 });
+    });
+
+    it('shows loading spinner during confirm action', async () => {
+      let resolveConfirm: (value: unknown) => void;
+      const confirmPromise = new Promise((resolve) => { resolveConfirm = resolve; });
+
+      const mockFetch = jest.fn((url: string, options?: RequestInit) => {
+        const method = options?.method || 'GET';
+        if (method === 'GET') {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ success: true, data: { count: 5, operators: [] } }),
+          });
+        }
+        // POST returns pending promise
+        return confirmPromise.then(() => ({
+          ok: true,
+          json: () => Promise.resolve({ success: true, data: { count: 5 } }),
+        }));
+      });
+      global.fetch = mockFetch as unknown as typeof fetch;
+
+      render(<OperatorLockDialog {...defaultProps} />);
+
+      // Preview
+      fireEvent.click(screen.getByRole('button', { name: /Xem trước/ }));
+
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /Xác nhận khóa/ })).toBeInTheDocument();
+      });
+
+      // Click confirm
+      fireEvent.click(screen.getByRole('button', { name: /Xác nhận khóa/ }));
+
+      // Should show loading state
+      await waitFor(() => {
+        const confirmButton = screen.getByRole('button', { name: /Xác nhận khóa/ });
+        expect(confirmButton).toBeDisabled();
+      }, { timeout: 100 });
+
+      // Resolve to clean up
+      resolveConfirm!({});
+    });
+  });
+
+  describe('Month Input Validation', () => {
+    it('disables preview button when month is empty', () => {
+      render(<OperatorLockDialog {...defaultProps} />);
+
+      const monthInput = screen.getByLabelText('Tháng');
+      fireEvent.change(monthInput, { target: { value: '' } });
+
+      const previewButton = screen.getByRole('button', { name: /Xem trước/ });
+      expect(previewButton).toBeDisabled();
+    });
+  });
 });

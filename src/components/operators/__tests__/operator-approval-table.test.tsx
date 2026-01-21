@@ -424,4 +424,189 @@ describe('OperatorApprovalTable', () => {
       });
     });
   });
+
+  describe('Row Highlighting', () => {
+    it('highlights overdue rows with red background', () => {
+      const { container } = render(
+        <OperatorApprovalTable
+          items={[mockOverdueApprovalItem]}
+          onApprove={mockOnApprove}
+        />
+      );
+
+      // Overdue row should have bg-red-50 class
+      const overdueRows = container.querySelectorAll('tr.bg-red-50');
+      expect(overdueRows.length).toBeGreaterThan(0);
+    });
+
+    it('does not highlight non-overdue rows with red', () => {
+      const item = createMockApprovalItem({
+        id: 'test1',
+        daysOverdue: -5, // 5 days until due
+      });
+
+      const { container } = render(
+        <OperatorApprovalTable
+          items={[item]}
+          onApprove={mockOnApprove}
+        />
+      );
+
+      // Non-overdue row should not have red background
+      const dataRows = container.querySelectorAll('tbody tr');
+      expect(dataRows[0]).not.toHaveClass('bg-red-50');
+    });
+  });
+
+  describe('Approve Button States', () => {
+    it('shows button as disabled during approval process', async () => {
+      const slowOnApprove = jest.fn().mockImplementation(
+        () => new Promise((resolve) => setTimeout(resolve, 500))
+      );
+
+      render(
+        <OperatorApprovalTable
+          items={[mockApprovalQueueItems[0]]}
+          onApprove={slowOnApprove}
+        />
+      );
+
+      const approveButton = screen.getByText('Duyệt');
+      fireEvent.click(approveButton);
+
+      // Button should be disabled during approval
+      await waitFor(() => {
+        expect(approveButton).toBeDisabled();
+      });
+    });
+
+    it('shows "Đang xử lý..." text during batch approval', async () => {
+      const slowOnApprove = jest.fn().mockImplementation(
+        () => new Promise((resolve) => setTimeout(resolve, 500))
+      );
+
+      render(
+        <OperatorApprovalTable
+          items={mockApprovalQueueItems}
+          onApprove={slowOnApprove}
+        />
+      );
+
+      const checkboxes = screen.getAllByRole('checkbox');
+      fireEvent.click(checkboxes[1]);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Đã chọn 1 dịch vụ/)).toBeInTheDocument();
+      });
+
+      const batchApproveButton = screen.getByText('Duyệt tất cả');
+      fireEvent.click(batchApproveButton);
+
+      // Should show processing text
+      await waitFor(() => {
+        expect(screen.getByText('Đang xử lý...')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Data Formatting', () => {
+    it('displays supplier name or dash when empty', () => {
+      const itemWithoutSupplier = createMockApprovalItem({
+        id: 'test1',
+        supplierName: null,
+      });
+
+      render(
+        <OperatorApprovalTable
+          items={[itemWithoutSupplier]}
+          onApprove={mockOnApprove}
+        />
+      );
+
+      // Should show dash for missing supplier
+      const cells = screen.getAllByRole('cell');
+      const hasEmptySupplierCell = Array.from(cells).some(cell => cell.textContent === '-');
+      expect(hasEmptySupplierCell).toBe(true);
+    });
+
+    it('displays payment deadline or dash when empty', () => {
+      const itemWithoutDeadline = createMockApprovalItem({
+        id: 'test1',
+        paymentDeadline: null,
+      });
+
+      render(
+        <OperatorApprovalTable
+          items={[itemWithoutDeadline]}
+          onApprove={mockOnApprove}
+        />
+      );
+
+      // Should show dash for missing deadline
+      const cells = screen.getAllByRole('cell');
+      const hasDashCell = Array.from(cells).some(cell => cell.textContent === '-');
+      expect(hasDashCell).toBe(true);
+    });
+
+    it('formats paidAmount in green color', () => {
+      const item = createMockApprovalItem({
+        id: 'test1',
+        paidAmount: 1000000,
+      });
+
+      const { container } = render(
+        <OperatorApprovalTable
+          items={[item]}
+          onApprove={mockOnApprove}
+        />
+      );
+
+      // Find cells with green text for paid amount
+      const greenCells = container.querySelectorAll('.text-green-600');
+      expect(greenCells.length).toBeGreaterThan(0);
+    });
+
+    it('displays service type in subtitle', () => {
+      const item = createMockApprovalItem({
+        id: 'test1',
+        serviceType: 'HOTEL',
+        serviceName: 'Khách sạn ABC',
+      });
+
+      render(
+        <OperatorApprovalTable
+          items={[item]}
+          onApprove={mockOnApprove}
+        />
+      );
+
+      expect(screen.getByText('HOTEL')).toBeInTheDocument();
+      expect(screen.getByText('Khách sạn ABC')).toBeInTheDocument();
+    });
+  });
+
+  describe('Debt Display', () => {
+    it('displays zero debt in green', () => {
+      const itemWithZeroDebt = createMockApprovalItem({
+        id: 'test1',
+        debt: 0,
+        totalCost: 1000000,
+        paidAmount: 1000000,
+      });
+
+      const { container } = render(
+        <OperatorApprovalTable
+          items={[itemWithZeroDebt]}
+          onApprove={mockOnApprove}
+        />
+      );
+
+      // Zero debt should show in green
+      const greenCells = container.querySelectorAll('.text-green-600');
+      const hasZeroDebt = Array.from(greenCells).some(cell =>
+        cell.textContent?.includes('0')
+      );
+      expect(hasZeroDebt).toBe(true);
+    });
+  });
 });
