@@ -160,4 +160,234 @@ describe('RevenueSummaryCard', () => {
       expect(screen.getAllByText('3 giao dich').length).toBeGreaterThanOrEqual(1);
     });
   });
+
+  describe('Calculation Accuracy', () => {
+    it('calculates tier-specific amounts correctly for KT only', () => {
+      const revenues = [
+        { amountVND: 1000000, paymentType: 'DEPOSIT', lockKT: true, lockAdmin: false, lockFinal: false },
+        { amountVND: 2000000, paymentType: 'DEPOSIT', lockKT: true, lockAdmin: false, lockFinal: false },
+      ];
+
+      render(<RevenueSummaryCard revenues={revenues} />);
+
+      // KT count should be 2
+      const breakdown = screen.getByText('Phan bo khoa').parentElement?.parentElement;
+      expect(breakdown?.textContent).toContain('2');
+    });
+
+    it('calculates tier-specific amounts correctly for Admin tier', () => {
+      const revenues = [
+        { amountVND: 1000000, paymentType: 'DEPOSIT', lockKT: true, lockAdmin: true, lockFinal: false },
+        { amountVND: 2000000, paymentType: 'FULL_PAYMENT', lockKT: true, lockAdmin: true, lockFinal: false },
+        { amountVND: 3000000, paymentType: 'PARTIAL', lockKT: true, lockAdmin: true, lockFinal: false },
+      ];
+
+      render(<RevenueSummaryCard revenues={revenues} />);
+
+      // Admin tier should show 3 items
+      const breakdown = screen.getByText('Phan bo khoa').parentElement?.parentElement;
+      expect(breakdown?.textContent).toContain('Admin');
+      expect(breakdown?.textContent).toContain('3');
+    });
+
+    it('calculates tier-specific amounts correctly for Final tier', () => {
+      const revenues = [
+        { amountVND: 5000000, paymentType: 'DEPOSIT', lockKT: true, lockAdmin: true, lockFinal: true },
+      ];
+
+      render(<RevenueSummaryCard revenues={revenues} />);
+
+      // Final count should be 1
+      const breakdown = screen.getByText('Phan bo khoa').parentElement?.parentElement;
+      expect(breakdown?.textContent).toContain('Cuoi');
+      expect(breakdown?.textContent).toContain('1');
+    });
+
+    it('handles multiple refunds correctly', () => {
+      const revenues = [
+        { amountVND: 10000000, paymentType: 'FULL_PAYMENT', lockKT: false, lockAdmin: false, lockFinal: false },
+        { amountVND: 1000000, paymentType: 'REFUND', lockKT: false, lockAdmin: false, lockFinal: false },
+        { amountVND: 500000, paymentType: 'REFUND', lockKT: false, lockAdmin: false, lockFinal: false },
+        { amountVND: 500000, paymentType: 'REFUND', lockKT: false, lockAdmin: false, lockFinal: false },
+      ];
+
+      render(<RevenueSummaryCard revenues={revenues} />);
+
+      // Total: 10M - 1M - 0.5M - 0.5M = 8M
+      expect(screen.getByText(/8\.000\.000/)).toBeInTheDocument();
+    });
+
+    it('calculates locked refunds correctly', () => {
+      const revenues = [
+        { amountVND: 5000000, paymentType: 'DEPOSIT', lockKT: true, lockAdmin: false, lockFinal: false },
+        { amountVND: 1000000, paymentType: 'REFUND', lockKT: true, lockAdmin: false, lockFinal: false },
+      ];
+
+      render(<RevenueSummaryCard revenues={revenues} />);
+
+      // Locked: 5M - 1M = 4M (appears in both total and locked cards)
+      const amounts = screen.getAllByText(/4\.000\.000/);
+      expect(amounts.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('handles large amounts correctly', () => {
+      const revenues = [
+        { amountVND: 999999999, paymentType: 'FULL_PAYMENT', lockKT: false, lockAdmin: false, lockFinal: false },
+      ];
+
+      render(<RevenueSummaryCard revenues={revenues} />);
+
+      // Should format correctly with Vietnamese number format
+      expect(screen.getByText(/999\.999\.999/)).toBeInTheDocument();
+    });
+
+    it('handles zero amounts', () => {
+      const revenues = [
+        { amountVND: 0, paymentType: 'DEPOSIT', lockKT: false, lockAdmin: false, lockFinal: false },
+      ];
+
+      render(<RevenueSummaryCard revenues={revenues} />);
+
+      // Should show 0
+      const zeroValues = screen.getAllByText(/^0 d$/);
+      expect(zeroValues.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('counts different payment types correctly', () => {
+      const revenues = [
+        { amountVND: 1000000, paymentType: 'DEPOSIT', lockKT: false, lockAdmin: false, lockFinal: false },
+        { amountVND: 2000000, paymentType: 'DEPOSIT', lockKT: false, lockAdmin: false, lockFinal: false },
+        { amountVND: 3000000, paymentType: 'FULL_PAYMENT', lockKT: false, lockAdmin: false, lockFinal: false },
+        { amountVND: 4000000, paymentType: 'PARTIAL', lockKT: false, lockAdmin: false, lockFinal: false },
+      ];
+
+      render(<RevenueSummaryCard revenues={revenues} />);
+
+      // Total: 4 transactions, 2 deposits
+      expect(screen.getByText('4 giao dich')).toBeInTheDocument();
+      expect(screen.getByText('2 giao dich')).toBeInTheDocument();
+    });
+
+    it('excludes refunds from deposit count', () => {
+      const revenues = [
+        { amountVND: 1000000, paymentType: 'DEPOSIT', lockKT: false, lockAdmin: false, lockFinal: false },
+        { amountVND: 500000, paymentType: 'REFUND', lockKT: false, lockAdmin: false, lockFinal: false },
+      ];
+
+      render(<RevenueSummaryCard revenues={revenues} />);
+
+      // Deposit card should show only 1 deposit
+      expect(screen.getByText('1 giao dich')).toBeInTheDocument();
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('handles null/undefined lock fields', () => {
+      const revenues = [
+        { amountVND: 1000000, paymentType: 'DEPOSIT' } as { amountVND: number; paymentType: string; lockKT?: boolean; lockAdmin?: boolean; lockFinal?: boolean },
+      ];
+
+      render(<RevenueSummaryCard revenues={revenues} />);
+
+      // Should render without error
+      expect(screen.getByText('Tong thu nhap')).toBeInTheDocument();
+    });
+
+    it('handles mixed lock states in same tier', () => {
+      const revenues = [
+        { amountVND: 1000000, paymentType: 'DEPOSIT', lockKT: true, lockAdmin: false, lockFinal: false },
+        { amountVND: 2000000, paymentType: 'DEPOSIT', lockKT: false, lockAdmin: false, lockFinal: false },
+        { amountVND: 3000000, paymentType: 'DEPOSIT', lockKT: true, lockAdmin: true, lockFinal: false },
+      ];
+
+      render(<RevenueSummaryCard revenues={revenues} />);
+
+      // Total locked: 1M + 3M = 4M (2 items locked)
+      expect(screen.getByText('2 giao dich')).toBeInTheDocument();
+    });
+
+    it('handles all revenues being refunds', () => {
+      const revenues = [
+        { amountVND: 1000000, paymentType: 'REFUND', lockKT: false, lockAdmin: false, lockFinal: false },
+        { amountVND: 2000000, paymentType: 'REFUND', lockKT: false, lockAdmin: false, lockFinal: false },
+      ];
+
+      render(<RevenueSummaryCard revenues={revenues} />);
+
+      // Total: -1M - 2M = -3M (negative display)
+      // Component should handle negative values
+      expect(screen.getByText('2 giao dich')).toBeInTheDocument();
+    });
+
+    it('handles decimal amounts', () => {
+      const revenues = [
+        { amountVND: 1500000.5, paymentType: 'DEPOSIT', lockKT: false, lockAdmin: false, lockFinal: false },
+      ];
+
+      render(<RevenueSummaryCard revenues={revenues} />);
+
+      // Multiple cards show "1 giao dich" (total, deposit, locked=0, breakdown)
+      const transactions = screen.getAllByText('1 giao dich');
+      expect(transactions.length).toBeGreaterThanOrEqual(1);
+      // Amount should contain 1.500
+      const amounts = screen.getAllByText(/1\.500/);
+      expect(amounts.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('handles string amounts (should convert to number)', () => {
+      const revenues = [
+        { amountVND: '1000000' as unknown as number, paymentType: 'DEPOSIT', lockKT: false, lockAdmin: false, lockFinal: false },
+      ];
+
+      render(<RevenueSummaryCard revenues={revenues} />);
+
+      // Component uses Number() to convert - multiple cards show the same value
+      const amounts = screen.getAllByText(/1\.000\.000/);
+      expect(amounts.length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  describe('Icon Rendering', () => {
+    it('renders correct icons for each card', () => {
+      const { container } = render(<RevenueSummaryCard revenues={mockRevenues} />);
+
+      // Check that SVG icons are present
+      const svgs = container.querySelectorAll('svg');
+      expect(svgs.length).toBeGreaterThanOrEqual(4); // At least 4 cards with icons
+    });
+  });
+
+  describe('Color Coding', () => {
+    it('applies green color to total revenue', () => {
+      const { container } = render(<RevenueSummaryCard revenues={mockRevenues} />);
+
+      const greenText = container.querySelector('.text-green-600');
+      expect(greenText).toBeInTheDocument();
+    });
+
+    it('applies blue color to deposit total', () => {
+      const { container } = render(<RevenueSummaryCard revenues={mockRevenues} />);
+
+      const blueText = container.querySelector('.text-blue-600');
+      expect(blueText).toBeInTheDocument();
+    });
+
+    it('applies amber color to locked total', () => {
+      const { container } = render(<RevenueSummaryCard revenues={mockRevenues} />);
+
+      const amberText = container.querySelector('.text-amber-600');
+      expect(amberText).toBeInTheDocument();
+    });
+  });
+
+  describe('Responsive Layout', () => {
+    it('applies correct grid classes', () => {
+      const { container } = render(<RevenueSummaryCard revenues={mockRevenues} />);
+
+      const gridContainer = container.firstChild;
+      expect(gridContainer).toHaveClass('grid');
+      expect(gridContainer).toHaveClass('grid-cols-2');
+      expect(gridContainer).toHaveClass('md:grid-cols-4');
+    });
+  });
 });
