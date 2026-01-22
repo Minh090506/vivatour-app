@@ -694,3 +694,67 @@ export interface SalesResponse {
   sales: SaleItem[];
   summary: SalesSummary;
 }
+
+// ============================================
+// COST BREAKDOWN REPORT TYPES
+// ============================================
+
+// Cost breakdown by service type (for pie chart)
+export interface CostBreakdownByServiceType {
+  type: string;
+  label: string;
+  total: number;
+  expectedTotal: number;
+  variance: number;
+  variancePercent: number;
+  count: number;
+}
+
+// Cost breakdown by supplier
+export interface CostBreakdownBySupplier {
+  supplierId: string | null;
+  supplierName: string;
+  total: number;
+  paidAmount: number;
+  debt: number;
+  count: number;
+}
+
+// Service detail for booking breakdown
+export interface BookingServiceDetail {
+  type: string;
+  name: string;
+  cost: number;
+}
+
+// Cost breakdown by booking code (with variance)
+export interface CostBreakdownByBooking {
+  bookingCode: string;
+  customerName: string;
+  expectedCost: number;
+  actualCost: number;
+  variance: number;
+  variancePercent: number;
+  status: 'on-budget' | 'slight-over' | 'over-budget';
+  services: BookingServiceDetail[];
+}
+
+// Cost breakdown report summary
+export interface CostBreakdownSummary {
+  totalActualCost: number;
+  totalExpectedCost: number;
+  totalVariance: number;
+  variancePercent: number;
+  totalPaidAmount: number;
+  totalDebt: number;
+  totalCount: number;
+  bookingCount: number;
+}
+
+// Full cost breakdown report
+export interface CostBreakdownReport {
+  byServiceType: CostBreakdownByServiceType[];
+  bySupplier: CostBreakdownBySupplier[];
+  byBooking: CostBreakdownByBooking[];
+  summary: CostBreakdownSummary;
+}
