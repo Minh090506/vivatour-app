@@ -1,5 +1,15 @@
 import { prisma } from './db';
-import type { SupplierBalance } from '@/types';
+import type { SupplierBalance, SupplierBalanceAlert, PaymentModel } from '@/types';
+
+// Default low balance threshold (can be overridden per payment model)
+export const DEFAULT_LOW_BALANCE_THRESHOLD = 5000000; // 5 million VND
+
+// Payment model specific thresholds
+export const LOW_BALANCE_THRESHOLDS: Record<PaymentModel, number> = {
+  PREPAID: 5000000,     // 5M - needs top-up soon
+  PAY_PER_USE: 0,       // No threshold - pay as you go
+  CREDIT: -10000000,    // -10M - approaching credit limit
+};
 
 /**
  * Calculate balance for a single supplier
@@ -183,4 +193,163 @@ export async function getBalanceTrend() {
     });
 
   return trend;
+}
+
+/**
+ * Get suppliers with low balance alerts
+ * Returns suppliers whose balance is below their payment model threshold
+ */
+export async function getLowBalanceAlerts(
+  customThreshold?: number
+): Promise<SupplierBalanceAlert[]> {
+  // Get all active suppliers with their payment model
+  const suppliers = await prisma.supplier.findMany({
+    where: { isActive: true },
+    select: {
+      id: true,
+      code: true,
+      name: true,
+      type: true,
+      paymentModel: true,
+      creditLimit: true,
+    },
+    orderBy: { code: 'asc' },
+  });
+
+  const alerts: SupplierBalanceAlert[] = [];
+
+  for (const supplier of suppliers) {
+    const balance = await calculateSupplierBalance(supplier.id);
+    const paymentModel = supplier.paymentModel as PaymentModel;
+
+    // Determine threshold: custom > credit limit (for CREDIT) > payment model default
+    let threshold = customThreshold ?? LOW_BALANCE_THRESHOLDS[paymentModel];
+
+    // For CREDIT model, use negative credit limit as threshold if set
+    if (paymentModel === 'CREDIT' && supplier.creditLimit) {
+      threshold = -Number(supplier.creditLimit);
+    }
+
+    // Skip PAY_PER_USE unless custom threshold is provided
+    if (paymentModel === 'PAY_PER_USE' && customThreshold === undefined) {
+      continue;
+    }
+
+    // Check if balance is below threshold
+    if (balance.balance <= threshold) {
+      // Determine severity
+      let severity: 'warning' | 'critical' = 'warning';
+      if (paymentModel === 'PREPAID' && balance.balance <= 0) {
+        severity = 'critical';
+      } else if (paymentModel === 'CREDIT' && supplier.creditLimit) {
+        // Critical if over 80% of credit limit used
+        const creditLimit = Number(supplier.creditLimit);
+        if (Math.abs(balance.balance) >= creditLimit * 0.8) {
+          severity = 'critical';
+        }
+      }
+
+      alerts.push({
+        supplierId: supplier.id,
+        supplierCode: supplier.code,
+        supplierName: supplier.name,
+        supplierType: supplier.type,
+        paymentModel,
+        balance: balance.balance,
+        threshold,
+        severity,
+        message: getAlertMessage(paymentModel, balance.balance, threshold, severity),
+      });
+    }
+  }
+
+  // Sort by severity (critical first) then by balance (lowest first)
+  return alerts.sort((a, b) => {
+    if (a.severity !== b.severity) {
+      return a.severity === 'critical' ? -1 : 1;
+    }
+    return a.balance - b.balance;
+  });
+}
+
+/**
+ * Generate alert message based on payment model and balance
+ */
+function getAlertMessage(
+  paymentModel: PaymentModel,
+  balance: number,
+  threshold: number,
+  severity: 'warning' | 'critical'
+): string {
+  const formatAmount = (n: number) => new Intl.NumberFormat('vi-VN').format(Math.abs(n));
+
+  if (paymentModel === 'PREPAID') {
+    if (severity === 'critical') {
+      return balance < 0
+        ? `So du am ${formatAmount(balance)} VND - can nap tien ngay`
+        : `So du con lai ${formatAmount(balance)} VND - can nap tien`;
+    }
+    return `So du thap ${formatAmount(balance)} VND - nen nap them`;
+  }
+
+  if (paymentModel === 'CREDIT') {
+    const used = Math.abs(balance);
+    const limit = Math.abs(threshold);
+    const percent = Math.round((used / limit) * 100);
+    if (severity === 'critical') {
+      return `Da su dung ${percent}% han muc (${formatAmount(used)}/${formatAmount(limit)} VND)`;
+    }
+    return `Dang su dung ${percent}% han muc tin dung`;
+  }
+
+  // PAY_PER_USE (only shown with custom threshold)
+  return `So du ${balance < 0 ? 'am ' : ''}${formatAmount(balance)} VND`;
+}
+
+/**
+ * Get transaction history for a supplier with filters
+ */
+export async function getSupplierTransactionHistory(
+  supplierId: string,
+  options: {
+    fromDate?: Date;
+    toDate?: Date;
+    type?: string;
+    limit?: number;
+    offset?: number;
+  } = {}
+) {
+  const { fromDate, toDate, type, limit = 50, offset = 0 } = options;
+
+  const where: Record<string, unknown> = { supplierId };
+
+  if (type) where.type = type;
+
+  if (fromDate || toDate) {
+    where.transactionDate = {};
+    if (fromDate) (where.transactionDate as Record<string, Date>).gte = fromDate;
+    if (toDate) (where.transactionDate as Record<string, Date>).lte = toDate;
+  }
+
+  const [transactions, total] = await Promise.all([
+    prisma.supplierTransaction.findMany({
+      where,
+      select: {
+        id: true,
+        type: true,
+        amount: true,
+        transactionDate: true,
+        description: true,
+        proofLink: true,
+        relatedBookingCode: true,
+        createdAt: true,
+      },
+      orderBy: { transactionDate: 'desc' },
+      take: limit,
+      skip: offset,
+    }),
+    prisma.supplierTransaction.count({ where }),
+  ]);
+
+  return { transactions, total, hasMore: offset + transactions.length < total };
 }

@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { hasPermission, type Role } from '@/lib/permissions';
-import { getSupplierBalanceSummary, getBalanceTrend } from '@/lib/supplier-balance';
+import {
+  getSupplierBalanceSummary,
+  getBalanceTrend,
+  getLowBalanceAlerts,
+} from '@/lib/supplier-balance';
 
 // GET /api/reports/supplier-balance - Get balance summary for all suppliers
+// Query params:
+//   - type: filter by supplier type
+//   - includeAlerts: include low balance alerts (default: true)
+//   - alertThreshold: custom threshold for alerts (optional)
 export async function GET(request: NextRequest) {
   try {
     // Auth check
@@ -24,16 +32,28 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || undefined;
+    const includeAlerts = searchParams.get('includeAlerts') !== 'false';
+    const alertThreshold = searchParams.get('alertThreshold');
 
-    const [result, trend] = await Promise.all([
+    // Fetch data in parallel
+    const promises: Promise<unknown>[] = [
       getSupplierBalanceSummary(type),
       getBalanceTrend(),
-    ]);
+    ];
+
+    // Only fetch alerts if requested
+    if (includeAlerts) {
+      const threshold = alertThreshold ? parseInt(alertThreshold, 10) : undefined;
+      promises.push(getLowBalanceAlerts(threshold));
+    }
+
+    const [result, trend, alerts] = await Promise.all(promises);
 
     return NextResponse.json({
       success: true,
-      ...result,
+      ...(result as Record<string, unknown>),
       trend,
+      alerts: includeAlerts ? alerts : [],
     });
   } catch (error) {
     console.error('Error fetching supplier balance report:', error);

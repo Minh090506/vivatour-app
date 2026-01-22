@@ -465,6 +465,61 @@ export interface SupplierFilters {
   isActive?: boolean;
 }
 
+// Low Balance Alert Types
+export interface SupplierBalanceAlert {
+  supplierId: string;
+  supplierCode: string;
+  supplierName: string;
+  supplierType: string;
+  paymentModel: PaymentModel;
+  balance: number;
+  threshold: number;
+  severity: 'warning' | 'critical';
+  message: string;
+}
+
+// Transaction History with Filters
+export interface TransactionHistoryFilters {
+  supplierId: string;
+  fromDate?: string;
+  toDate?: string;
+  type?: TransactionType;
+  limit?: number;
+  offset?: number;
+}
+
+export interface TransactionHistoryResponse {
+  transactions: SupplierTransaction[];
+  total: number;
+  hasMore: boolean;
+}
+
+// Enhanced Balance Report Response
+export interface SupplierBalanceReportResponse {
+  data: SupplierBalanceSummary[];
+  summary: {
+    supplierCount: number;
+    totalDeposits: number;
+    totalCosts: number;
+    totalRefunds: number;
+    totalBalance: number;
+    positiveBalance: number;
+    negativeBalance: number;
+  };
+  byPaymentModel: Array<{
+    model: string;
+    count: number;
+    totalBalance: number;
+  }>;
+  trend: Array<{
+    month: string;
+    deposits: number;
+    costs: number;
+    balance: number;
+  }>;
+  alerts: SupplierBalanceAlert[];
+}
+
 // ============================================
 // OPERATOR TYPES (Dịch vụ/Chi phí)
 // ============================================
