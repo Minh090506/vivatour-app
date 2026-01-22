@@ -6,31 +6,63 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { BarChart3, RefreshCw, TrendingUp } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { BarChart3, RefreshCw, TrendingUp, Wallet } from 'lucide-react';
 import { CostByServiceChart } from '@/components/operators/reports/cost-by-service-chart';
 import { CostBySupplierTable } from '@/components/operators/reports/cost-by-supplier-table';
 import { MonthlyTrend } from '@/components/operators/reports/monthly-trend';
 import { PaymentStatusCards } from '@/components/operators/reports/payment-status-cards';
 import { ProfitReportTable } from '@/components/operators/reports/profit-report-table';
 import { ProfitChart } from '@/components/operators/reports/profit-chart';
+import { RevenueStackedBarChart } from '@/components/operators/reports/revenue-stacked-bar-chart';
+import { RevenueByServiceTable } from '@/components/operators/reports/revenue-by-service-table';
+import { RevenueBySupplierTable } from '@/components/operators/reports/revenue-by-supplier-table';
 import { ErrorFallback } from '@/components/ui/error-fallback';
 import { safeFetch } from '@/lib/api/fetch-utils';
 import { formatCurrency } from '@/lib/utils';
-import type { OperatorCostReport, PaymentStatusReport, ProfitReport } from '@/types';
+import { SERVICE_TYPES } from '@/config/operator-config';
+import type {
+  OperatorCostReport,
+  PaymentStatusReport,
+  ProfitReport,
+  OperatorRevenueReport,
+  Supplier,
+} from '@/types';
 
-type ReportTab = 'cost' | 'profit';
+type ReportTab = 'cost' | 'profit' | 'revenue';
 
 export default function OperatorReportsPage() {
   const [activeTab, setActiveTab] = useState<ReportTab>('cost');
   const [costReport, setCostReport] = useState<OperatorCostReport | null>(null);
   const [paymentReport, setPaymentReport] = useState<PaymentStatusReport | null>(null);
   const [profitReport, setProfitReport] = useState<ProfitReport | null>(null);
+  const [revenueReport, setRevenueReport] = useState<OperatorRevenueReport | null>(null);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  // Revenue tab specific filters
+  const [revenueServiceType, setRevenueServiceType] = useState('');
+  const [revenueSupplierId, setRevenueSupplierId] = useState('');
   const [loading, setLoading] = useState(true);
+  const [revenueLoading, setRevenueLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch reports function
+  // Fetch suppliers for filter dropdown
+  useEffect(() => {
+    const fetchSuppliers = async () => {
+      const result = await safeFetch<Supplier[]>('/api/suppliers');
+      if (result.data) setSuppliers(result.data);
+    };
+    fetchSuppliers();
+  }, []);
+
+  // Fetch cost and profit reports
   const fetchReports = async () => {
     setLoading(true);
     setError(null);
@@ -62,11 +94,43 @@ export default function OperatorReportsPage() {
     setLoading(false);
   };
 
+  // Fetch revenue report separately (has its own filters)
+  const fetchRevenueReport = async () => {
+    setRevenueLoading(true);
+
+    const params = new URLSearchParams();
+    if (fromDate) params.set('fromDate', fromDate);
+    if (toDate) params.set('toDate', toDate);
+    if (revenueServiceType) params.set('serviceType', revenueServiceType);
+    if (revenueSupplierId) params.set('supplierId', revenueSupplierId);
+
+    const result = await safeFetch<OperatorRevenueReport>(
+      `/api/operator/reports/revenue?${params}`
+    );
+
+    if (result.data) setRevenueReport(result.data);
+    setRevenueLoading(false);
+  };
+
   // Initial load and when date filters change
   useEffect(() => {
     fetchReports();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fromDate, toDate]);
+
+  // Fetch revenue when tab is active or filters change
+  useEffect(() => {
+    if (activeTab === 'revenue') {
+      fetchRevenueReport();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, fromDate, toDate, revenueServiceType, revenueSupplierId]);
+
+  // Clear revenue-specific filters
+  const clearRevenueFilters = () => {
+    setRevenueServiceType('');
+    setRevenueSupplierId('');
+  };
 
   return (
     <div className="space-y-6">
@@ -77,20 +141,31 @@ export default function OperatorReportsPage() {
             <BarChart3 className="h-6 w-6" />
             Báo Cáo Điều Hành
           </h1>
-          <p className="text-muted-foreground">Phân tích chi phí và lợi nhuận theo booking</p>
+          <p className="text-muted-foreground">Phân tích chi phí, thanh toán và lợi nhuận</p>
         </div>
-        <Button variant="outline" onClick={fetchReports} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+        <Button
+          variant="outline"
+          onClick={() => {
+            fetchReports();
+            if (activeTab === 'revenue') fetchRevenueReport();
+          }}
+          disabled={loading || revenueLoading}
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${loading || revenueLoading ? 'animate-spin' : ''}`} />
           Làm mới
         </Button>
       </div>
 
       {/* Main Report Tabs */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as ReportTab)}>
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsList className="grid w-full max-w-lg grid-cols-3">
           <TabsTrigger value="cost" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             Chi phí
+          </TabsTrigger>
+          <TabsTrigger value="revenue" className="flex items-center gap-2">
+            <Wallet className="h-4 w-4" />
+            Thanh toán
           </TabsTrigger>
           <TabsTrigger value="profit" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
@@ -98,7 +173,7 @@ export default function OperatorReportsPage() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Date filters */}
+        {/* Date filters - shared across tabs */}
         <Card className="mt-4">
           <CardContent className="pt-6">
             <div className="flex flex-wrap gap-4 items-end">
@@ -120,13 +195,53 @@ export default function OperatorReportsPage() {
                   className="w-40"
                 />
               </div>
-              {(fromDate || toDate) && (
+
+              {/* Revenue-specific filters */}
+              {activeTab === 'revenue' && (
+                <>
+                  <div className="space-y-2">
+                    <Label>Loại dịch vụ</Label>
+                    <Select value={revenueServiceType} onValueChange={setRevenueServiceType}>
+                      <SelectTrigger className="w-40">
+                        <SelectValue placeholder="Tất cả" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Tất cả</SelectItem>
+                        {Object.entries(SERVICE_TYPES).map(([key, { label }]) => (
+                          <SelectItem key={key} value={key}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Nhà cung cấp</Label>
+                    <Select value={revenueSupplierId} onValueChange={setRevenueSupplierId}>
+                      <SelectTrigger className="w-48">
+                        <SelectValue placeholder="Tất cả" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Tất cả</SelectItem>
+                        {suppliers.map((supplier) => (
+                          <SelectItem key={supplier.id} value={supplier.id}>
+                            {supplier.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
+
+              {(fromDate || toDate || (activeTab === 'revenue' && (revenueServiceType || revenueSupplierId))) && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => {
                     setFromDate('');
                     setToDate('');
+                    if (activeTab === 'revenue') clearRevenueFilters();
                   }}
                 >
                   Xóa bộ lọc
@@ -137,14 +252,14 @@ export default function OperatorReportsPage() {
         </Card>
 
         {/* Loading state */}
-        {loading && (
+        {loading && activeTab !== 'revenue' && (
           <div className="text-center py-8 text-muted-foreground">
             Đang tải báo cáo...
           </div>
         )}
 
         {/* Error state */}
-        {!loading && error && (
+        {!loading && error && activeTab !== 'revenue' && (
           <ErrorFallback
             title="Lỗi tải báo cáo"
             message={error}
@@ -218,6 +333,84 @@ export default function OperatorReportsPage() {
               <CardContent className="pt-6">
                 <p className="text-center text-muted-foreground py-8">
                   Không có dữ liệu chi phí trong khoảng thời gian đã chọn
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Revenue Report Tab (NEW) */}
+        <TabsContent value="revenue" className="mt-4 space-y-6">
+          {/* Loading state */}
+          {revenueLoading && (
+            <div className="text-center py-8 text-muted-foreground">
+              Đang tải báo cáo thanh toán...
+            </div>
+          )}
+
+          {!revenueLoading && revenueReport && (
+            <>
+              {/* Summary Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-sm text-muted-foreground">Tổng chi phí</p>
+                    <p className="text-2xl font-bold">
+                      {formatCurrency(revenueReport.summary.totalCost)} ₫
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-sm text-muted-foreground">Đã thanh toán</p>
+                    <p className="text-2xl font-bold text-green-600">
+                      {formatCurrency(revenueReport.summary.paidAmount)} ₫
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-sm text-muted-foreground">Còn nợ</p>
+                    <p className="text-2xl font-bold text-red-600">
+                      {formatCurrency(revenueReport.summary.debt)} ₫
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <p className="text-sm text-muted-foreground">Số dịch vụ</p>
+                    <p className="text-2xl font-bold">{revenueReport.summary.totalCount}</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Stacked Bar Chart */}
+              <RevenueStackedBarChart data={revenueReport.byMonth} />
+
+              {/* Sub tabs for detailed breakdown */}
+              <Tabs defaultValue="service">
+                <TabsList>
+                  <TabsTrigger value="service">Theo loại DV</TabsTrigger>
+                  <TabsTrigger value="supplier">Theo NCC</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="service" className="mt-4">
+                  <RevenueByServiceTable data={revenueReport.byServiceType} />
+                </TabsContent>
+
+                <TabsContent value="supplier" className="mt-4">
+                  <RevenueBySupplierTable data={revenueReport.bySupplier} />
+                </TabsContent>
+              </Tabs>
+            </>
+          )}
+
+          {/* Empty state */}
+          {!revenueLoading && revenueReport && revenueReport.summary.totalCount === 0 && (
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-center text-muted-foreground py-8">
+                  Không có dữ liệu thanh toán trong khoảng thời gian đã chọn
                 </p>
               </CardContent>
             </Card>

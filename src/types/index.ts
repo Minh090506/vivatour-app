@@ -588,6 +588,55 @@ export interface PaymentStatusReport {
 }
 
 // ============================================
+// OPERATOR REVENUE REPORT TYPES
+// ============================================
+
+// Revenue data by month (stacked bar chart)
+export interface RevenueByMonth {
+  month: string; // YYYY-MM
+  totalCost: number;
+  paidAmount: number;
+  debt: number;
+  count: number;
+}
+
+// Revenue data by service type
+export interface RevenueByServiceType {
+  type: string;
+  label: string;
+  totalCost: number;
+  paidAmount: number;
+  debt: number;
+  count: number;
+}
+
+// Revenue data by supplier
+export interface RevenueBySupplier {
+  supplierId: string | null;
+  supplierName: string;
+  totalCost: number;
+  paidAmount: number;
+  debt: number;
+  count: number;
+}
+
+// Revenue report summary
+export interface RevenueReportSummary {
+  totalCost: number;
+  paidAmount: number;
+  debt: number;
+  totalCount: number;
+}
+
+// Full operator revenue report
+export interface OperatorRevenueReport {
+  byMonth: RevenueByMonth[];
+  byServiceType: RevenueByServiceType[];
+  bySupplier: RevenueBySupplier[];
+  summary: RevenueReportSummary;
+}
+
+// ============================================
 // PROFIT REPORT TYPES
 // ============================================
 
