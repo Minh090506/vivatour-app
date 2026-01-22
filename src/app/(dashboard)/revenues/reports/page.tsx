@@ -10,7 +10,7 @@ import { DateRangeSelector } from '@/components/reports/date-range-selector';
 import { RevenueByTypeChart } from '@/components/revenues/reports/revenue-by-type-chart';
 import { RevenueBySourceChart } from '@/components/revenues/reports/revenue-by-source-chart';
 import { CurrencyBreakdownTable } from '@/components/revenues/reports/currency-breakdown-table';
-import { DollarSign, TrendingUp, CreditCard, ArrowLeft } from 'lucide-react';
+import { DollarSign, TrendingUp, CreditCard, ArrowLeft, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -67,12 +67,20 @@ export default function RevenueReportsPage() {
           </div>
           <p className="text-muted-foreground ml-12">Phan tich doanh thu theo loai, nguon, va tien te</p>
         </div>
-        <DateRangeSelector
-          value={dateRange}
-          onChange={setDateRange}
-          customDates={customDates}
-          onCustomDatesChange={setCustomDates}
-        />
+        <div className="flex items-center gap-3">
+          <Button variant="outline" asChild>
+            <Link href="/revenues/reports/payments">
+              <Receipt className="h-4 w-4 mr-2" />
+              Theo doi Thanh toan
+            </Link>
+          </Button>
+          <DateRangeSelector
+            value={dateRange}
+            onChange={setDateRange}
+            customDates={customDates}
+            onCustomDatesChange={setCustomDates}
+          />
+        </div>
       </div>
 
       {/* Summary Cards */}

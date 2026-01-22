@@ -4,3 +4,8 @@ export { RevenueSummaryCard } from './revenue-summary-card';
 export { RevenueHistoryPanel } from './revenue-history-panel';
 export { RevenueLockDialog } from './revenue-lock-dialog';
 export { SalesSummaryTable } from './sales-summary-table';
+
+// Report components
+export { PaymentTimelineChart } from './reports/payment-timeline-chart';
+export { PaymentCurrencyTable } from './reports/payment-currency-table';
+export { OverduePaymentsAlert } from './reports/overdue-payments-alert';
