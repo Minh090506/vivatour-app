@@ -1,0 +1,120 @@
+# Scout Report: Report Pages & Export Functionality Analysis
+
+Date: 2026-01-22 | Status: Complete
+
+## 1. REPORT PAGES FOUND
+
+### Main Report Pages (5 pages)
+1. src/app/(dashboard)/reports/page.tsx - Dashboard overview
+2. src/app/(dashboard)/operators/reports/page.tsx - Operator reports
+3. src/app/(dashboard)/suppliers/reports/page.tsx - Supplier reports  
+4. src/app/(dashboard)/revenues/reports/page.tsx - Revenue analysis
+5. src/app/(dashboard)/revenues/reports/payments/page.tsx - Payment tracking
+
+### Report Components (18 total)
+Dashboard: kpi-cards, revenue-trend-chart, cost-breakdown-chart, funnel-chart, export-dropdown
+Operators: cost-by-service-chart, cost-by-supplier-table, monthly-trend, payment-status-cards, profit-chart
+Suppliers: balance-trend-chart, payment-model-chart, low-balance-alerts
+Revenues: revenue-by-type-chart, revenue-by-source-chart, currency-breakdown-table
+
+## 2. EXPORT FUNCTIONALITY
+
+Current Implementation: src/components/reports/export-dropdown.tsx
+- Dropdown menu with CSV and PDF options
+- Uses formatVND() for currency
+- Uses formatDate() for date formatting
+- Located in header top-right
+
+Utilities: src/lib/export/csv-export.ts
+- exportToCsv(data, columns, filename)
+- generateCsv() with UTF-8 BOM support
+- formatVND(value) - Vietnamese currency
+- formatDate(date, format) - ISO or Vietnamese
+- downloadCsv() - Browser download
+
+Export Coverage:
+- Dashboard: CSV (trend/cost/funnel) + PDF ✓
+- Suppliers: CSV (balance data) ✓
+- Operators: NO EXPORT (gap)
+- Revenues: NO EXPORT (gap)
+
+## 3. DATA TYPES
+
+All defined in: src/types/index.ts (816 lines)
+
+Request: id, code, customerName, contact, pax, country, status, stage, expectedRevenue, expectedCost
+Operator: id, serviceDate, serviceName, costBeforeTax, totalCost, paymentStatus, paidAmount, debt (computed)
+Revenue: id, paymentDate, paymentType, amountVND, currency, exchangeRate
+Supplier: id, code, name, type, paymentModel, balance
+
+3-Tier Locks: lockKT/Admin/Final with timestamps and user tracking
+
+## 4. UI PATTERNS
+
+Button Component: src/components/ui/button.tsx
+Variants: default, destructive, outline, secondary, ghost, link
+Sizes: default (h-11), sm (h-10), lg (h-12), icon sizes
+Mobile-first: h-11 → md:h-9 responsive
+
+Export Button Pattern:
+<Button variant="outline" onClick={handleExport} disabled={\!data.length}>
+  <Download className="h-4 w-4 mr-2" />
+  Xuat
+</Button>
+
+Common Patterns:
+- Export: top-right header, variant=outline, Download icon
+- Refresh: variant=outline, RefreshCw icon
+- Filters: Select/Input components in card
+- Navigation: variant=ghost with icon
+
+## 5. KEY FINDINGS
+
+Strengths:
+- Consistent CSV export with UTF-8 BOM (Vietnamese support)
+- Multiple modular report pages
+- Mobile-first responsive design (44px touch targets)
+- Full TypeScript coverage
+- Date range filtering system
+- 3-tier lock system for financial data
+
+Gaps:
+- Operator Reports: no export button
+- Revenue Reports: no export button  
+- PDF: uses print API only (not library-based)
+- No Excel/JSON/XML export formats
+
+Implementation Guidelines:
+- Filter state: useState in page component
+- Currency: Intl.NumberFormat('vi-VN')
+- Dates: report-utils.ts getDateRange() function
+- API: /api/reports/* endpoints
+- Button placement: top-right next to filters
+
+## 6. FILE INVENTORY
+
+Report Pages (5):
+- src/app/(dashboard)/reports/page.tsx
+- src/app/(dashboard)/operators/reports/page.tsx
+- src/app/(dashboard)/suppliers/reports/page.tsx
+- src/app/(dashboard)/revenues/reports/page.tsx
+- src/app/(dashboard)/revenues/reports/payments/page.tsx
+
+Export (2):
+- src/lib/export/csv-export.ts
+- src/lib/export/pdf-export.ts
+
+Export UI (1):
+- src/components/reports/export-dropdown.tsx
+
+Utilities (2):
+- src/lib/report-utils.ts
+- src/lib/utils.ts
+
+Data Types (1):
+- src/types/index.ts
+
+Report Components (18+):
+- Dashboard/operators/suppliers/revenues report components
+
+**Report Complete** | Found 5 report pages, working export on 2, identified gaps for 2 pages

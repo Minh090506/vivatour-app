@@ -12,6 +12,7 @@ import { RevenueBySourceChart } from '@/components/revenues/reports/revenue-by-s
 import { CurrencyBreakdownTable } from '@/components/revenues/reports/currency-breakdown-table';
 import { DollarSign, TrendingUp, CreditCard, ArrowLeft, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ExportRevenueDropdown } from '@/components/revenues/reports/export-revenue-dropdown';
 import Link from 'next/link';
 
 function formatVND(value: number): string {
@@ -68,6 +69,7 @@ export default function RevenueReportsPage() {
           <p className="text-muted-foreground ml-12">Phan tich doanh thu theo loai, nguon, va tien te</p>
         </div>
         <div className="flex items-center gap-3">
+          <ExportRevenueDropdown data={data} loading={loading} />
           <Button variant="outline" asChild>
             <Link href="/revenues/reports/payments">
               <Receipt className="h-4 w-4 mr-2" />

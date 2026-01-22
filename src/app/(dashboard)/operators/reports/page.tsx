@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { BarChart3, RefreshCw, TrendingUp, Wallet, PieChart } from 'lucide-react';
+import { ExportOperatorDropdown } from '@/components/operators/reports/export-operator-dropdown';
 import { CostByServiceChart } from '@/components/operators/reports/cost-by-service-chart';
 import { CostBySupplierTable } from '@/components/operators/reports/cost-by-supplier-table';
 import { MonthlyTrend } from '@/components/operators/reports/monthly-trend';
@@ -175,18 +176,28 @@ export default function OperatorReportsPage() {
           </h1>
           <p className="text-muted-foreground">Phân tích chi phí, thanh toán và lợi nhuận</p>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => {
-            fetchReports();
-            if (activeTab === 'revenue') fetchRevenueReport();
-            if (activeTab === 'breakdown') fetchBreakdownReport();
-          }}
-          disabled={loading || revenueLoading || breakdownLoading}
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading || revenueLoading || breakdownLoading ? 'animate-spin' : ''}`} />
-          Làm mới
-        </Button>
+        <div className="flex items-center gap-2">
+          <ExportOperatorDropdown
+            activeTab={activeTab}
+            costReport={costReport}
+            profitReport={profitReport}
+            revenueReport={revenueReport}
+            breakdownReport={breakdownReport}
+            loading={loading || revenueLoading || breakdownLoading}
+          />
+          <Button
+            variant="outline"
+            onClick={() => {
+              fetchReports();
+              if (activeTab === 'revenue') fetchRevenueReport();
+              if (activeTab === 'breakdown') fetchBreakdownReport();
+            }}
+            disabled={loading || revenueLoading || breakdownLoading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading || revenueLoading || breakdownLoading ? 'animate-spin' : ''}`} />
+            Làm mới
+          </Button>
+        </div>
       </div>
 
       {/* Main Report Tabs */}

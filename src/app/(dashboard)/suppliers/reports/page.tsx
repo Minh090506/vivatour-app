@@ -14,7 +14,7 @@ import { SUPPLIER_TYPES, SUPPLIER_TYPE_KEYS } from '@/config/supplier-config';
 import { BalanceTrendChart } from '@/components/suppliers/reports/balance-trend-chart';
 import { PaymentModelChart } from '@/components/suppliers/reports/payment-model-chart';
 import { LowBalanceAlerts } from '@/components/suppliers/reports/low-balance-alerts';
-import { exportToCsv, formatVND as formatVNDExport } from '@/lib/export/csv-export';
+import { exportSupplierBalance, exportSupplierTransactions } from '@/lib/export/csv-generator';
 import Link from 'next/link';
 import type { SupplierBalanceAlert, TransactionType } from '@/types';
 
@@ -123,18 +123,22 @@ export default function SupplierReportsPage() {
 
   const handleExport = useCallback(() => {
     if (!data.length) return;
-    const columns = [
-      { header: 'Ma NCC', accessor: 'code' as const },
-      { header: 'Ten NCC', accessor: 'name' as const },
-      { header: 'Loai', accessor: 'type' as const },
-      { header: 'Tong nap', accessor: (r: SupplierBalanceData) => formatVNDExport(r.deposits) },
-      { header: 'Da chi', accessor: (r: SupplierBalanceData) => formatVNDExport(r.costs) },
-      { header: 'Hoan tien', accessor: (r: SupplierBalanceData) => formatVNDExport(r.refunds) },
-      { header: 'So du', accessor: (r: SupplierBalanceData) => formatVNDExport(r.balance) },
-    ];
-    const filename = `bao-cao-cong-no-ncc-${new Date().toISOString().split('T')[0]}`;
-    exportToCsv(data, columns, filename);
+    exportSupplierBalance(data);
   }, [data]);
+
+  const handleTransactionExport = useCallback(() => {
+    if (!transactions.length) return;
+    const txnData = transactions.map((txn) => ({
+      transactionDate: txn.transactionDate,
+      supplierCode: txn.supplier?.code || '',
+      supplierName: txn.supplier?.name || '',
+      type: getTransactionTypeLabel(txn.type),
+      amount: txn.amount,
+      description: txn.description,
+      relatedBookingCode: txn.relatedBookingCode,
+    }));
+    exportSupplierTransactions(txnData);
+  }, [transactions]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -438,7 +442,18 @@ export default function SupplierReportsPage() {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>Lich su giao dich</span>
-                <Badge variant="secondary">{transactionsTotal} giao dich</Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">{transactionsTotal} giao dich</Badge>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleTransactionExport}
+                    disabled={!transactions.length}
+                  >
+                    <Download className="h-4 w-4 mr-1" />
+                    Xuat CSV
+                  </Button>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
