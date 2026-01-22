@@ -12,6 +12,7 @@ import { SERVICE_TYPES, SERVICE_TYPE_KEYS, DEFAULT_VAT_RATE } from '@/config/ope
 import type { Supplier } from '@/types';
 import {
   validateOperatorForm,
+  validateServiceDateInRange,
   type OperatorFormErrors,
 } from '@/lib/validations/operator-validation';
 import { safeParseFloat, safeNonNegativeFloat } from '@/lib/utils/parse-utils';
@@ -21,6 +22,8 @@ interface Request {
   code: string;
   customerName: string;
   status: string;
+  startDate?: Date | string | null;
+  endDate?: Date | string | null;
 }
 
 // Minimal operator data needed for the form
@@ -87,7 +90,7 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
       setLoadingData(true);
       try {
         const [reqRes, supRes] = await Promise.all([
-          fetch('/api/requests?status=F5&limit=100'),
+          fetch('/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate'),
           fetch('/api/suppliers?isActive=true'),
         ]);
 
@@ -181,6 +184,21 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
         return;
       }
 
+      // Validate service date is within booking date range
+      const selectedRequest = requests.find(r => r.id === formData.requestId);
+      if (selectedRequest?.startDate && selectedRequest?.endDate) {
+        const dateValidation = validateServiceDateInRange(
+          formData.serviceDate,
+          { startDate: selectedRequest.startDate, endDate: selectedRequest.endDate }
+        );
+        if (!dateValidation.valid) {
+          setFieldErrors(prev => ({ ...prev, serviceDate: dateValidation.error }));
+          setError('Vui lòng kiểm tra lại thông tin');
+          setLoading(false);
+          return;
+        }
+      }
+
       const url = isEditing ? `/api/operators/${operator.id}` : '/api/operators';
       const method = isEditing ? 'PUT' : 'POST';
 
@@ -218,6 +236,16 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (fieldErrors[field as keyof OperatorFormErrors]) {
       setFieldErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  // onBlur validation for serviceName
+  const handleServiceNameBlur = () => {
+    if (!formData.serviceName.trim()) {
+      setFieldErrors(prev => ({
+        ...prev,
+        serviceName: 'Tên dịch vụ không được trống'
+      }));
     }
   };
 
@@ -325,6 +353,7 @@ export function OperatorForm({ operator, requestId, onSuccess }: OperatorFormPro
               id="serviceName"
               value={formData.serviceName}
               onChange={(e) => updateField('serviceName', e.target.value)}
+              onBlur={handleServiceNameBlur}
               placeholder="VD: Khách sạn Mường Thanh - 2 đêm"
               className={fieldErrors.serviceName ? 'border-red-500' : ''}
               required

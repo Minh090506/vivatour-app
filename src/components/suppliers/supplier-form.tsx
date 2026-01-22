@@ -50,6 +50,7 @@ export function SupplierForm({ supplier, onSuccess }: SupplierFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [generatedCode, setGeneratedCode] = useState('');
+  const [isGeneratingCode, setIsGeneratingCode] = useState(false);
 
   // Check if location is custom (not in predefined list)
   const isCustomLocation = formData.location === CUSTOM_LOCATION ||
@@ -59,6 +60,7 @@ export function SupplierForm({ supplier, onSuccess }: SupplierFormProps) {
   const fetchGeneratedCode = useCallback(async () => {
     if (!formData.type || !formData.name || isEditing) return;
 
+    setIsGeneratingCode(true);
     try {
       const locationParam = isCustomLocation ? '' : formData.location;
       const params = new URLSearchParams({
@@ -83,6 +85,8 @@ export function SupplierForm({ supplier, onSuccess }: SupplierFormProps) {
         1
       );
       setGeneratedCode(code);
+    } finally {
+      setIsGeneratingCode(false);
     }
   }, [formData.type, formData.name, formData.location, isCustomLocation, isEditing]);
 
@@ -95,8 +99,26 @@ export function SupplierForm({ supplier, onSuccess }: SupplierFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+
+    // Pre-submit validation (BEFORE loading state)
+    if (!formData.type) {
+      setError('Vui lòng chọn loại NCC');
+      return;
+    }
+
+    if (!formData.name.trim()) {
+      setError('Vui lòng nhập tên NCC');
+      return;
+    }
+
+    // For new suppliers, ensure code is generated and not generating
+    if (!isEditing && (!generatedCode || isGeneratingCode)) {
+      setError('Đang tạo mã NCC, vui lòng đợi...');
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const url = isEditing ? `/api/suppliers/${supplier.id}` : '/api/suppliers';
@@ -405,7 +427,7 @@ export function SupplierForm({ supplier, onSuccess }: SupplierFormProps) {
 
       {/* Actions */}
       <div className="flex gap-4">
-        <Button type="submit" disabled={loading || (!isEditing && !generatedCode)}>
+        <Button type="submit" disabled={loading || (!isEditing && (isGeneratingCode || !generatedCode))}>
           {loading ? 'Đang lưu...' : isEditing ? 'Cập nhật' : 'Tạo NCC'}
         </Button>
         <Button type="button" variant="outline" onClick={() => router.back()}>

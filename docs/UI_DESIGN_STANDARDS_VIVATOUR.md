@@ -730,6 +730,30 @@
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
+### 6.1.1 Form Validation Edge Cases
+
+Key validation rules enforced across forms (client + server-side):
+
+**Revenue Form (revenue-form.tsx)**
+- Payment date: Cannot be in future (validated on blur + submit)
+- Messages: Vietnamese validation errors shown in red alert box
+- Server validation: Duplicate prevention via unique index on (requestId, paymentDate)
+
+**Operator Form (operator-form.tsx)**
+- Service date range: Must fall within request's startDate and endDate
+- Validation: onBlur for serviceName field + handleBlur callbacks
+- Date range check: Compared against request date boundaries
+
+**Supplier Form (supplier-form.tsx)**
+- Code generation: Client-side generation with debounced server-side request
+- Race condition fix: Only accepts latest code generation request (ignores stale responses)
+- Pre-submit validation: Ensures all required fields populated before API call
+
+**General Rules**
+- All currency fields: Must be > 0
+- Required fields: Form prevents submit if empty
+- Localized messages: All error messages in Vietnamese (VND, dates, etc.)
+
 ### 6.2 List Item States
 
 ```

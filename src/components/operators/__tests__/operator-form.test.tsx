@@ -33,7 +33,7 @@ describe('OperatorForm', () => {
   describe('Rendering', () => {
     it('renders form with empty state (create mode)', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -56,7 +56,7 @@ describe('OperatorForm', () => {
 
     it('renders form with initial data (edit mode)', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -77,7 +77,7 @@ describe('OperatorForm', () => {
 
     it('displays loading state while fetching data', () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -88,7 +88,7 @@ describe('OperatorForm', () => {
 
     it('renders all form sections', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -106,7 +106,7 @@ describe('OperatorForm', () => {
 
     it('disables booking selector when editing', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -126,20 +126,20 @@ describe('OperatorForm', () => {
   describe('Booking Selection', () => {
     it('fetches F5 requests on mount', async () => {
       const mockFetch = setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
       render(<OperatorForm />);
 
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith('/api/requests?status=F5&limit=100');
+        expect(mockFetch).toHaveBeenCalledWith('/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate');
       });
     });
 
     it('populates dropdown with fetched requests', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -156,7 +156,7 @@ describe('OperatorForm', () => {
 
     it('shows helper text about F5 status', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -171,7 +171,7 @@ describe('OperatorForm', () => {
   describe('Service Type', () => {
     it('renders all service types from config', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -191,7 +191,7 @@ describe('OperatorForm', () => {
 
     it('displays Vietnamese labels', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -210,7 +210,7 @@ describe('OperatorForm', () => {
   describe('Cost Calculation', () => {
     it('auto-calculates VAT at 10% when costBeforeTax changes', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -234,7 +234,7 @@ describe('OperatorForm', () => {
 
     it('updates totalCost when costBeforeTax changes', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -258,7 +258,7 @@ describe('OperatorForm', () => {
 
     it('formats currency in VND format', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -284,7 +284,7 @@ describe('OperatorForm', () => {
   describe('Supplier Selection', () => {
     it('fetches active suppliers on mount', async () => {
       const mockFetch = setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -297,7 +297,7 @@ describe('OperatorForm', () => {
 
     it('auto-fills supplier name when selected', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -320,7 +320,7 @@ describe('OperatorForm', () => {
   describe('Validation', () => {
     it('shows error for empty required fields on submit', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -348,7 +348,7 @@ describe('OperatorForm', () => {
 
     it('clears field error when user types', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -379,7 +379,7 @@ describe('OperatorForm', () => {
   describe('Submission', () => {
     it('calls POST /api/operators in create mode', async () => {
       const mockFetch = setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
         '/api/operators': { success: true, data: { id: 'new-op-1' } },
       });
@@ -424,7 +424,7 @@ describe('OperatorForm', () => {
 
     it('calls PUT /api/operators/:id in edit mode', async () => {
       const mockFetch = setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
         [`/api/operators/${mockOperatorData.id}`]: { success: true, data: mockOperatorData },
       });
@@ -507,7 +507,7 @@ describe('OperatorForm', () => {
 
     it('calls onSuccess callback on successful submit', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
         [`/api/operators/${mockOperatorData.id}`]: { success: true, data: mockOperatorData },
       });
@@ -533,7 +533,7 @@ describe('OperatorForm', () => {
 
     it('displays API error message on failure', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
         [`/api/operators/${mockOperatorData.id}`]: { success: false, error: 'Database connection failed' },
       });
@@ -557,7 +557,7 @@ describe('OperatorForm', () => {
 
     it('handles field-level API errors', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
         [`/api/operators/${mockOperatorData.id}`]: {
           success: false,
@@ -630,7 +630,7 @@ describe('OperatorForm', () => {
 
     it('navigates to detail page on success without onSuccess callback', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
         [`/api/operators/${mockOperatorData.id}`]: { success: true, data: { id: mockOperatorData.id } },
       });
@@ -678,7 +678,7 @@ describe('OperatorForm', () => {
   describe('Supplier Selection Detailed', () => {
     it('shows supplier name from operator data', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -697,7 +697,7 @@ describe('OperatorForm', () => {
 
     it('disables supplier name input when supplier is selected', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -715,7 +715,7 @@ describe('OperatorForm', () => {
   describe('Cancel Button', () => {
     it('calls router.back on cancel click', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -735,7 +735,7 @@ describe('OperatorForm', () => {
   describe('Empty Data States', () => {
     it('renders with empty requests list', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: [] },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: [] },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -753,7 +753,7 @@ describe('OperatorForm', () => {
 
     it('renders with empty suppliers list', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: [] },
       });
 
@@ -771,7 +771,7 @@ describe('OperatorForm', () => {
   describe('Debt Calculation Display', () => {
     it('shows debt in red when outstanding balance exists', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -789,7 +789,7 @@ describe('OperatorForm', () => {
 
     it('shows paid amount in green when exists', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -807,7 +807,7 @@ describe('OperatorForm', () => {
   describe('Form Field Updates', () => {
     it('updates service date field', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -825,7 +825,7 @@ describe('OperatorForm', () => {
 
     it('updates payment deadline field', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -843,7 +843,7 @@ describe('OperatorForm', () => {
 
     it('updates bank account field', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -861,7 +861,7 @@ describe('OperatorForm', () => {
 
     it('updates notes field', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -879,7 +879,7 @@ describe('OperatorForm', () => {
 
     it('updates paid amount field', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -897,7 +897,7 @@ describe('OperatorForm', () => {
 
     it('updates VAT field independently', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 
@@ -915,7 +915,7 @@ describe('OperatorForm', () => {
 
     it('updates total cost field independently', async () => {
       setupFetchMock({
-        '/api/requests?status=F5&limit=100': { success: true, data: mockRequestsF5 },
+        '/api/requests?status=F5&limit=100&fields=id,code,customerName,status,startDate,endDate': { success: true, data: mockRequestsF5 },
         '/api/suppliers?isActive=true': { success: true, data: mockSuppliers },
       });
 

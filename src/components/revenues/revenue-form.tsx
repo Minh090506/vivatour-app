@@ -113,22 +113,32 @@ export function RevenueForm({ revenue, requestId, onSuccess, onCancel }: Revenue
 
     // Validation
     if (!formData.requestId) {
-      setError('Vui long chon Booking');
+      setError('Vui lòng chọn Booking');
       setLoading(false);
       return;
     }
     if (!formData.paymentType) {
-      setError('Vui long chon loai thanh toan');
+      setError('Vui lòng chọn loại thanh toán');
       setLoading(false);
       return;
     }
     if (!formData.paymentSource) {
-      setError('Vui long chon nguon thanh toan');
+      setError('Vui lòng chọn nguồn thanh toán');
       setLoading(false);
       return;
     }
     if (currencyData.amountVND <= 0) {
-      setError('So tien VND phai > 0');
+      setError('Số tiền VND phải > 0');
+      setLoading(false);
+      return;
+    }
+
+    // Prevent future payment dates
+    const paymentDate = new Date(formData.paymentDate);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    if (paymentDate > today) {
+      setError('Ngày thanh toán không được là ngày tương lai');
       setLoading(false);
       return;
     }

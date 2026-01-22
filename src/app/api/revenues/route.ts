@@ -150,6 +150,54 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate: Prevent future payment dates
+    const paymentDateObj = new Date(validatedData.paymentDate);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    if (paymentDateObj > today) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Ngày thanh toán không được là ngày tương lai',
+          errors: { paymentDate: 'Ngày thanh toán không được là ngày tương lai' }
+        },
+        { status: 400 }
+      );
+    }
+
+    // Check for duplicate revenue (same booking + date + amount + type)
+    const paymentDateStart = new Date(validatedData.paymentDate);
+    paymentDateStart.setHours(0, 0, 0, 0);
+    const paymentDateEnd = new Date(validatedData.paymentDate);
+    paymentDateEnd.setHours(23, 59, 59, 999);
+
+    // Calculate amountVND for duplicate check
+    const checkAmountVND = validatedData.currency === 'VND'
+      ? validatedData.amountVND || 0
+      : Math.round((validatedData.foreignAmount || 0) * (validatedData.exchangeRate || 0));
+
+    const existingRevenue = await prisma.revenue.findFirst({
+      where: {
+        requestId: validatedData.requestId,
+        paymentDate: { gte: paymentDateStart, lte: paymentDateEnd },
+        amountVND: checkAmountVND,
+        paymentType: validatedData.paymentType,
+      },
+      select: { id: true, revenueId: true },
+    });
+
+    if (existingRevenue) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Thu nhập này đã được ghi nhận trước đó',
+          duplicate: existingRevenue.revenueId,
+          errors: { _form: 'Thu nhập trùng lặp' }
+        },
+        { status: 409 }
+      );
+    }
+
     // Generate revenueId using bookingCode or requestId fallback
     const revenueId = await generateRevenueId(req.bookingCode || validatedData.requestId);
 

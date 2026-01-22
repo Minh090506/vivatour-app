@@ -251,7 +251,7 @@ describe('RevenueForm', () => {
       fireEvent.click(screen.getByRole('button', { name: /Tạo thu nhập/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/Vui long chon Booking/i)).toBeInTheDocument();
+        expect(screen.getByText(/Vui lòng chọn Booking/i)).toBeInTheDocument();
       });
     });
 
@@ -265,7 +265,7 @@ describe('RevenueForm', () => {
       fireEvent.click(screen.getByRole('button', { name: /Tạo thu nhập/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/Vui long chon loai thanh toan/i)).toBeInTheDocument();
+        expect(screen.getByText(/Vui lòng chọn loại thanh toán/i)).toBeInTheDocument();
       });
     });
 
@@ -283,7 +283,7 @@ describe('RevenueForm', () => {
       fireEvent.click(screen.getByRole('button', { name: /Tạo thu nhập/i }));
 
       await waitFor(() => {
-        expect(screen.getByText(/Vui long chon Booking/i)).toBeInTheDocument();
+        expect(screen.getByText(/Vui lòng chọn Booking/i)).toBeInTheDocument();
       });
     });
   });
