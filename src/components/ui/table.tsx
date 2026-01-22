@@ -8,11 +8,11 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div
       data-slot="table-container"
-      className="relative w-full overflow-x-auto"
+      className="relative w-full overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0"
     >
       <table
         data-slot="table"
-        className={cn("w-full caption-bottom text-sm", className)}
+        className={cn("w-full caption-bottom text-sm min-w-[640px]", className)}
         {...props}
       />
     </div>
@@ -57,7 +57,8 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
     <tr
       data-slot="table-row"
       className={cn(
-        "hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors",
+        // Mobile: larger touch target with active state for touch feedback
+        "hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors active:bg-muted/70 md:active:bg-transparent",
         className
       )}
       {...props}
@@ -70,7 +71,8 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
     <th
       data-slot="table-head"
       className={cn(
-        "text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        // Mobile: min 44px height for touch target
+        "text-foreground h-12 px-3 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] md:h-10 md:px-2",
         className
       )}
       {...props}
@@ -83,7 +85,8 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
     <td
       data-slot="table-cell"
       className={cn(
-        "p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        // Mobile: larger padding for touch, whitespace-nowrap prevents text wrap
+        "p-3 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px] md:p-2",
         className
       )}
       {...props}

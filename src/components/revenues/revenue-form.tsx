@@ -235,7 +235,7 @@ export function RevenueForm({ revenue, requestId, onSuccess, onCancel }: Revenue
           <CardTitle>Thông tin thanh toán</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="paymentDate">Ngày thanh toán *</Label>
               <Input

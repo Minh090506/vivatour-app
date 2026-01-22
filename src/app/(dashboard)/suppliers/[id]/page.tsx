@@ -141,7 +141,7 @@ export default function SupplierDetailPage({ params }: { params: Promise<{ id: s
           <CardTitle>Thông tin NCC</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <p className="text-sm text-muted-foreground">Loại NCC</p>
               <p className="font-medium">{supplier.type}</p>

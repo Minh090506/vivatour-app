@@ -137,7 +137,7 @@ export function EditSupplierModal({ supplier, onSuccess }: EditSupplierModalProp
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Basic Info */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="name">Tên NCC *</Label>
               <Input
@@ -169,7 +169,7 @@ export function EditSupplierModal({ supplier, onSuccess }: EditSupplierModalProp
           </div>
 
           {/* Location & Payment */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="location">Địa phương</Label>
               <Select
@@ -212,7 +212,7 @@ export function EditSupplierModal({ supplier, onSuccess }: EditSupplierModalProp
 
           {/* Credit fields - conditional */}
           {formData.paymentModel === 'CREDIT' && (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="creditLimit">Hạn mức công nợ</Label>
                 <Input
@@ -237,7 +237,7 @@ export function EditSupplierModal({ supplier, onSuccess }: EditSupplierModalProp
           )}
 
           {/* Contact Info */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="contactName">Người liên hệ</Label>
               <Input
@@ -258,7 +258,7 @@ export function EditSupplierModal({ supplier, onSuccess }: EditSupplierModalProp
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="contactEmail">Email</Label>
               <Input

@@ -211,7 +211,7 @@ export function RequestForm({ initialData, onSubmit, onCancel, isEditing = false
         <CardHeader>
           <CardTitle>Thông tin khách hàng</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-4">
+        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField label="Tên khách" required error={fieldErrors.customerName}>
             <Input
               value={formData.customerName}
@@ -276,7 +276,7 @@ export function RequestForm({ initialData, onSubmit, onCancel, isEditing = false
         <CardHeader>
           <CardTitle>Thông tin Tour</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-4">
+        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <FormField label="Số ngày" error={fieldErrors.tourDays}>
             <Input
               type="number"

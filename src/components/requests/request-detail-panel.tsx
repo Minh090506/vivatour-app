@@ -225,7 +225,7 @@ export function RequestDetailPanel({
         <CardHeader>
           <CardTitle>Thông tin khách hàng</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-4">
+        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <InfoRow label="Tên" value={request.customerName} />
           <InfoRow label="Liên hệ" value={request.contact} />
           <InfoRow label="WhatsApp" value={request.whatsapp || '-'} />
@@ -240,7 +240,7 @@ export function RequestDetailPanel({
         <CardHeader>
           <CardTitle>Thông tin Tour</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-4">
+        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <InfoRow label="Số ngày" value={request.tourDays?.toString() || '-'} />
           <InfoRow
             label="Ngày bắt đầu"

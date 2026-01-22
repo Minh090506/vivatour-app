@@ -48,10 +48,11 @@ export function SlideInPanel({
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <SheetContent
         side="right"
-        className="w-[85vw] sm:w-[540px] md:w-[600px] p-0 flex flex-col"
+        // Mobile: full width, sm+: 540px, md+: 600px
+        className="w-full sm:w-[540px] md:w-[600px] p-0 flex flex-col"
       >
         {(title || description) && (
-          <SheetHeader className="px-4 pt-4 pb-2 border-b">
+          <SheetHeader className="px-4 pt-14 pb-2 border-b sm:pt-4">
             {title && <SheetTitle>{title}</SheetTitle>}
             {description && <SheetDescription>{description}</SheetDescription>}
           </SheetHeader>

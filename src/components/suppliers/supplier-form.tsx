@@ -192,7 +192,7 @@ export function SupplierForm({ supplier, onSuccess }: SupplierFormProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Type and Name row */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="type">Loại NCC *</Label>
               <Select
@@ -225,7 +225,7 @@ export function SupplierForm({ supplier, onSuccess }: SupplierFormProps) {
           </div>
 
           {/* Location row */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="location">Địa phương</Label>
               <Select
@@ -291,7 +291,7 @@ export function SupplierForm({ supplier, onSuccess }: SupplierFormProps) {
           )}
 
           {/* Payment model row */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="paymentModel">Hình thức thanh toán *</Label>
               <Select
@@ -313,7 +313,7 @@ export function SupplierForm({ supplier, onSuccess }: SupplierFormProps) {
           </div>
 
           {formData.paymentModel === 'CREDIT' && (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="creditLimit">Hạn mức công nợ</Label>
                 <Input
@@ -345,7 +345,7 @@ export function SupplierForm({ supplier, onSuccess }: SupplierFormProps) {
           <CardTitle>Thông tin liên hệ</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="contactName">Người liên hệ</Label>
               <Input
@@ -366,7 +366,7 @@ export function SupplierForm({ supplier, onSuccess }: SupplierFormProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="contactEmail">Email</Label>
               <Input
